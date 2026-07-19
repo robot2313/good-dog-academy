@@ -1,3 +1,14 @@
 export const storageKeys = {
   appState: '@good-dog-academy/app-state',
+  schemaVersion: '@good-dog-academy/schema-version',
+  owners: '@good-dog-academy/domain/owners',
+  dogs: '@good-dog-academy/domain/dogs',
+  behaviourProfiles: '@good-dog-academy/domain/behaviour-profiles',
+  lessons: '@good-dog-academy/domain/lessons',
+  dailyPlans: '@good-dog-academy/domain/daily-plans',
+  trainingSessions: '@good-dog-academy/domain/training-sessions',
+  achievements: '@good-dog-academy/domain/achievements',
+  progress: '@good-dog-academy/domain/progress',
+  notificationSettings: '@good-dog-academy/domain/notification-settings',
+  developmentSeedVersion: '@good-dog-academy/development/seed-version',
 } as const;
