@@ -27,13 +27,20 @@ Behaviour assessment session
   -> BehaviourAssessment completion service
        -> transaction manager
             -> BehaviourAssessment + BehaviourProfile repositories
+
+Lesson catalogue
+  -> immutable bundled LessonDefinition content
+  -> catalogue validation and deterministic ordering
+  -> prerequisite/unlock service
+       -> transaction-backed LessonProgress initialization
+            -> LessonProgress repository -> StorageAdapter
 ```
 
 ## Schema versions
 
 `CURRENT_SCHEMA_VERSION` identifies the storage layout understood by the installed application. At startup, `MigrationManager` reads the stored version. A new database is stamped with the current version. An older database must have a contiguous migration path registered in `src/storage/migrations/index.ts`; migrations run in order and the stored version is updated after each successful step. A newer or invalid version is rejected safely.
 
-Version 3 is current. Migration 1→2 adds the Owner onboarding preferences and Dog profile fields introduced in Milestone 3. Migration 2→3 replaces the obsolete single confidence field with a complete typed `skillScores` map, `unknownSkills`, and an optional `assessmentId`. Existing profile values and ownership IDs are preserved; each new skill begins at neutral 50 and is explicitly unknown until assessed. Each migration and its schema-version update run through the staged transaction manager, so failed writes restore the prior schema and records. Re-running startup at version 3 is idempotent.
+Version 4 is current. Migration 1→2 adds the Owner onboarding preferences and Dog profile fields introduced in Milestone 3. Migration 2→3 replaces the obsolete single confidence field with a complete typed `skillScores` map, `unknownSkills`, and an optional `assessmentId`. Migration 3→4 introduces the LessonProgress storage namespace without automatically creating progress; any pre-release records are preserved. Each migration and its schema-version update run through the staged transaction manager, so failed writes restore the prior schema and records. Re-running startup at version 4 is idempotent.
 
 ## Transactions
 
@@ -47,15 +54,30 @@ Owner
 └── Dog
     ├── BehaviourProfile
     ├── BehaviourAssessment history
+    ├── LessonProgress
     ├── Progress
     ├── TrainingSession
     ├── DailyPlan
     └── Achievement
 ```
 
-Deleting a Dog deletes all records keyed by that dog before deleting the Dog. Deleting an Owner applies the dog cascade to every Dog belonging to the Owner, deletes the Owner's NotificationSettings, and then deletes the Owner. Lessons are global catalogue records and are never cascade-deleted. All cascades execute through one application-level transaction.
+Deleting a Dog deletes all records keyed by that dog, including LessonProgress, before deleting the Dog. Deleting an Owner applies the dog cascade to every Dog belonging to the Owner, deletes the Owner's NotificationSettings, and then deletes the Owner. Immutable LessonDefinition content is bundled application code and is never cascade-deleted. All cascades execute through one application-level transaction.
 
 Development reset uses the same Owner cascade, including BehaviourAssessment history, then removes captured app-managed Dog photo URIs.
+
+## Lesson catalogue foundation
+
+`LessonDefinition` is immutable bundled content with stable `lesson:` identifiers, semantic content versions, typed BehaviourSkill and category values, difficulty levels 1–5, prerequisites, structured troubleshooting, safety notes, and completion criteria. Higher difficulty always means more advanced training. There is no LessonDefinition AsyncStorage key or repository.
+
+The production catalogue is intentionally empty until final content receives product review. Test-only definitions live under `tests/support`. The catalogue loader validates every definition, checks duplicate IDs and supported skills, verifies every prerequisite reference, and performs depth-first cycle detection. A valid catalogue is copied into deeply frozen records and sorted by difficulty then stable ID. Application initialization loads the catalogue after migrations and maps validation failures into structured initialization errors.
+
+`LessonProgress` is mutable local user data owned through Owner → Dog. It stores status, attempt and completion counters, timestamps, best performance rating, current difficulty adjustment, and unlock time while referencing an immutable lesson ID. Its repository uses AsyncStorage through the standard StorageAdapter and runtime validator.
+
+The unlock service is deterministic. Active lessons without prerequisites are available. A prerequisite lesson remains locked until every required lesson reaches its specified successful-completion count. An unlocked lesson with attempts is in progress; its own completion criteria determine completed status. Missing catalogue references and duplicate progress for the same lesson are rejected.
+
+The explicit progress initialization service validates Owner/Dog ownership, evaluates the current catalogue, preserves all existing progress, and creates only missing records. Its writes are staged under one transaction, so a failure commits none. Repeated calls are idempotent. It is deliberately not invoked during onboarding, assessment, migration, or application startup.
+
+A future Daily Plan engine may read the frozen catalogue together with validated LessonProgress to select eligible content. Milestone 5 does not generate DailyPlans, recommendations, training sessions, or achievements.
 
 ## Behaviour assessment
 

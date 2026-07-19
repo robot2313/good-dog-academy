@@ -8,21 +8,19 @@ import {
   sampleBehaviourAssessment,
   sampleDailyPlan,
   sampleDog,
-  sampleLessons,
   sampleNotificationSettings,
   sampleOwner,
   sampleProgress,
   sampleTrainingSession,
 } from './sampleData';
 
-const developmentSeedVersion = 2;
+const developmentSeedVersion = 3;
 const seedKeys = [
   storageKeys.developmentSeedVersion,
   storageKeys.owners,
   storageKeys.dogs,
   storageKeys.behaviourProfiles,
   storageKeys.behaviourAssessments,
-  storageKeys.lessons,
   storageKeys.dailyPlans,
   storageKeys.trainingSessions,
   storageKeys.achievements,
@@ -41,7 +39,6 @@ export async function seedDevelopmentData(): Promise<void> {
     await repositories.dogs.save(sampleDog);
     await repositories.behaviourProfiles.save(sampleBehaviourProfile);
     await repositories.behaviourAssessments.save(sampleBehaviourAssessment);
-    for (const lesson of sampleLessons) await repositories.lessons.save(lesson);
     await repositories.dailyPlans.save(sampleDailyPlan);
     await repositories.trainingSessions.save(sampleTrainingSession);
     await repositories.achievements.save(sampleAchievement);

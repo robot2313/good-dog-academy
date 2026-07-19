@@ -1,23 +1,24 @@
 # Good Dog Academy
 
-Good Dog Academy is an Expo React Native dog-training application focused on personalised, adaptive training. The current build includes production onboarding, a dog profile, and a deterministic behaviour assessment backed by a validated local domain and persistence architecture.
+Good Dog Academy is an Expo React Native dog-training application focused on personalised, adaptive training. The current build includes production onboarding, a dog profile, deterministic behaviour assessment, and the immutable lesson-catalogue foundation needed by future planning work.
 
 ## Current status
 
 Completed milestones:
 
 - **Milestone 1 — Modular foundation:** React Navigation stack and bottom tabs, reusable components, theme, hooks, services, and an AsyncStorage abstraction.
-- **Milestone 2 — Domain foundation:** typed Owner, Dog, BehaviourProfile, Lesson, DailyPlan, TrainingSession, Achievement, Progress, and NotificationSettings models; runtime validators; repositories; and local persistence.
+- **Milestone 2 — Domain foundation:** typed Owner, Dog, BehaviourProfile, DailyPlan, TrainingSession, Achievement, Progress, and NotificationSettings models; runtime validators; repositories; and local persistence.
 - **Milestone 2.1 — Domain hardening:** schema migrations, staged transactions, rollback, ownership deletion rules, structured initialization errors, development-only seed separation, and comprehensive domain/repository tests.
 - **Milestone 3 — Onboarding and dog profile:** Welcome → Owner Setup → Dog Setup → existing main application, with validated forms, optional dog photo, reliable persisted completion detection, and atomic Owner/Dog/BehaviourProfile creation.
 - **Milestone 3.1 — Onboarding integrity:** app-managed persistent dog photos, native localized birthday selection, confirmed corrupt-data recovery, atomic migration 1→2 coverage, and legacy onboarding cleanup.
 - **Milestone 4 — Behaviour assessment:** an accessible five-screen assessment covering ten skills, deterministic scoring, raw-response history, atomic BehaviourAssessment/BehaviourProfile persistence, schema migration 2→3, safety messaging, and relationship-aware startup routing.
+- **Milestone 5 — Lesson catalogue foundation:** immutable validated LessonDefinition content, deterministic prerequisite and unlock evaluation, mutable per-dog LessonProgress, atomic idempotent progress initialization, ownership cascades, and schema migration 3→4.
 
 Not implemented yet:
 
 - Adaptive recommendations
 - Daily plan generation
-- Production lesson flows
+- Final production lesson content and lesson UI flows
 - Authentication or backend services
 - Cloud sync
 - Subscriptions or payments
@@ -105,6 +106,7 @@ src/
 │   └── validation/   Runtime boundary validation
 ├── features/
 │   ├── assessment/   Immutable questions, scoring, screens, state, and atomic completion
+│   ├── lessons/      Immutable catalogue, prerequisite engine, and progress initialization
 │   └── onboarding/   Forms, screens, validation, status, and completion service
 ├── hooks/            Presentation hooks
 ├── navigation/       Root stack and bottom-tab configuration
@@ -119,6 +121,7 @@ src/
 
 tests/
 ├── assessment/       Scoring, catalogue, navigation, recovery, and atomic completion tests
+├── lessons/          Catalogue, prerequisite, unlock, and progress initialization tests
 ├── domain/           Domain validator tests
 ├── onboarding/       Form, navigation, status, and completion tests
 ├── services/         Transaction and ownership tests
@@ -141,6 +144,16 @@ The bundled assessment catalogue is immutable application content, not AsyncStor
 Assessment answers remain in memory until completion. Completion validates all ten responses, stores a new raw BehaviourAssessment without deleting history, and updates the BehaviourProfile inside one staged transaction. A failure commits neither record and keeps the answers available for retry. Severe reactivity answers show calm, non-diagnostic safety guidance and recommend qualified force-free professional or veterinary help when injury is possible.
 
 Corrupt assessment data has a separate recoverable startup state. The app explains the issue and requires confirmation before clearing only assessment data; valid Owner, Dog, and BehaviourProfile setup is retained.
+
+## Lesson catalogue and progress
+
+`LessonDefinition` records are bundled, deeply frozen application content. They are never stored in AsyncStorage and have no mutable repository. Startup loads and validates the complete catalogue, rejecting malformed definitions, unsupported skills, duplicate IDs, missing prerequisite references, and circular dependency chains with structured errors. Ordering is deterministic by difficulty and stable lesson ID. The production catalogue is intentionally empty until reviewed lesson content is supplied in a later milestone; the existing visible test cards remain presentation-only UI data.
+
+`LessonProgress` is mutable per-Owner/per-Dog data stored through the standard repository abstraction. It tracks status, attempts, successful completions, performance, difficulty adjustment, unlock dates, and activity timestamps while referencing a stable immutable lesson ID.
+
+The prerequisite engine derives `locked`, `available`, `inProgress`, or `completed` from catalogue requirements and existing progress. All prerequisites must meet their required successful-completion counts. The explicit initialization service creates only missing progress records, preserves existing records, is idempotent, and saves through one transaction. It is not called during onboarding, assessment, migration, or startup.
+
+Deleting a Dog or Owner cascade-deletes LessonProgress. Immutable LessonDefinition content is application code and is never included in user-data deletion. Future Daily Plan work can consume the validated catalogue and progress status, but Milestone 5 does not generate plans or recommendations.
 
 Incomplete or corrupt onboarding data is never silently cleared. The Welcome screen explains the problem and requires a separate confirmation before ownership-aware, transactional recovery runs.
 

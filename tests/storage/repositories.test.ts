@@ -4,7 +4,6 @@ import {
   sampleBehaviourProfile,
   sampleDailyPlan,
   sampleDog,
-  sampleLessons,
   sampleNotificationSettings,
   sampleOwner,
   sampleProgress,
@@ -13,6 +12,7 @@ import {
 import type { Repository } from '../../src/domain/repositories';
 import { createDomainRepositories } from '../../src/services/createDomainRepositories';
 import { InMemoryStorageAdapter } from '../support/InMemoryStorageAdapter';
+import { lessonProgress } from '../support/lessonFixtures';
 
 type Entity = { id: string };
 type RepositoryCase = {
@@ -27,7 +27,7 @@ const cases: RepositoryCase[] = [
   { name: 'Dog', entity: sampleDog, update: (value) => ({ ...value, name: 'Updated Dog' }), select: (r) => r.dogs },
   { name: 'BehaviourProfile', entity: sampleBehaviourProfile, update: (value) => ({ ...value, notes: 'Updated notes' }), select: (r) => r.behaviourProfiles },
   { name: 'BehaviourAssessment', entity: sampleBehaviourAssessment, update: (value) => ({ ...value, completedAt: '2026-07-19T01:00:00.000Z' }), select: (r) => r.behaviourAssessments },
-  { name: 'Lesson', entity: sampleLessons[0], update: (value) => ({ ...value, title: 'Updated Lesson' }), select: (r) => r.lessons },
+  { name: 'LessonProgress', entity: lessonProgress(), update: (value) => ({ ...value, attempts: 1, status: 'inProgress', lastAttemptedAt: '2026-07-19T01:00:00.000Z' }), select: (r) => r.lessonProgress },
   { name: 'DailyPlan', entity: sampleDailyPlan, update: (value) => ({ ...value, status: 'completed' }), select: (r) => r.dailyPlans },
   { name: 'TrainingSession', entity: sampleTrainingSession, update: (value) => ({ ...value, notes: 'Updated notes' }), select: (r) => r.trainingSessions },
   { name: 'Achievement', entity: sampleAchievement, update: (value) => ({ ...value, title: 'Updated Achievement' }), select: (r) => r.achievements },

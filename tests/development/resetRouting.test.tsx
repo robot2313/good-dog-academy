@@ -6,6 +6,7 @@ import App from '../../App';
 import { sampleBehaviourAssessment, sampleBehaviourProfile, sampleDog, sampleOwner } from '../../src/development/seed/sampleData';
 import { appStorage } from '../../src/services/appStorage';
 import { createDomainRepositories } from '../../src/services/createDomainRepositories';
+import { lessonProgress } from '../support/lessonFixtures';
 
 describe('development reset routing', () => {
   afterEach(async () => {
@@ -20,6 +21,7 @@ describe('development reset routing', () => {
     await repositories.dogs.save(sampleDog);
     await repositories.behaviourProfiles.save(sampleBehaviourProfile);
     await repositories.behaviourAssessments.save(sampleBehaviourAssessment);
+    await repositories.lessonProgress.save(lessonProgress());
 
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
     const view = render(<App />);
@@ -47,5 +49,6 @@ describe('development reset routing', () => {
     await expect(repositories.dogs.findAll()).resolves.toEqual([]);
     await expect(repositories.behaviourProfiles.findAll()).resolves.toEqual([]);
     await expect(repositories.behaviourAssessments.findAll()).resolves.toEqual([]);
+    await expect(repositories.lessonProgress.findAll()).resolves.toEqual([]);
   });
 });

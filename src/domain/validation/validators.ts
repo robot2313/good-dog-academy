@@ -4,7 +4,8 @@ import type {
   BehaviourProfile,
   DailyPlan,
   Dog,
-  Lesson,
+  LessonDefinition,
+  LessonProgress,
   NotificationSettings,
   Owner,
   Progress,
@@ -26,7 +27,8 @@ import {
 
 const levels = ['low', 'medium', 'high'] as const;
 const challenges = ['recall', 'lead-pulling', 'jumping'] as const;
-const categories = ['foundation', ...challenges] as const;
+const lessonCategories = ['foundation', 'life-skills', 'behaviour', 'safety'] as const;
+const lessonTags = ['foundation', 'home', 'outdoors', 'walking', 'recall', 'impulse-control', 'confidence', 'safety'] as const;
 const assessmentOptions = ['never', 'rarely', 'sometimes', 'often', 'almost-always', 'not-sure'] as const;
 const optionValues: Record<(typeof assessmentOptions)[number], number | null> = { never: 0, rarely: 1, sometimes: 2, often: 3, 'almost-always': 4, 'not-sure': null };
 
@@ -124,19 +126,66 @@ export function validateBehaviourAssessment(value: unknown): ValidationResult<Be
   return finishValidation<BehaviourAssessment>(value, errors);
 }
 
-export function validateLesson(value: unknown): ValidationResult<Lesson> {
+export function validateLessonDefinition(value: unknown): ValidationResult<LessonDefinition> {
   const { record, errors } = recordOrError(value);
   if (!record) return { valid: false, errors };
-  ['id', 'slug', 'title', 'description'].forEach((key) => requireString(record, key, errors));
-  if (!isOneOf(record.category, categories)) errors.push('category is invalid');
-  if (!isOneOf(record.difficulty, [1, 2, 3, 4, 5] as const)) errors.push('difficulty must be between 1 and 5');
+  ['id', 'title', 'shortDescription', 'goal'].forEach((key) => requireString(record, key, errors));
+  if (typeof record.id !== 'string' || !/^lesson:[a-z0-9]+(?:-[a-z0-9]+)*$/.test(record.id)) errors.push('id must be a stable lesson identifier');
+  if (typeof record.contentVersion !== 'string' || !/^\d+\.\d+\.\d+$/.test(record.contentVersion)) errors.push('contentVersion must use semantic version format');
+  if (!isOneOf(record.skill, behaviourSkills)) errors.push('skill is unsupported');
+  if (!isOneOf(record.category, lessonCategories)) errors.push('category is invalid');
+  if (!isOneOf(record.difficultyLevel, [1, 2, 3, 4, 5] as const)) errors.push('difficultyLevel must be between 1 and 5');
   if (!isNonNegativeInteger(record.estimatedMinutes) || record.estimatedMinutes === 0) errors.push('estimatedMinutes must be a positive integer');
-  if (!isStringArray(record.steps)) errors.push('steps must contain non-empty strings');
-  if (!isStringArray(record.successCriteria)) errors.push('successCriteria must contain non-empty strings');
-  if (typeof record.published !== 'boolean') errors.push('published must be boolean');
+  ['equipment', 'steps', 'tips', 'commonMistakes', 'safetyNotes'].forEach((key) => {
+    if (!isStringArray(record[key])) errors.push(`${key} must contain non-empty strings`);
+  });
+  if (Array.isArray(record.steps) && record.steps.length === 0) errors.push('steps must not be empty');
+  if (!Array.isArray(record.prerequisites)) errors.push('prerequisites must be an array');
+  else {
+    const prerequisiteIds: string[] = [];
+    record.prerequisites.forEach((item, index) => {
+      if (!isRecord(item)) { errors.push(`prerequisites[${index}] must be an object`); return; }
+      if (typeof item.lessonId !== 'string' || !/^lesson:[a-z0-9]+(?:-[a-z0-9]+)*$/.test(item.lessonId)) errors.push(`prerequisites[${index}].lessonId is invalid`);
+      else prerequisiteIds.push(item.lessonId);
+      if (!isNonNegativeInteger(item.minimumSuccessfulCompletions) || item.minimumSuccessfulCompletions === 0) errors.push(`prerequisites[${index}].minimumSuccessfulCompletions must be positive`);
+    });
+    if (new Set(prerequisiteIds).size !== prerequisiteIds.length) errors.push('prerequisites must not contain duplicate lesson IDs');
+  }
+  if (record.minimumDogAgeMonths !== null && !isNonNegativeInteger(record.minimumDogAgeMonths)) errors.push('minimumDogAgeMonths must be a non-negative integer or null');
+  if (!Array.isArray(record.troubleshooting)) errors.push('troubleshooting must be an array');
+  else record.troubleshooting.forEach((item, index) => {
+    if (!isRecord(item) || !isNonEmptyString(item.problem) || !isNonEmptyString(item.solution)) errors.push(`troubleshooting[${index}] is invalid`);
+  });
+  if (!isRecord(record.completionCriteria)) errors.push('completionCriteria must be an object');
+  else {
+    if (!isNonNegativeInteger(record.completionCriteria.minimumSuccessfulCompletions) || record.completionCriteria.minimumSuccessfulCompletions === 0) errors.push('completionCriteria.minimumSuccessfulCompletions must be positive');
+    if (record.completionCriteria.minimumPerformanceRating !== null && !isOneOf(record.completionCriteria.minimumPerformanceRating, [1, 2, 3, 4, 5] as const)) errors.push('completionCriteria.minimumPerformanceRating is invalid');
+  }
+  if (!Array.isArray(record.tags) || !record.tags.every((tag) => isOneOf(tag, lessonTags)) || new Set(record.tags).size !== record.tags.length) errors.push('tags contains an invalid or duplicate value');
+  if (typeof record.isActive !== 'boolean') errors.push('isActive must be boolean');
+  return finishValidation<LessonDefinition>(value, errors);
+}
+
+export function validateLessonProgress(value: unknown): ValidationResult<LessonProgress> {
+  const { record, errors } = recordOrError(value);
+  if (!record) return { valid: false, errors };
+  ['id', 'ownerId', 'dogId', 'lessonId'].forEach((key) => requireString(record, key, errors));
+  if (typeof record.lessonId !== 'string' || !/^lesson:[a-z0-9]+(?:-[a-z0-9]+)*$/.test(record.lessonId)) errors.push('lessonId must be a stable lesson identifier');
+  if (!isOneOf(record.status, ['locked', 'available', 'inProgress', 'completed'] as const)) errors.push('status is invalid');
+  if (!isNonNegativeInteger(record.attempts)) errors.push('attempts must be a non-negative integer');
+  if (!isNonNegativeInteger(record.successfulCompletions)) errors.push('successfulCompletions must be a non-negative integer');
+  if (isNonNegativeInteger(record.attempts) && isNonNegativeInteger(record.successfulCompletions) && record.successfulCompletions > record.attempts) errors.push('successfulCompletions cannot exceed attempts');
+  ['lastAttemptedAt', 'lastCompletedAt', 'unlockedAt'].forEach((key) => {
+    if (record[key] !== null && !isIsoDate(record[key])) errors.push(`${key} must be an ISO date or null`);
+  });
+  if (record.bestPerformanceRating !== null && !isOneOf(record.bestPerformanceRating, [1, 2, 3, 4, 5] as const)) errors.push('bestPerformanceRating is invalid');
+  if (!isOneOf(record.currentDifficultyAdjustment, [-2, -1, 0, 1, 2] as const)) errors.push('currentDifficultyAdjustment is invalid');
+  if (record.status === 'locked' && record.unlockedAt !== null) errors.push('locked progress cannot have unlockedAt');
+  if (record.status !== 'locked' && !isIsoDate(record.unlockedAt)) errors.push('unlocked progress requires unlockedAt');
+  if (record.status === 'completed' && (record.successfulCompletions === 0 || !isIsoDate(record.lastCompletedAt))) errors.push('completed progress requires a successful completion date');
   requireIsoDate(record, 'createdAt', errors);
   requireIsoDate(record, 'updatedAt', errors);
-  return finishValidation<Lesson>(value, errors);
+  return finishValidation<LessonProgress>(value, errors);
 }
 
 export function validateDailyPlan(value: unknown): ValidationResult<DailyPlan> {

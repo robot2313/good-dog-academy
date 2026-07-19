@@ -4,7 +4,8 @@ export type { AssessmentOption, AssessmentResponse, BehaviourAssessment, Behavio
 export type { BehaviourChallenge, BehaviourLevel, BehaviourProfile } from './BehaviourProfile';
 export type { DailyPlan, DailyPlanStatus } from './DailyPlan';
 export type { Dog, DogEnergyLevel, DogSex, WeightUnit } from './Dog';
-export type { Lesson, LessonCategory, LessonDifficulty } from './Lesson';
+export type { LessonCategory, LessonCompletionCriteria, LessonContentVersion, LessonDefinition, LessonDifficultyLevel, LessonId, LessonPrerequisite, LessonTag, LessonTroubleshooting } from './LessonDefinition';
+export type { LessonDifficultyAdjustment, LessonPerformanceRating, LessonProgress, LessonProgressStatus } from './LessonProgress';
 export type { NotificationSettings } from './NotificationSettings';
 export type { Owner, PrimaryGoal, TrainingExperience } from './Owner';
 export type { Progress } from './Progress';

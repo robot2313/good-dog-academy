@@ -4,7 +4,7 @@ import type {
   BehaviourAssessment,
   DailyPlan,
   Dog,
-  Lesson,
+  LessonProgress,
   NotificationSettings,
   Owner,
   Progress,
@@ -16,7 +16,7 @@ export interface OwnerRepository extends Repository<Owner> {}
 export interface DogRepository extends Repository<Dog> {}
 export interface BehaviourProfileRepository extends Repository<BehaviourProfile> {}
 export interface BehaviourAssessmentRepository extends Repository<BehaviourAssessment> {}
-export interface LessonRepository extends Repository<Lesson> {}
+export interface LessonProgressRepository extends Repository<LessonProgress> {}
 export interface DailyPlanRepository extends Repository<DailyPlan> {}
 export interface TrainingSessionRepository extends Repository<TrainingSession> {}
 export interface AchievementRepository extends Repository<Achievement> {}
@@ -28,7 +28,7 @@ export type DomainRepositories = {
   dogs: DogRepository;
   behaviourProfiles: BehaviourProfileRepository;
   behaviourAssessments: BehaviourAssessmentRepository;
-  lessons: LessonRepository;
+  lessonProgress: LessonProgressRepository;
   dailyPlans: DailyPlanRepository;
   trainingSessions: TrainingSessionRepository;
   achievements: AchievementRepository;

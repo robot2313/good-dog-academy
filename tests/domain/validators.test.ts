@@ -4,7 +4,6 @@ import {
   sampleBehaviourProfile,
   sampleDailyPlan,
   sampleDog,
-  sampleLessons,
   sampleNotificationSettings,
   sampleOwner,
   sampleProgress,
@@ -16,12 +15,13 @@ import {
   validateBehaviourProfile,
   validateDailyPlan,
   validateDog,
-  validateLesson,
+  validateLessonProgress,
   validateNotificationSettings,
   validateOwner,
   validateProgress,
   validateTrainingSession,
 } from '../../src/domain/validation';
+import { lessonProgress } from '../support/lessonFixtures';
 
 type Case = {
   name: string;
@@ -37,7 +37,7 @@ const cases: Case[] = [
   { name: 'Dog', valid: sampleDog, validate: validateDog, requiredField: 'ownerId', invalid: { ...sampleDog, sex: 'other' }, boundary: { ...sampleDog, weightKg: null, dateOfBirth: null, birthdayEstimated: true, estimatedAgeYears: 1 } },
   { name: 'BehaviourProfile', valid: sampleBehaviourProfile, validate: validateBehaviourProfile, requiredField: 'dogId', invalid: { ...sampleBehaviourProfile, energyLevel: 'extreme' }, boundary: { ...sampleBehaviourProfile, challenges: [], notes: '' } },
   { name: 'BehaviourAssessment', valid: sampleBehaviourAssessment, validate: validateBehaviourAssessment, requiredField: 'ownerId', invalid: { ...sampleBehaviourAssessment, schemaVersion: 2 }, boundary: { ...sampleBehaviourAssessment, unknownSkills: [], calculatedScores: { ...sampleBehaviourAssessment.calculatedScores, recall: 0 } } },
-  { name: 'Lesson', valid: sampleLessons[0], validate: validateLesson, requiredField: 'title', invalid: { ...sampleLessons[0], difficulty: 6 }, boundary: { ...sampleLessons[0], difficulty: 5, estimatedMinutes: 1 } },
+  { name: 'LessonProgress', valid: lessonProgress(), validate: validateLessonProgress, requiredField: 'dogId', invalid: { ...lessonProgress(), status: 'started' }, boundary: { ...lessonProgress(), status: 'locked', unlockedAt: null, currentDifficultyAdjustment: -2 } },
   { name: 'DailyPlan', valid: sampleDailyPlan, validate: validateDailyPlan, requiredField: 'dogId', invalid: { ...sampleDailyPlan, status: 'unknown' }, boundary: { ...sampleDailyPlan, lessonIds: [] } },
   { name: 'TrainingSession', valid: sampleTrainingSession, validate: validateTrainingSession, requiredField: 'lessonId', invalid: { ...sampleTrainingSession, outcome: 'mixed' }, boundary: { ...sampleTrainingSession, dailyPlanId: null, completedAt: null, outcome: null, durationMinutes: 0 } },
   { name: 'Achievement', valid: sampleAchievement, validate: validateAchievement, requiredField: 'code', invalid: { ...sampleAchievement, earnedAt: 'not-a-date' }, boundary: { ...sampleAchievement, title: 'A', description: 'A' } },
@@ -61,9 +61,9 @@ describe.each(cases)('$name validator', ({ valid, validate, requiredField, inval
 });
 
 describe('additional validator boundaries', () => {
-  it('accepts both Lesson difficulty boundaries', () => {
-    expect(validateLesson({ ...sampleLessons[0], difficulty: 1 }).valid).toBe(true);
-    expect(validateLesson({ ...sampleLessons[0], difficulty: 5 }).valid).toBe(true);
+  it('validates LessonProgress counter and completion boundaries', () => {
+    expect(validateLessonProgress({ ...lessonProgress(), attempts: 1, successfulCompletions: 2 }).valid).toBe(false);
+    expect(validateLessonProgress({ ...lessonProgress(), status: 'completed', attempts: 1, successfulCompletions: 1, lastCompletedAt: '2026-07-19T01:00:00.000Z' }).valid).toBe(true);
   });
 
   it('rejects zero dog weight and malformed dates', () => {

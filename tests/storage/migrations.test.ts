@@ -3,7 +3,9 @@ import { MigrationError, MigrationManager } from '../../src/storage/migrations/M
 import { InMemoryStorageAdapter } from '../support/InMemoryStorageAdapter';
 import { migration1To2 } from '../../src/storage/migrations/Migration1To2';
 import { migration2To3 } from '../../src/storage/migrations/Migration2To3';
+import { migration3To4 } from '../../src/storage/migrations/Migration3To4';
 import { behaviourSkills } from '../../src/domain/models';
+import { lessonProgress } from '../support/lessonFixtures';
 import { storageKeys } from '../../src/storage/storageKeys';
 import type { StorageAdapter } from '../../src/storage/StorageAdapter';
 
@@ -32,6 +34,16 @@ class ProfileWriteFailingStorage implements StorageAdapter {
   removeItem(key: string): Promise<void> { return this.base.removeItem(key); }
   async setItem<T>(key: string, value: T): Promise<void> {
     if (key === storageKeys.behaviourProfiles) throw new Error('Injected profile migration failure');
+    await this.base.setItem(key, value);
+  }
+}
+
+class LessonProgressWriteFailingStorage implements StorageAdapter {
+  constructor(private readonly base: StorageAdapter) {}
+  getItem<T>(key: string): Promise<T | null> { return this.base.getItem<T>(key); }
+  removeItem(key: string): Promise<void> { return this.base.removeItem(key); }
+  async setItem<T>(key: string, value: T): Promise<void> {
+    if (key === storageKeys.lessonProgress) throw new Error('Injected lesson progress migration failure');
     await this.base.setItem(key, value);
   }
 }
@@ -142,6 +154,44 @@ describe('schema migration 2 to 3', () => {
   it('is idempotent when startup runs again', async () => {
     const storage = await version2Storage();
     const manager = new MigrationManager(storage, storageKeys.schemaVersion, 3, [migration2To3]);
+    await manager.migrateToCurrent();
+    const once = storage.snapshot();
+    await manager.migrateToCurrent();
+    expect(storage.snapshot()).toEqual(once);
+  });
+});
+
+describe('schema migration 3 to 4', () => {
+  async function version3Storage(withPreReleaseProgress = true) {
+    const storage = new InMemoryStorageAdapter();
+    await storage.setItem(storageKeys.schemaVersion, 3);
+    await storage.setItem(storageKeys.owners, [version1Owner]);
+    if (withPreReleaseProgress) await storage.setItem(storageKeys.lessonProgress, [lessonProgress()]);
+    return storage;
+  }
+
+  it('preserves existing records and never creates lesson progress automatically', async () => {
+    const withProgress = await version3Storage();
+    await new MigrationManager(withProgress, storageKeys.schemaVersion, 4, [migration3To4]).migrateToCurrent();
+    await expect(withProgress.getItem(storageKeys.owners)).resolves.toEqual([version1Owner]);
+    await expect(withProgress.getItem(storageKeys.lessonProgress)).resolves.toEqual([lessonProgress()]);
+    await expect(withProgress.getItem(storageKeys.schemaVersion)).resolves.toBe(4);
+
+    const withoutProgress = await version3Storage(false);
+    await new MigrationManager(withoutProgress, storageKeys.schemaVersion, 4, [migration3To4]).migrateToCurrent();
+    await expect(withoutProgress.getItem(storageKeys.lessonProgress)).resolves.toBeNull();
+  });
+
+  it('rolls back the schema update and data when migration writes fail', async () => {
+    const base = await version3Storage();
+    const before = base.snapshot();
+    await expect(new MigrationManager(new LessonProgressWriteFailingStorage(base), storageKeys.schemaVersion, 4, [migration3To4]).migrateToCurrent()).rejects.toBeInstanceOf(MigrationError);
+    expect(base.snapshot()).toEqual(before);
+  });
+
+  it('is idempotent on repeated startup', async () => {
+    const storage = await version3Storage();
+    const manager = new MigrationManager(storage, storageKeys.schemaVersion, 4, [migration3To4]);
     await manager.migrateToCurrent();
     const once = storage.snapshot();
     await manager.migrateToCurrent();

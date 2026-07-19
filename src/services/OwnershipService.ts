@@ -6,6 +6,7 @@ const dogOwnedKeys = [
   storageKeys.dogs,
   storageKeys.behaviourProfiles,
   storageKeys.behaviourAssessments,
+  storageKeys.lessonProgress,
   storageKeys.progress,
   storageKeys.trainingSessions,
   storageKeys.dailyPlans,
@@ -48,6 +49,7 @@ export class OwnershipService {
     const childRepositories = [
       repositories.behaviourProfiles,
       repositories.behaviourAssessments,
+      repositories.lessonProgress,
       repositories.progress,
       repositories.trainingSessions,
       repositories.dailyPlans,

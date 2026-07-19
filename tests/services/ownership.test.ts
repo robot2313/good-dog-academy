@@ -13,6 +13,7 @@ import { createDomainRepositories } from '../../src/services/createDomainReposit
 import { OwnershipService } from '../../src/services/OwnershipService';
 import { StorageTransactionManager } from '../../src/storage/StorageTransactionManager';
 import { InMemoryStorageAdapter } from '../support/InMemoryStorageAdapter';
+import { lessonProgress } from '../support/lessonFixtures';
 
 async function populate(storage: InMemoryStorageAdapter) {
   const repositories = createDomainRepositories(storage);
@@ -20,6 +21,7 @@ async function populate(storage: InMemoryStorageAdapter) {
   await repositories.dogs.save(sampleDog);
   await repositories.behaviourProfiles.save(sampleBehaviourProfile);
   await repositories.behaviourAssessments.save(sampleBehaviourAssessment);
+  await repositories.lessonProgress.save(lessonProgress());
   await repositories.progress.save(sampleProgress);
   await repositories.trainingSessions.save(sampleTrainingSession);
   await repositories.dailyPlans.save(sampleDailyPlan);
@@ -37,6 +39,7 @@ describe('OwnershipService', () => {
     await expect(repositories.dogs.findAll()).resolves.toEqual([]);
     await expect(repositories.behaviourProfiles.findAll()).resolves.toEqual([]);
     await expect(repositories.behaviourAssessments.findAll()).resolves.toEqual([]);
+    await expect(repositories.lessonProgress.findAll()).resolves.toEqual([]);
     await expect(repositories.progress.findAll()).resolves.toEqual([]);
     await expect(repositories.trainingSessions.findAll()).resolves.toEqual([]);
     await expect(repositories.dailyPlans.findAll()).resolves.toEqual([]);
@@ -54,6 +57,7 @@ describe('OwnershipService', () => {
     await expect(repositories.dogs.findAll()).resolves.toEqual([]);
     await expect(repositories.behaviourProfiles.findAll()).resolves.toEqual([]);
     await expect(repositories.behaviourAssessments.findAll()).resolves.toEqual([]);
+    await expect(repositories.lessonProgress.findAll()).resolves.toEqual([]);
     await expect(repositories.progress.findAll()).resolves.toEqual([]);
     await expect(repositories.trainingSessions.findAll()).resolves.toEqual([]);
     await expect(repositories.dailyPlans.findAll()).resolves.toEqual([]);
