@@ -1,6 +1,5 @@
 import {
   sampleBehaviourProfile,
-  sampleDailyPlan,
   sampleDog,
   sampleOwner,
 } from '../../src/development/seed/sampleData';
@@ -13,13 +12,13 @@ describe('DomainTransactionService', () => {
   it('saves an owner setup atomically', async () => {
     const storage = new InMemoryStorageAdapter();
     const service = new DomainTransactionService(new StorageTransactionManager(storage));
-    await service.saveOwnerSetup({ owner: sampleOwner, dog: sampleDog, behaviourProfile: sampleBehaviourProfile, dailyPlan: sampleDailyPlan });
+    await service.saveOwnerSetup({ owner: sampleOwner, dog: sampleDog, behaviourProfile: sampleBehaviourProfile });
 
     const repositories = createDomainRepositories(storage);
     await expect(repositories.owners.findById(sampleOwner.id)).resolves.toEqual(sampleOwner);
     await expect(repositories.dogs.findById(sampleDog.id)).resolves.toEqual(sampleDog);
     await expect(repositories.behaviourProfiles.findById(sampleBehaviourProfile.id)).resolves.toEqual(sampleBehaviourProfile);
-    await expect(repositories.dailyPlans.findById(sampleDailyPlan.id)).resolves.toEqual(sampleDailyPlan);
+    await expect(repositories.dailyPlans.findAll()).resolves.toEqual([]);
   });
 
   it('saves none of the setup when any entity is invalid', async () => {
@@ -27,7 +26,7 @@ describe('DomainTransactionService', () => {
     const service = new DomainTransactionService(new StorageTransactionManager(storage));
     const invalidProfile = { ...sampleBehaviourProfile, energyLevel: 'extreme' } as unknown as typeof sampleBehaviourProfile;
 
-    await expect(service.saveOwnerSetup({ owner: sampleOwner, dog: sampleDog, behaviourProfile: invalidProfile, dailyPlan: sampleDailyPlan })).rejects.toBeInstanceOf(TransactionError);
+    await expect(service.saveOwnerSetup({ owner: sampleOwner, dog: sampleDog, behaviourProfile: invalidProfile })).rejects.toBeInstanceOf(TransactionError);
     expect(storage.snapshot()).toEqual({});
   });
 });

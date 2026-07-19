@@ -1,5 +1,7 @@
 export type RootStackParamList = {
-  Onboarding: undefined;
+  Welcome: undefined;
+  OwnerSetup: undefined;
+  DogSetup: undefined;
   Main: undefined;
 };
 

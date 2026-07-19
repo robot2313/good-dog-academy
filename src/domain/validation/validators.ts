@@ -42,7 +42,9 @@ export function validateOwner(value: unknown): ValidationResult<Owner> {
   const { record, errors } = recordOrError(value);
   if (!record) return { valid: false, errors };
   ['id', 'displayName'].forEach((key) => requireString(record, key, errors));
-  if (!isNonEmptyString(record.email) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(record.email)) errors.push('email must be valid');
+  if (record.email !== null && (!isNonEmptyString(record.email) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(record.email))) errors.push('email must be valid or null');
+  if (!isOneOf(record.trainingExperience, ['beginner', 'intermediate', 'experienced'] as const)) errors.push('trainingExperience is invalid');
+  if (!isOneOf(record.primaryGoal, ['family-companion', 'basic-obedience', 'behaviour-help', 'adventure', 'dog-sport'] as const)) errors.push('primaryGoal is invalid');
   requireIsoDate(record, 'createdAt', errors);
   requireIsoDate(record, 'updatedAt', errors);
   return finishValidation<Owner>(value, errors);
@@ -51,10 +53,19 @@ export function validateOwner(value: unknown): ValidationResult<Owner> {
 export function validateDog(value: unknown): ValidationResult<Dog> {
   const { record, errors } = recordOrError(value);
   if (!record) return { valid: false, errors };
-  ['id', 'ownerId', 'name', 'breed'].forEach((key) => requireString(record, key, errors));
+  ['id', 'ownerId', 'name'].forEach((key) => requireString(record, key, errors));
+  if (typeof record.breedUnknown !== 'boolean') errors.push('breedUnknown must be boolean');
+  if (record.breedUnknown !== true && !isNonEmptyString(record.breed)) errors.push('breed must be provided unless unknown');
+  if (typeof record.birthdayEstimated !== 'boolean') errors.push('birthdayEstimated must be boolean');
   if (record.dateOfBirth !== null && !isDateOnly(record.dateOfBirth)) errors.push('dateOfBirth must be a date or null');
+  if (record.estimatedAgeYears !== null && (!isNonNegativeNumber(record.estimatedAgeYears) || record.estimatedAgeYears <= 0 || record.estimatedAgeYears > 30)) errors.push('estimatedAgeYears must be greater than 0 and at most 30, or null');
+  if (record.birthdayEstimated === true && record.estimatedAgeYears === null) errors.push('estimatedAgeYears is required for an estimated birthday');
+  if (record.birthdayEstimated === false && record.dateOfBirth === null) errors.push('dateOfBirth is required when birthday is not estimated');
   if (!isOneOf(record.sex, ['female', 'male', 'unknown'] as const)) errors.push('sex is invalid');
   if (record.weightKg !== null && (!isNonNegativeNumber(record.weightKg) || record.weightKg === 0)) errors.push('weightKg must be positive or null');
+  if (!isOneOf(record.weightUnit, ['kg', 'lb'] as const)) errors.push('weightUnit is invalid');
+  if (!isOneOf(record.energyLevel, levels)) errors.push('energyLevel is invalid');
+  if (record.photoUri !== null && !isNonEmptyString(record.photoUri)) errors.push('photoUri must be a non-empty string or null');
   requireIsoDate(record, 'createdAt', errors);
   requireIsoDate(record, 'updatedAt', errors);
   return finishValidation<Dog>(value, errors);

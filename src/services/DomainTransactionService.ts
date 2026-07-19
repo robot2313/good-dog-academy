@@ -1,4 +1,4 @@
-import type { BehaviourProfile, DailyPlan, Dog, Owner } from '../domain/models';
+import type { BehaviourProfile, Dog, Owner } from '../domain/models';
 import { StorageTransactionManager } from '../storage/StorageTransactionManager';
 import { storageKeys } from '../storage/storageKeys';
 import { createDomainRepositories } from './createDomainRepositories';
@@ -7,14 +7,12 @@ const ownerSetupKeys = [
   storageKeys.owners,
   storageKeys.dogs,
   storageKeys.behaviourProfiles,
-  storageKeys.dailyPlans,
 ] as const;
 
 export type OwnerSetup = {
   owner: Owner;
   dog: Dog;
   behaviourProfile: BehaviourProfile;
-  dailyPlan: DailyPlan;
 };
 
 export class DomainTransactionService {
@@ -26,7 +24,6 @@ export class DomainTransactionService {
       await repositories.owners.save(setup.owner);
       await repositories.dogs.save(setup.dog);
       await repositories.behaviourProfiles.save(setup.behaviourProfile);
-      await repositories.dailyPlans.save(setup.dailyPlan);
     });
   }
 }

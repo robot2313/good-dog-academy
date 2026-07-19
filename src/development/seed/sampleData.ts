@@ -12,8 +12,8 @@ import type {
 
 const createdAt = '2026-07-19T00:00:00.000Z';
 
-export const sampleOwner: Owner = { id: 'owner-sample-001', email: 'alex.morgan@example.com', displayName: 'Alex Morgan', createdAt, updatedAt: createdAt };
-export const sampleDog: Dog = { id: 'dog-sample-001', ownerId: sampleOwner.id, name: 'Milo', breed: 'Labrador Retriever mix', dateOfBirth: '2024-03-12', sex: 'male', weightKg: 24.5, createdAt, updatedAt: createdAt };
+export const sampleOwner: Owner = { id: 'owner-sample-001', email: 'alex.morgan@example.com', displayName: 'Alex Morgan', trainingExperience: 'intermediate', primaryGoal: 'family-companion', createdAt, updatedAt: createdAt };
+export const sampleDog: Dog = { id: 'dog-sample-001', ownerId: sampleOwner.id, name: 'Milo', breed: 'Labrador Retriever mix', breedUnknown: false, dateOfBirth: '2024-03-12', birthdayEstimated: false, estimatedAgeYears: null, sex: 'male', weightKg: 24.5, weightUnit: 'kg', energyLevel: 'high', photoUri: null, createdAt, updatedAt: createdAt };
 export const sampleBehaviourProfile: BehaviourProfile = { id: 'behaviour-profile-sample-001', dogId: sampleDog.id, energyLevel: 'high', confidenceLevel: 'medium', foodMotivation: 'high', challenges: ['recall', 'lead-pulling'], notes: 'Engages well indoors and needs support around outdoor distractions.', createdAt, updatedAt: createdAt };
 
 export const sampleLessons: Lesson[] = [

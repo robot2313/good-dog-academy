@@ -24,7 +24,7 @@ Domain transaction and ownership services
 
 ## Schema versions
 
-`CURRENT_SCHEMA_VERSION` identifies the storage layout understood by the installed application. At startup, `MigrationManager` reads the stored version. A new database is stamped with the current version. An older database must have a contiguous migration path registered in `src/storage/migrations/index.ts`; migrations run in order and the stored version is updated after each successful step. A newer or invalid version is rejected safely. Version 1 is current, so there are no migrations yet.
+`CURRENT_SCHEMA_VERSION` identifies the storage layout understood by the installed application. At startup, `MigrationManager` reads the stored version. A new database is stamped with the current version. An older database must have a contiguous migration path registered in `src/storage/migrations/index.ts`; migrations run in order and the stored version is updated after each successful step. A newer or invalid version is rejected safely. Version 2 is current. Migration 1→2 adds the Owner onboarding preferences and Dog profile fields introduced in Milestone 3 while preserving existing records.
 
 ## Transactions
 

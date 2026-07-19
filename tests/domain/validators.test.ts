@@ -32,7 +32,7 @@ type Case = {
 
 const cases: Case[] = [
   { name: 'Owner', valid: sampleOwner, validate: validateOwner, requiredField: 'displayName', invalid: { ...sampleOwner, email: 'invalid' }, boundary: { ...sampleOwner, displayName: 'A' } },
-  { name: 'Dog', valid: sampleDog, validate: validateDog, requiredField: 'ownerId', invalid: { ...sampleDog, sex: 'other' }, boundary: { ...sampleDog, weightKg: null, dateOfBirth: null } },
+  { name: 'Dog', valid: sampleDog, validate: validateDog, requiredField: 'ownerId', invalid: { ...sampleDog, sex: 'other' }, boundary: { ...sampleDog, weightKg: null, dateOfBirth: null, birthdayEstimated: true, estimatedAgeYears: 1 } },
   { name: 'BehaviourProfile', valid: sampleBehaviourProfile, validate: validateBehaviourProfile, requiredField: 'dogId', invalid: { ...sampleBehaviourProfile, energyLevel: 'extreme' }, boundary: { ...sampleBehaviourProfile, challenges: [], notes: '' } },
   { name: 'Lesson', valid: sampleLessons[0], validate: validateLesson, requiredField: 'title', invalid: { ...sampleLessons[0], difficulty: 6 }, boundary: { ...sampleLessons[0], difficulty: 5, estimatedMinutes: 1 } },
   { name: 'DailyPlan', valid: sampleDailyPlan, validate: validateDailyPlan, requiredField: 'dogId', invalid: { ...sampleDailyPlan, status: 'unknown' }, boundary: { ...sampleDailyPlan, lessonIds: [] } },
