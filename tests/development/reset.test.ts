@@ -1,5 +1,6 @@
 import {
   sampleAchievement,
+  sampleBehaviourAssessment,
   sampleBehaviourProfile,
   sampleDailyPlan,
   sampleDog,
@@ -23,6 +24,7 @@ async function populate() {
   await repositories.owners.save(sampleOwner);
   await repositories.dogs.save(dog);
   await repositories.behaviourProfiles.save(sampleBehaviourProfile);
+  await repositories.behaviourAssessments.save(sampleBehaviourAssessment);
   await repositories.progress.save(sampleProgress);
   await repositories.trainingSessions.save(sampleTrainingSession);
   await repositories.dailyPlans.save(sampleDailyPlan);
@@ -41,6 +43,7 @@ describe('DevelopmentResetService', () => {
     await expect(repositories.owners.findAll()).resolves.toEqual([]);
     await expect(repositories.dogs.findAll()).resolves.toEqual([]);
     await expect(repositories.behaviourProfiles.findAll()).resolves.toEqual([]);
+    await expect(repositories.behaviourAssessments.findAll()).resolves.toEqual([]);
     await expect(repositories.progress.findAll()).resolves.toEqual([]);
     await expect(repositories.trainingSessions.findAll()).resolves.toEqual([]);
     await expect(repositories.dailyPlans.findAll()).resolves.toEqual([]);

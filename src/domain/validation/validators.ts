@@ -1,5 +1,6 @@
 import type {
   Achievement,
+  BehaviourAssessment,
   BehaviourProfile,
   DailyPlan,
   Dog,
@@ -9,6 +10,7 @@ import type {
   Progress,
   TrainingSession,
 } from '../models';
+import { behaviourSkills } from '../models';
 import {
   finishValidation,
   isDateOnly,
@@ -25,6 +27,16 @@ import {
 const levels = ['low', 'medium', 'high'] as const;
 const challenges = ['recall', 'lead-pulling', 'jumping'] as const;
 const categories = ['foundation', ...challenges] as const;
+const assessmentOptions = ['never', 'rarely', 'sometimes', 'often', 'almost-always', 'not-sure'] as const;
+const optionValues: Record<(typeof assessmentOptions)[number], number | null> = { never: 0, rarely: 1, sometimes: 2, often: 3, 'almost-always': 4, 'not-sure': null };
+
+function isSkillScores(value: unknown): boolean {
+  return isRecord(value) && behaviourSkills.every((skill) => typeof value[skill] === 'number' && [0, 25, 50, 75, 100].includes(value[skill] as number));
+}
+
+function isUnknownSkills(value: unknown): boolean {
+  return Array.isArray(value) && value.every((skill) => isOneOf(skill, behaviourSkills)) && new Set(value).size === value.length;
+}
 
 function requireString(record: Record<string, unknown>, key: string, errors: string[]): void {
   if (!isNonEmptyString(record[key])) errors.push(`${key} must be a non-empty string`);
@@ -76,14 +88,40 @@ export function validateBehaviourProfile(value: unknown): ValidationResult<Behav
   const { record, errors } = recordOrError(value);
   if (!record) return { valid: false, errors };
   ['id', 'dogId'].forEach((key) => requireString(record, key, errors));
-  ['energyLevel', 'confidenceLevel', 'foodMotivation'].forEach((key) => {
+  ['energyLevel', 'foodMotivation'].forEach((key) => {
     if (!isOneOf(record[key], levels)) errors.push(`${key} is invalid`);
   });
   if (!Array.isArray(record.challenges) || !record.challenges.every((item) => isOneOf(item, challenges))) errors.push('challenges contains an invalid value');
+  if (!isSkillScores(record.skillScores)) errors.push('skillScores must contain a valid score for every behaviour skill');
+  if (!isUnknownSkills(record.unknownSkills)) errors.push('unknownSkills contains an invalid or duplicate skill');
+  if (record.assessmentId !== null && !isNonEmptyString(record.assessmentId)) errors.push('assessmentId must be a string or null');
   if (typeof record.notes !== 'string') errors.push('notes must be a string');
   requireIsoDate(record, 'createdAt', errors);
   requireIsoDate(record, 'updatedAt', errors);
   return finishValidation<BehaviourProfile>(value, errors);
+}
+
+export function validateBehaviourAssessment(value: unknown): ValidationResult<BehaviourAssessment> {
+  const { record, errors } = recordOrError(value);
+  if (!record) return { valid: false, errors };
+  ['id', 'ownerId', 'dogId'].forEach((key) => requireString(record, key, errors));
+  if (!Array.isArray(record.responses) || record.responses.length === 0) {
+    errors.push('responses must be a non-empty array');
+  } else {
+    record.responses.forEach((response, index) => {
+      if (!isRecord(response)) { errors.push(`responses[${index}] must be an object`); return; }
+      requireString(response, 'questionId', errors);
+      if (!isOneOf(response.skill, behaviourSkills)) errors.push(`responses[${index}].skill is invalid`);
+      if (!isOneOf(response.selectedOption, assessmentOptions)) errors.push(`responses[${index}].selectedOption is invalid`);
+      if (!isOneOf(response.scoringDirection, ['positive', 'negative'] as const)) errors.push(`responses[${index}].scoringDirection is invalid`);
+      if (isOneOf(response.selectedOption, assessmentOptions) && response.frequencyValue !== optionValues[response.selectedOption]) errors.push(`responses[${index}].frequencyValue does not match selectedOption`);
+    });
+  }
+  if (!isSkillScores(record.calculatedScores)) errors.push('calculatedScores must contain every behaviour skill');
+  if (!isUnknownSkills(record.unknownSkills)) errors.push('unknownSkills contains an invalid or duplicate skill');
+  requireIsoDate(record, 'completedAt', errors);
+  if (record.schemaVersion !== 1) errors.push('schemaVersion must be 1');
+  return finishValidation<BehaviourAssessment>(value, errors);
 }
 
 export function validateLesson(value: unknown): ValidationResult<Lesson> {

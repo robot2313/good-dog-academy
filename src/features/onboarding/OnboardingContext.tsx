@@ -27,6 +27,7 @@ type OnboardingContextValue = {
   restartSavedSetup: () => Promise<boolean>;
   completeSetup: () => Promise<boolean>;
   resetAfterDevelopmentClear: () => void;
+  refreshApplicationStatus: () => Promise<void>;
 };
 
 const OnboardingContext = createContext<OnboardingContextValue | undefined>(undefined);
@@ -43,11 +44,15 @@ export function OnboardingProvider({ children }: PropsWithChildren): React.JSX.E
 
   const applyCompleteStatus = useCallback((nextStatus: OnboardingStatus) => {
     setStatus(nextStatus);
-    if (nextStatus.state === 'complete') {
+    if (nextStatus.state === 'complete' || nextStatus.state === 'assessment-required' || nextStatus.state === 'assessment-corrupt') {
       setDogName(nextStatus.dog.name);
       setBreed(nextStatus.dog.breedUnknown ? 'Unknown' : nextStatus.dog.breed);
     }
   }, [setBreed, setDogName]);
+
+  const refreshApplicationStatus = useCallback(async () => {
+    applyCompleteStatus(await statusService.getStatus());
+  }, [applyCompleteStatus]);
 
   useEffect(() => {
     void initializeApplication()
@@ -78,8 +83,8 @@ export function OnboardingProvider({ children }: PropsWithChildren): React.JSX.E
     if (!validateOwnerForm(ownerForm).valid || !validateDogForm(dogForm).valid) return false;
     setSaving(true);
     try {
-      const { owner, dog } = await onboardingCompletionService.complete(ownerForm, dogForm);
-      applyCompleteStatus({ state: 'complete', hasSavedData: true, owner, dog });
+      const { owner, dog, behaviourProfile } = await onboardingCompletionService.complete(ownerForm, dogForm);
+      applyCompleteStatus({ state: 'assessment-required', hasSavedData: true, owner, dog, behaviourProfile });
       return true;
     } catch (cause) {
       const error = new InitializationError(cause instanceof DogPhotoStorageError ? 'DOG_PHOTO_PERSIST_FAILED' : 'ONBOARDING_SAVE_FAILED', { phase: 'onboarding-completion' }, true, { cause });
@@ -100,7 +105,7 @@ export function OnboardingProvider({ children }: PropsWithChildren): React.JSX.E
     setStatus({ state: 'not-started', hasSavedData: false });
   }, [resetAppState]);
 
-  const value = useMemo(() => ({ status, loading, ownerForm, dogForm, saveError, recoveryError, saving, setOwnerForm, setDogForm, restartSavedSetup, completeSetup, resetAfterDevelopmentClear }), [completeSetup, dogForm, loading, ownerForm, recoveryError, resetAfterDevelopmentClear, restartSavedSetup, saveError, saving, status]);
+  const value = useMemo(() => ({ status, loading, ownerForm, dogForm, saveError, recoveryError, saving, setOwnerForm, setDogForm, restartSavedSetup, completeSetup, resetAfterDevelopmentClear, refreshApplicationStatus }), [completeSetup, dogForm, loading, ownerForm, recoveryError, refreshApplicationStatus, resetAfterDevelopmentClear, restartSavedSetup, saveError, saving, status]);
   return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;
 }
 

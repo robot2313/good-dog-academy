@@ -3,6 +3,8 @@ import type { DomainTransactionService } from '../../services/DomainTransactionS
 import type { DogFormData, OwnerFormData } from './types';
 import { dogFromForm, ownerFromForm, validateDogForm, validateOwnerForm } from './validation';
 import type { DogPhotoStorage } from './photo/DogPhotoStorage';
+import { createNeutralSkillScores } from '../../domain/behaviour/skillScores';
+import { behaviourSkills } from '../../domain/models';
 
 export type CompletedOnboarding = { owner: Owner; dog: Dog; behaviourProfile: BehaviourProfile };
 
@@ -25,9 +27,11 @@ export class OnboardingCompletionService {
       id: this.createId('behaviour-profile'),
       dogId: dog.id,
       energyLevel: dog.energyLevel,
-      confidenceLevel: 'medium',
       foodMotivation: 'medium',
       challenges: [],
+      skillScores: createNeutralSkillScores(),
+      unknownSkills: [...behaviourSkills],
+      assessmentId: null,
       notes: '',
       createdAt: timestamp,
       updatedAt: timestamp,

@@ -5,6 +5,7 @@ import { createDomainRepositories } from './createDomainRepositories';
 const dogOwnedKeys = [
   storageKeys.dogs,
   storageKeys.behaviourProfiles,
+  storageKeys.behaviourAssessments,
   storageKeys.progress,
   storageKeys.trainingSessions,
   storageKeys.dailyPlans,
@@ -46,6 +47,7 @@ export class OwnershipService {
   ): Promise<void> {
     const childRepositories = [
       repositories.behaviourProfiles,
+      repositories.behaviourAssessments,
       repositories.progress,
       repositories.trainingSessions,
       repositories.dailyPlans,

@@ -1,4 +1,4 @@
-import { sampleBehaviourProfile, sampleDog, sampleOwner } from '../../src/development/seed/sampleData';
+import { sampleBehaviourAssessment, sampleBehaviourProfile, sampleDog, sampleOwner } from '../../src/development/seed/sampleData';
 import { createOnboardingStatusService } from '../../src/features/onboarding/OnboardingStatusService';
 import { createDomainRepositories } from '../../src/services/createDomainRepositories';
 import { storageKeys } from '../../src/storage/storageKeys';
@@ -15,6 +15,7 @@ describe('OnboardingStatusService', () => {
     await repositories.owners.save(sampleOwner);
     await repositories.dogs.save(sampleDog);
     await repositories.behaviourProfiles.save(sampleBehaviourProfile);
+    await repositories.behaviourAssessments.save(sampleBehaviourAssessment);
     await expect(createOnboardingStatusService(storage).getStatus()).resolves.toMatchObject({ state: 'complete', owner: sampleOwner, dog: sampleDog });
   });
 
@@ -22,6 +23,35 @@ describe('OnboardingStatusService', () => {
     const storage = new InMemoryStorageAdapter();
     await createDomainRepositories(storage).owners.save(sampleOwner);
     await expect(createOnboardingStatusService(storage).getStatus()).resolves.toMatchObject({ state: 'incomplete', hasSavedData: true });
+  });
+
+  it('requires assessment when setup is complete but no matching assessment exists', async () => {
+    const storage = new InMemoryStorageAdapter();
+    const repositories = createDomainRepositories(storage);
+    await repositories.owners.save(sampleOwner);
+    await repositories.dogs.save(sampleDog);
+    await repositories.behaviourProfiles.save({ ...sampleBehaviourProfile, assessmentId: null });
+    await expect(createOnboardingStatusService(storage).getStatus()).resolves.toMatchObject({ state: 'assessment-required', owner: sampleOwner, dog: sampleDog });
+  });
+
+  it('does not accept an assessment with mismatched ownership', async () => {
+    const storage = new InMemoryStorageAdapter();
+    const repositories = createDomainRepositories(storage);
+    await repositories.owners.save(sampleOwner);
+    await repositories.dogs.save(sampleDog);
+    await repositories.behaviourProfiles.save(sampleBehaviourProfile);
+    await repositories.behaviourAssessments.save({ ...sampleBehaviourAssessment, ownerId: 'different-owner' });
+    await expect(createOnboardingStatusService(storage).getStatus()).resolves.toMatchObject({ state: 'assessment-required' });
+  });
+
+  it('reports corrupt assessment data separately while preserving valid setup', async () => {
+    const storage = new InMemoryStorageAdapter();
+    const repositories = createDomainRepositories(storage);
+    await repositories.owners.save(sampleOwner);
+    await repositories.dogs.save(sampleDog);
+    await repositories.behaviourProfiles.save(sampleBehaviourProfile);
+    await storage.setItem(storageKeys.behaviourAssessments, [{ id: null }]);
+    await expect(createOnboardingStatusService(storage).getStatus()).resolves.toMatchObject({ state: 'assessment-corrupt', owner: sampleOwner, dog: sampleDog });
   });
 
   it('reports corrupt persisted records safely', async () => {

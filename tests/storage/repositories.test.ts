@@ -1,5 +1,6 @@
 import {
   sampleAchievement,
+  sampleBehaviourAssessment,
   sampleBehaviourProfile,
   sampleDailyPlan,
   sampleDog,
@@ -25,6 +26,7 @@ const cases: RepositoryCase[] = [
   { name: 'Owner', entity: sampleOwner, update: (value) => ({ ...value, displayName: 'Updated Owner' }), select: (r) => r.owners },
   { name: 'Dog', entity: sampleDog, update: (value) => ({ ...value, name: 'Updated Dog' }), select: (r) => r.dogs },
   { name: 'BehaviourProfile', entity: sampleBehaviourProfile, update: (value) => ({ ...value, notes: 'Updated notes' }), select: (r) => r.behaviourProfiles },
+  { name: 'BehaviourAssessment', entity: sampleBehaviourAssessment, update: (value) => ({ ...value, completedAt: '2026-07-19T01:00:00.000Z' }), select: (r) => r.behaviourAssessments },
   { name: 'Lesson', entity: sampleLessons[0], update: (value) => ({ ...value, title: 'Updated Lesson' }), select: (r) => r.lessons },
   { name: 'DailyPlan', entity: sampleDailyPlan, update: (value) => ({ ...value, status: 'completed' }), select: (r) => r.dailyPlans },
   { name: 'TrainingSession', entity: sampleTrainingSession, update: (value) => ({ ...value, notes: 'Updated notes' }), select: (r) => r.trainingSessions },

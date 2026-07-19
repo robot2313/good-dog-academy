@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, render } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 
 import App from '../../App';
-import { sampleBehaviourProfile, sampleDog, sampleOwner } from '../../src/development/seed/sampleData';
+import { sampleBehaviourAssessment, sampleBehaviourProfile, sampleDog, sampleOwner } from '../../src/development/seed/sampleData';
 import { appStorage } from '../../src/services/appStorage';
 import { createDomainRepositories } from '../../src/services/createDomainRepositories';
 
@@ -19,6 +19,7 @@ describe('development reset routing', () => {
     await repositories.owners.save(sampleOwner);
     await repositories.dogs.save(sampleDog);
     await repositories.behaviourProfiles.save(sampleBehaviourProfile);
+    await repositories.behaviourAssessments.save(sampleBehaviourAssessment);
 
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
     const view = render(<App />);
@@ -45,5 +46,6 @@ describe('development reset routing', () => {
     await expect(repositories.owners.findAll()).resolves.toEqual([]);
     await expect(repositories.dogs.findAll()).resolves.toEqual([]);
     await expect(repositories.behaviourProfiles.findAll()).resolves.toEqual([]);
+    await expect(repositories.behaviourAssessments.findAll()).resolves.toEqual([]);
   });
 });

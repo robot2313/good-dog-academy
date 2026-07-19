@@ -5,6 +5,8 @@ export type InitializationErrorCode =
   | 'ONBOARDING_RECOVERY_FAILED'
   | 'DOG_PHOTO_PERSIST_FAILED'
   | 'DEVELOPMENT_RESET_FAILED'
+  | 'BEHAVIOUR_ASSESSMENT_SAVE_FAILED'
+  | 'BEHAVIOUR_ASSESSMENT_RECOVERY_FAILED'
   | 'UNKNOWN_INITIALIZATION_ERROR';
 
 const messages: Record<InitializationErrorCode, string> = {
@@ -14,6 +16,8 @@ const messages: Record<InitializationErrorCode, string> = {
   ONBOARDING_RECOVERY_FAILED: 'We couldn’t restart setup safely. Your saved data has not been intentionally changed.',
   DOG_PHOTO_PERSIST_FAILED: 'We couldn’t save that photo. Try another image or remove the optional photo and continue.',
   DEVELOPMENT_RESET_FAILED: 'App data could not be reset safely. No navigation change was made.',
+  BEHAVIOUR_ASSESSMENT_SAVE_FAILED: 'We couldnâ€™t save the assessment. Your answers are still here, so please try again.',
+  BEHAVIOUR_ASSESSMENT_RECOVERY_FAILED: 'We couldnâ€™t safely restart the assessment. Your setup data has not been deleted.',
   UNKNOWN_INITIALIZATION_ERROR: 'The application could not finish initialising.',
 };
 

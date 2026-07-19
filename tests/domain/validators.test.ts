@@ -1,5 +1,6 @@
 import {
   sampleAchievement,
+  sampleBehaviourAssessment,
   sampleBehaviourProfile,
   sampleDailyPlan,
   sampleDog,
@@ -11,6 +12,7 @@ import {
 } from '../../src/development/seed/sampleData';
 import {
   validateAchievement,
+  validateBehaviourAssessment,
   validateBehaviourProfile,
   validateDailyPlan,
   validateDog,
@@ -34,6 +36,7 @@ const cases: Case[] = [
   { name: 'Owner', valid: sampleOwner, validate: validateOwner, requiredField: 'displayName', invalid: { ...sampleOwner, email: 'invalid' }, boundary: { ...sampleOwner, displayName: 'A' } },
   { name: 'Dog', valid: sampleDog, validate: validateDog, requiredField: 'ownerId', invalid: { ...sampleDog, sex: 'other' }, boundary: { ...sampleDog, weightKg: null, dateOfBirth: null, birthdayEstimated: true, estimatedAgeYears: 1 } },
   { name: 'BehaviourProfile', valid: sampleBehaviourProfile, validate: validateBehaviourProfile, requiredField: 'dogId', invalid: { ...sampleBehaviourProfile, energyLevel: 'extreme' }, boundary: { ...sampleBehaviourProfile, challenges: [], notes: '' } },
+  { name: 'BehaviourAssessment', valid: sampleBehaviourAssessment, validate: validateBehaviourAssessment, requiredField: 'ownerId', invalid: { ...sampleBehaviourAssessment, schemaVersion: 2 }, boundary: { ...sampleBehaviourAssessment, unknownSkills: [], calculatedScores: { ...sampleBehaviourAssessment.calculatedScores, recall: 0 } } },
   { name: 'Lesson', valid: sampleLessons[0], validate: validateLesson, requiredField: 'title', invalid: { ...sampleLessons[0], difficulty: 6 }, boundary: { ...sampleLessons[0], difficulty: 5, estimatedMinutes: 1 } },
   { name: 'DailyPlan', valid: sampleDailyPlan, validate: validateDailyPlan, requiredField: 'dogId', invalid: { ...sampleDailyPlan, status: 'unknown' }, boundary: { ...sampleDailyPlan, lessonIds: [] } },
   { name: 'TrainingSession', valid: sampleTrainingSession, validate: validateTrainingSession, requiredField: 'lessonId', invalid: { ...sampleTrainingSession, outcome: 'mixed' }, boundary: { ...sampleTrainingSession, dailyPlanId: null, completedAt: null, outcome: null, durationMinutes: 0 } },
@@ -71,5 +74,11 @@ describe('additional validator boundaries', () => {
   it('rejects invalid challenge and non-integer progress values', () => {
     expect(validateBehaviourProfile({ ...sampleBehaviourProfile, challenges: ['barking'] }).valid).toBe(false);
     expect(validateProgress({ ...sampleProgress, totalTrainingMinutes: 1.5 }).valid).toBe(false);
+  });
+
+  it('rejects invalid assessment response options and inconsistent raw frequency values', () => {
+    const [response, ...rest] = sampleBehaviourAssessment.responses;
+    expect(validateBehaviourAssessment({ ...sampleBehaviourAssessment, responses: [{ ...response, selectedOption: 'invalid' }, ...rest] }).valid).toBe(false);
+    expect(validateBehaviourAssessment({ ...sampleBehaviourAssessment, responses: [{ ...response, frequencyValue: 4 }, ...rest] }).valid).toBe(false);
   });
 });

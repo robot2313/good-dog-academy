@@ -1,4 +1,6 @@
 export type { Achievement } from './Achievement';
+export { behaviourSkills } from './BehaviourAssessment';
+export type { AssessmentOption, AssessmentResponse, BehaviourAssessment, BehaviourSkill, ScoringDirection } from './BehaviourAssessment';
 export type { BehaviourChallenge, BehaviourLevel, BehaviourProfile } from './BehaviourProfile';
 export type { DailyPlan, DailyPlanStatus } from './DailyPlan';
 export type { Dog, DogEnergyLevel, DogSex, WeightUnit } from './Dog';

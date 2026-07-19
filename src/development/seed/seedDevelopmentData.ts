@@ -5,6 +5,7 @@ import { createDomainRepositories } from '../../services/createDomainRepositorie
 import {
   sampleAchievement,
   sampleBehaviourProfile,
+  sampleBehaviourAssessment,
   sampleDailyPlan,
   sampleDog,
   sampleLessons,
@@ -14,12 +15,13 @@ import {
   sampleTrainingSession,
 } from './sampleData';
 
-const developmentSeedVersion = 1;
+const developmentSeedVersion = 2;
 const seedKeys = [
   storageKeys.developmentSeedVersion,
   storageKeys.owners,
   storageKeys.dogs,
   storageKeys.behaviourProfiles,
+  storageKeys.behaviourAssessments,
   storageKeys.lessons,
   storageKeys.dailyPlans,
   storageKeys.trainingSessions,
@@ -38,6 +40,7 @@ export async function seedDevelopmentData(): Promise<void> {
     await repositories.owners.save(sampleOwner);
     await repositories.dogs.save(sampleDog);
     await repositories.behaviourProfiles.save(sampleBehaviourProfile);
+    await repositories.behaviourAssessments.save(sampleBehaviourAssessment);
     for (const lesson of sampleLessons) await repositories.lessons.save(lesson);
     await repositories.dailyPlans.save(sampleDailyPlan);
     await repositories.trainingSessions.save(sampleTrainingSession);

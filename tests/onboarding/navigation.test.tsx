@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react-native';
 
 import App from '../../App';
-import { sampleBehaviourProfile, sampleDog, sampleOwner } from '../../src/development/seed/sampleData';
+import { sampleBehaviourAssessment, sampleBehaviourProfile, sampleDog, sampleOwner } from '../../src/development/seed/sampleData';
 import { appStorage } from '../../src/services/appStorage';
 import { createDomainRepositories } from '../../src/services/createDomainRepositories';
 
@@ -58,6 +58,7 @@ describe('onboarding navigation', () => {
     await repositories.owners.save(sampleOwner);
     await repositories.dogs.save(sampleDog);
     await repositories.behaviourProfiles.save(sampleBehaviourProfile);
+    await repositories.behaviourAssessments.save(sampleBehaviourAssessment);
 
     const view = await render(<App />);
     expect(await view.findByText('One focused session today.')).toBeTruthy();

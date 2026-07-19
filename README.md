@@ -1,6 +1,6 @@
 # Good Dog Academy
 
-Good Dog Academy is an Expo React Native dog-training application focused on personalised, adaptive training. The current build includes a production onboarding and dog-profile flow backed by a validated local domain and persistence architecture.
+Good Dog Academy is an Expo React Native dog-training application focused on personalised, adaptive training. The current build includes production onboarding, a dog profile, and a deterministic behaviour assessment backed by a validated local domain and persistence architecture.
 
 ## Current status
 
@@ -11,10 +11,10 @@ Completed milestones:
 - **Milestone 2.1 — Domain hardening:** schema migrations, staged transactions, rollback, ownership deletion rules, structured initialization errors, development-only seed separation, and comprehensive domain/repository tests.
 - **Milestone 3 — Onboarding and dog profile:** Welcome → Owner Setup → Dog Setup → existing main application, with validated forms, optional dog photo, reliable persisted completion detection, and atomic Owner/Dog/BehaviourProfile creation.
 - **Milestone 3.1 — Onboarding integrity:** app-managed persistent dog photos, native localized birthday selection, confirmed corrupt-data recovery, atomic migration 1→2 coverage, and legacy onboarding cleanup.
+- **Milestone 4 — Behaviour assessment:** an accessible five-screen assessment covering ten skills, deterministic scoring, raw-response history, atomic BehaviourAssessment/BehaviourProfile persistence, schema migration 2→3, safety messaging, and relationship-aware startup routing.
 
 Not implemented yet:
 
-- Behaviour assessment
 - Adaptive recommendations
 - Daily plan generation
 - Production lesson flows
@@ -89,9 +89,11 @@ App.tsx
 └── providers
     ├── application presentation state
     └── onboarding session state
-        └── navigation
-            ├── onboarding stack
-            └── existing bottom tabs
+        └── assessment session state
+            └── navigation
+                ├── onboarding stack
+                ├── behaviour assessment stack
+                └── existing bottom tabs
 
 src/
 ├── components/       Shared accessible UI components
@@ -102,6 +104,7 @@ src/
 │   ├── repositories/ Storage contracts
 │   └── validation/   Runtime boundary validation
 ├── features/
+│   ├── assessment/   Immutable questions, scoring, screens, state, and atomic completion
 │   └── onboarding/   Forms, screens, validation, status, and completion service
 ├── hooks/            Presentation hooks
 ├── navigation/       Root stack and bottom-tab configuration
@@ -115,6 +118,7 @@ src/
 └── utils/            IDs and calculations
 
 tests/
+├── assessment/       Scoring, catalogue, navigation, recovery, and atomic completion tests
 ├── domain/           Domain validator tests
 ├── onboarding/       Form, navigation, status, and completion tests
 ├── services/         Transaction and ownership tests
@@ -130,7 +134,13 @@ Onboarding completion stages Owner, Dog, and initial BehaviourProfile writes in 
 
 Selected dog photos remain temporary during form entry. At completion they are copied into the app document directory and only the managed URI is stored. Failed onboarding transactions remove the managed copy. Exact birthdays use the platform-native date picker with future dates disabled; estimated age remains available.
 
-The app enters the main tabs only when persisted Owner, Dog, and BehaviourProfile records exist, validate successfully, and have valid ownership relationships. Missing, incomplete, or corrupt records do not count as completed onboarding.
+After onboarding, the app routes into the Behaviour Assessment until a valid BehaviourAssessment belongs to the current Owner and Dog and is referenced by the Dog's BehaviourProfile. Only then does it enter the main tabs. Startup derives this state from validated records and ownership relationships rather than a completion boolean.
+
+The bundled assessment catalogue is immutable application content, not AsyncStorage data. It covers Recall, Loose Lead Walking, Jumping, Barking, Chewing, Reactivity, House Training, Confidence, Impulse Control, and Focus. Positive questions score `frequencyValue × 25`; negative questions score `(4 - frequencyValue) × 25`. “Not sure / Not observed” stores the raw response, records the skill in `unknownSkills`, and assigns a neutral unmeasured starting value of 50.
+
+Assessment answers remain in memory until completion. Completion validates all ten responses, stores a new raw BehaviourAssessment without deleting history, and updates the BehaviourProfile inside one staged transaction. A failure commits neither record and keeps the answers available for retry. Severe reactivity answers show calm, non-diagnostic safety guidance and recommend qualified force-free professional or veterinary help when injury is possible.
+
+Corrupt assessment data has a separate recoverable startup state. The app explains the issue and requires confirmation before clearing only assessment data; valid Owner, Dog, and BehaviourProfile setup is retained.
 
 Incomplete or corrupt onboarding data is never silently cleared. The Welcome screen explains the problem and requires a separate confirmation before ownership-aware, transactional recovery runs.
 

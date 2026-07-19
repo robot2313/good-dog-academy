@@ -1,5 +1,6 @@
 import type {
   Achievement,
+  BehaviourAssessment,
   BehaviourProfile,
   DailyPlan,
   Dog,
@@ -9,12 +10,20 @@ import type {
   Progress,
   TrainingSession,
 } from '../../domain/models';
+import { calculateAssessmentScores, type AssessmentAnswers } from '../../features/assessment/scoring';
 
 const createdAt = '2026-07-19T00:00:00.000Z';
 
 export const sampleOwner: Owner = { id: 'owner-sample-001', email: 'alex.morgan@example.com', displayName: 'Alex Morgan', trainingExperience: 'intermediate', primaryGoal: 'family-companion', createdAt, updatedAt: createdAt };
 export const sampleDog: Dog = { id: 'dog-sample-001', ownerId: sampleOwner.id, name: 'Milo', breed: 'Labrador Retriever mix', breedUnknown: false, dateOfBirth: '2024-03-12', birthdayEstimated: false, estimatedAgeYears: null, sex: 'male', weightKg: 24.5, weightUnit: 'kg', energyLevel: 'high', photoUri: null, createdAt, updatedAt: createdAt };
-export const sampleBehaviourProfile: BehaviourProfile = { id: 'behaviour-profile-sample-001', dogId: sampleDog.id, energyLevel: 'high', confidenceLevel: 'medium', foodMotivation: 'high', challenges: ['recall', 'lead-pulling'], notes: 'Engages well indoors and needs support around outdoor distractions.', createdAt, updatedAt: createdAt };
+const sampleAssessmentAnswers = {
+  'recall-familiar': 'sometimes', 'lead-pulling': 'often', 'focus-handler': 'often',
+  'jumping-greetings': 'sometimes', 'barking-home': 'rarely', 'chewing-items': 'never',
+  'house-training': 'almost-always', reactivity: 'rarely', 'confidence-new': 'often', 'impulse-control': 'sometimes',
+} satisfies AssessmentAnswers;
+const sampleAssessmentResult = calculateAssessmentScores(sampleAssessmentAnswers);
+export const sampleBehaviourAssessment: BehaviourAssessment = { id: 'behaviour-assessment-sample-001', ownerId: sampleOwner.id, dogId: sampleDog.id, responses: sampleAssessmentResult.responses, calculatedScores: sampleAssessmentResult.calculatedScores, unknownSkills: sampleAssessmentResult.unknownSkills, completedAt: createdAt, schemaVersion: 1 };
+export const sampleBehaviourProfile: BehaviourProfile = { id: 'behaviour-profile-sample-001', dogId: sampleDog.id, energyLevel: 'high', foodMotivation: 'high', challenges: ['recall', 'lead-pulling'], skillScores: sampleAssessmentResult.calculatedScores, unknownSkills: sampleAssessmentResult.unknownSkills, assessmentId: sampleBehaviourAssessment.id, notes: 'Engages well indoors and needs support around outdoor distractions.', createdAt, updatedAt: createdAt };
 
 export const sampleLessons: Lesson[] = [
   { id: 'lesson-marker-word-001', slug: 'build-a-marker-word', title: 'Build a Marker Word', description: 'Teach a clear marker that identifies the exact behaviour earning a reward.', category: 'foundation', difficulty: 1, estimatedMinutes: 8, steps: ['Choose a short marker word.', 'Say the marker and deliver a reward.', 'Repeat in a quiet room.'], successCriteria: ['The dog anticipates a reward after hearing the marker.'], published: true, createdAt, updatedAt: createdAt },

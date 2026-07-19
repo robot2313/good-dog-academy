@@ -2,6 +2,8 @@ import type { Migration } from '../../src/storage/migrations/Migration';
 import { MigrationError, MigrationManager } from '../../src/storage/migrations/MigrationManager';
 import { InMemoryStorageAdapter } from '../support/InMemoryStorageAdapter';
 import { migration1To2 } from '../../src/storage/migrations/Migration1To2';
+import { migration2To3 } from '../../src/storage/migrations/Migration2To3';
+import { behaviourSkills } from '../../src/domain/models';
 import { storageKeys } from '../../src/storage/storageKeys';
 import type { StorageAdapter } from '../../src/storage/StorageAdapter';
 
@@ -20,6 +22,16 @@ class DogWriteFailingStorage implements StorageAdapter {
   removeItem(key: string): Promise<void> { return this.base.removeItem(key); }
   async setItem<T>(key: string, value: T): Promise<void> {
     if (key === storageKeys.dogs) throw new Error('Injected dog migration failure');
+    await this.base.setItem(key, value);
+  }
+}
+
+class ProfileWriteFailingStorage implements StorageAdapter {
+  constructor(private readonly base: StorageAdapter) {}
+  getItem<T>(key: string): Promise<T | null> { return this.base.getItem<T>(key); }
+  removeItem(key: string): Promise<void> { return this.base.removeItem(key); }
+  async setItem<T>(key: string, value: T): Promise<void> {
+    if (key === storageKeys.behaviourProfiles) throw new Error('Injected profile migration failure');
     await this.base.setItem(key, value);
   }
 }
@@ -93,6 +105,43 @@ describe('schema migration 1 to 2', () => {
   it('is safe and idempotent when startup runs again', async () => {
     const storage = await version1Storage();
     const manager = new MigrationManager(storage, storageKeys.schemaVersion, 2, [migration1To2]);
+    await manager.migrateToCurrent();
+    const once = storage.snapshot();
+    await manager.migrateToCurrent();
+    expect(storage.snapshot()).toEqual(once);
+  });
+});
+
+describe('schema migration 2 to 3', () => {
+  const version2Profile = { id: 'profile-v2', dogId: 'dog-v1', energyLevel: 'high', confidenceLevel: 'medium', foodMotivation: 'high', challenges: ['recall'], notes: 'Preserve this', createdAt: '2025-01-01T00:00:00.000Z', updatedAt: '2025-01-02T00:00:00.000Z' };
+  async function version2Storage() {
+    const storage = new InMemoryStorageAdapter();
+    await storage.setItem(storageKeys.schemaVersion, 2);
+    await storage.setItem(storageKeys.behaviourProfiles, [version2Profile]);
+    return storage;
+  }
+
+  it('preserves profile values, removes the obsolete field, and applies neutral assessment defaults', async () => {
+    const storage = await version2Storage();
+    await new MigrationManager(storage, storageKeys.schemaVersion, 3, [migration2To3]).migrateToCurrent();
+    const [profile] = await storage.getItem<Array<Record<string, unknown>>>(storageKeys.behaviourProfiles) ?? [];
+    expect(profile).toMatchObject({ id: version2Profile.id, dogId: version2Profile.dogId, energyLevel: 'high', foodMotivation: 'high', challenges: ['recall'], notes: 'Preserve this', assessmentId: null });
+    expect(profile).not.toHaveProperty('confidenceLevel');
+    expect(profile.unknownSkills).toEqual(behaviourSkills);
+    expect(Object.values(profile.skillScores as Record<string, number>)).toEqual(Array(10).fill(50));
+    await expect(storage.getItem(storageKeys.schemaVersion)).resolves.toBe(3);
+  });
+
+  it('does not leave a partial migration after a failed write', async () => {
+    const base = await version2Storage();
+    const before = base.snapshot();
+    await expect(new MigrationManager(new ProfileWriteFailingStorage(base), storageKeys.schemaVersion, 3, [migration2To3]).migrateToCurrent()).rejects.toBeInstanceOf(MigrationError);
+    expect(base.snapshot()).toEqual(before);
+  });
+
+  it('is idempotent when startup runs again', async () => {
+    const storage = await version2Storage();
+    const manager = new MigrationManager(storage, storageKeys.schemaVersion, 3, [migration2To3]);
     await manager.migrateToCurrent();
     const once = storage.snapshot();
     await manager.migrateToCurrent();

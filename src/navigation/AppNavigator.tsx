@@ -14,6 +14,9 @@ import { ProgressScreen } from '../screens/ProgressScreen';
 import { TodayScreen } from '../screens/TodayScreen';
 import type { MainTabParamList, RootStackParamList } from '../types/navigation';
 import { MainTabBar } from './MainTabBar';
+import { AssessmentIntroScreen } from '../features/assessment/screens/AssessmentIntroScreen';
+import { AssessmentResultsScreen } from '../features/assessment/screens/AssessmentResultsScreen';
+import { AssessmentSectionScreen } from '../features/assessment/screens/AssessmentSectionScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -37,8 +40,14 @@ export function AppNavigator(): React.JSX.Element {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {status.state === 'complete'
-          ? <Stack.Screen name="Main" component={MainTabs} />
+        {status.state === 'complete' ? <Stack.Screen name="Main" component={MainTabs} />
+          : status.state === 'assessment-required' || status.state === 'assessment-corrupt' ? <>
+              <Stack.Screen name="AssessmentIntro" component={AssessmentIntroScreen} />
+              <Stack.Screen name="AssessmentEveryday">{(props) => <AssessmentSectionScreen {...props} section="everyday" />}</Stack.Screen>
+              <Stack.Screen name="AssessmentHome">{(props) => <AssessmentSectionScreen {...props} section="home" />}</Stack.Screen>
+              <Stack.Screen name="AssessmentControl">{(props) => <AssessmentSectionScreen {...props} section="control" />}</Stack.Screen>
+              <Stack.Screen name="AssessmentResults" component={AssessmentResultsScreen} />
+            </>
           : <>
               <Stack.Screen name="Welcome" component={WelcomeScreen} />
               <Stack.Screen name="OwnerSetup" component={OwnerSetupScreen} />

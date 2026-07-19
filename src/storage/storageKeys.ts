@@ -4,6 +4,7 @@ export const storageKeys = {
   owners: '@good-dog-academy/domain/owners',
   dogs: '@good-dog-academy/domain/dogs',
   behaviourProfiles: '@good-dog-academy/domain/behaviour-profiles',
+  behaviourAssessments: '@good-dog-academy/domain/behaviour-assessments',
   lessons: '@good-dog-academy/domain/lessons',
   dailyPlans: '@good-dog-academy/domain/daily-plans',
   trainingSessions: '@good-dog-academy/domain/training-sessions',

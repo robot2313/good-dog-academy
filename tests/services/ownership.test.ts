@@ -1,5 +1,6 @@
 import {
   sampleAchievement,
+  sampleBehaviourAssessment,
   sampleBehaviourProfile,
   sampleDailyPlan,
   sampleDog,
@@ -18,6 +19,7 @@ async function populate(storage: InMemoryStorageAdapter) {
   await repositories.owners.save(sampleOwner);
   await repositories.dogs.save(sampleDog);
   await repositories.behaviourProfiles.save(sampleBehaviourProfile);
+  await repositories.behaviourAssessments.save(sampleBehaviourAssessment);
   await repositories.progress.save(sampleProgress);
   await repositories.trainingSessions.save(sampleTrainingSession);
   await repositories.dailyPlans.save(sampleDailyPlan);
@@ -34,6 +36,7 @@ describe('OwnershipService', () => {
 
     await expect(repositories.dogs.findAll()).resolves.toEqual([]);
     await expect(repositories.behaviourProfiles.findAll()).resolves.toEqual([]);
+    await expect(repositories.behaviourAssessments.findAll()).resolves.toEqual([]);
     await expect(repositories.progress.findAll()).resolves.toEqual([]);
     await expect(repositories.trainingSessions.findAll()).resolves.toEqual([]);
     await expect(repositories.dailyPlans.findAll()).resolves.toEqual([]);
@@ -50,6 +53,7 @@ describe('OwnershipService', () => {
     await expect(repositories.notificationSettings.findAll()).resolves.toEqual([]);
     await expect(repositories.dogs.findAll()).resolves.toEqual([]);
     await expect(repositories.behaviourProfiles.findAll()).resolves.toEqual([]);
+    await expect(repositories.behaviourAssessments.findAll()).resolves.toEqual([]);
     await expect(repositories.progress.findAll()).resolves.toEqual([]);
     await expect(repositories.trainingSessions.findAll()).resolves.toEqual([]);
     await expect(repositories.dailyPlans.findAll()).resolves.toEqual([]);
