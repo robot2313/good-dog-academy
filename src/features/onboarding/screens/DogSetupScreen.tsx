@@ -15,6 +15,7 @@ import { styles } from '../../../theme/styles';
 import type { RootStackParamList } from '../../../types/navigation';
 import { useOnboarding } from '../OnboardingContext';
 import { validateDogForm } from '../validation';
+import { BirthdayDateField } from '../components/BirthdayDateField';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DogSetup'>;
 
@@ -50,7 +51,10 @@ export function DogSetupScreen({ navigation }: Props): React.JSX.Element {
       </View>
       <View style={styles.photoActionRow}>
         {dogForm.photoUri ? <Image source={{ uri: dogForm.photoUri }} style={styles.photoPreview} accessibilityLabel="Selected dog photo" /> : <View style={styles.photoPreview} accessibilityLabel="No dog photo selected" />}
-        <View><SecondaryTextButton title={dogForm.photoUri ? 'Change photo' : 'Add optional photo'} onPress={() => void choosePhoto()} /></View>
+        <View>
+          <SecondaryTextButton title={dogForm.photoUri ? 'Change photo' : 'Add optional photo'} onPress={() => void choosePhoto()} />
+          {dogForm.photoUri ? <SecondaryTextButton title="Remove photo" onPress={() => setDogForm((current) => ({ ...current, photoUri: null }))} /> : null}
+        </View>
       </View>
       <InlineValidationMessage message={photoError} />
       <FormTextInput label="Dog name" value={dogForm.name} onChangeText={(name) => setDogForm((current) => ({ ...current, name }))} placeholder="Milo" autoCapitalize="words" error={dogForm.name.length > 0 ? validation.errors.name : undefined} />
@@ -59,7 +63,7 @@ export function DogSetupScreen({ navigation }: Props): React.JSX.Element {
       <SelectionChips label="Age information" options={birthdayMode} value={dogForm.birthdayEstimated ? 'estimated' : 'exact'} onChange={(value) => setDogForm((current) => ({ ...current, birthdayEstimated: value === 'estimated' }))} />
       {dogForm.birthdayEstimated
         ? <FormTextInput label="Estimated age in years" value={dogForm.estimatedAgeYears} onChangeText={(estimatedAgeYears) => setDogForm((current) => ({ ...current, estimatedAgeYears }))} keyboardType="decimal-pad" placeholder="2" error={dogForm.estimatedAgeYears.length > 0 ? validation.errors.estimatedAgeYears : undefined} />
-        : <FormTextInput label="Birthday" value={dogForm.birthday} onChangeText={(birthday) => setDogForm((current) => ({ ...current, birthday }))} placeholder="YYYY-MM-DD" keyboardType="numbers-and-punctuation" error={dogForm.birthday.length > 0 ? validation.errors.birthday : undefined} />}
+        : <BirthdayDateField value={dogForm.birthday} onChange={(birthday) => setDogForm((current) => ({ ...current, birthday }))} error={dogForm.birthday.length > 0 ? validation.errors.birthday : undefined} />}
       <SelectionChips label="Sex" options={sexOptions} value={dogForm.sex} onChange={(sex) => setDogForm((current) => ({ ...current, sex }))} />
       <FormTextInput label="Weight" value={dogForm.weight} onChangeText={(weight) => setDogForm((current) => ({ ...current, weight }))} keyboardType="decimal-pad" placeholder="24.5" error={dogForm.weight.length > 0 ? validation.errors.weight : undefined} />
       <SelectionChips label="Weight unit" options={weightUnits} value={dogForm.weightUnit} onChange={(weightUnit) => setDogForm((current) => ({ ...current, weightUnit }))} />

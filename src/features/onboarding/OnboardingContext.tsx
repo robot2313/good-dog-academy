@@ -9,6 +9,8 @@ import { onboardingCompletionService } from './onboardingCompletionServiceInstan
 import { createOnboardingStatusService, type OnboardingStatus } from './OnboardingStatusService';
 import { validateDogForm, validateOwnerForm } from './validation';
 import { emptyDogForm, emptyOwnerForm, type DogFormData, type OwnerFormData } from './types';
+import { onboardingRecoveryService } from './onboardingRecoveryServiceInstance';
+import { DogPhotoStorageError } from './photo/DogPhotoStorage';
 
 const statusService = createOnboardingStatusService(appStorage);
 
@@ -18,21 +20,24 @@ type OnboardingContextValue = {
   ownerForm: OwnerFormData;
   dogForm: DogFormData;
   saveError: string | null;
+  recoveryError: string | null;
   saving: boolean;
   setOwnerForm: React.Dispatch<React.SetStateAction<OwnerFormData>>;
   setDogForm: React.Dispatch<React.SetStateAction<DogFormData>>;
-  continueExistingSetup: () => Promise<void>;
+  restartSavedSetup: () => Promise<boolean>;
   completeSetup: () => Promise<boolean>;
+  resetAfterDevelopmentClear: () => void;
 };
 
 const OnboardingContext = createContext<OnboardingContextValue | undefined>(undefined);
 
 export function OnboardingProvider({ children }: PropsWithChildren): React.JSX.Element {
-  const { setDogName, setBreed, completeOnboarding: completeLegacyOnboarding } = useAppState();
+  const { setDogName, setBreed, resetAppState } = useAppState();
   const [status, setStatus] = useState<OnboardingStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const [ownerForm, setOwnerForm] = useState(emptyOwnerForm);
   const [dogForm, setDogForm] = useState(emptyDogForm);
 
@@ -41,9 +46,8 @@ export function OnboardingProvider({ children }: PropsWithChildren): React.JSX.E
     if (nextStatus.state === 'complete') {
       setDogName(nextStatus.dog.name);
       setBreed(nextStatus.dog.breedUnknown ? 'Unknown' : nextStatus.dog.breed);
-      completeLegacyOnboarding();
     }
-  }, [completeLegacyOnboarding, setBreed, setDogName]);
+  }, [setBreed, setDogName]);
 
   useEffect(() => {
     void initializeApplication()
@@ -52,30 +56,21 @@ export function OnboardingProvider({ children }: PropsWithChildren): React.JSX.E
       .finally(() => setLoading(false));
   }, [applyCompleteStatus]);
 
-  const continueExistingSetup = useCallback(async () => {
-    if (status?.state === 'incomplete') {
-      if (status.owner) setOwnerForm({ displayName: status.owner.displayName, trainingExperience: status.owner.trainingExperience, primaryGoal: status.owner.primaryGoal });
-      if (status.dog) {
-        const displayWeight = status.dog.weightKg === null ? '' : status.dog.weightUnit === 'lb' ? (status.dog.weightKg / 0.45359237).toFixed(1) : status.dog.weightKg.toString();
-        setDogForm({
-          photoUri: status.dog.photoUri,
-          name: status.dog.name,
-          breed: status.dog.breed,
-          breedUnknown: status.dog.breedUnknown,
-          birthdayEstimated: status.dog.birthdayEstimated,
-          birthday: status.dog.dateOfBirth ?? '',
-          estimatedAgeYears: status.dog.estimatedAgeYears?.toString() ?? '',
-          sex: status.dog.sex,
-          weight: displayWeight,
-          weightUnit: status.dog.weightUnit,
-          energyLevel: status.dog.energyLevel,
-        });
-      }
-      await statusService.clearIncompleteData();
-    } else if (status?.state === 'corrupt') {
-      await statusService.clearIncompleteData();
+  const restartSavedSetup = useCallback(async (): Promise<boolean> => {
+    if (!status) return false;
+    setRecoveryError(null);
+    try {
+      await onboardingRecoveryService.restart(status);
+      setOwnerForm(emptyOwnerForm);
+      setDogForm(emptyDogForm);
+      setStatus({ state: 'not-started', hasSavedData: false });
+      return true;
+    } catch (cause) {
+      const error = new InitializationError('ONBOARDING_RECOVERY_FAILED', { phase: 'onboarding-recovery', status: status.state }, true, { cause });
+      initializationErrorReporter.report(error);
+      setRecoveryError(error.userMessage);
+      return false;
     }
-    setStatus({ state: 'not-started', hasSavedData: false });
   }, [status]);
 
   const completeSetup = useCallback(async (): Promise<boolean> => {
@@ -87,7 +82,7 @@ export function OnboardingProvider({ children }: PropsWithChildren): React.JSX.E
       applyCompleteStatus({ state: 'complete', hasSavedData: true, owner, dog });
       return true;
     } catch (cause) {
-      const error = new InitializationError('ONBOARDING_SAVE_FAILED', { phase: 'onboarding-completion' }, true, { cause });
+      const error = new InitializationError(cause instanceof DogPhotoStorageError ? 'DOG_PHOTO_PERSIST_FAILED' : 'ONBOARDING_SAVE_FAILED', { phase: 'onboarding-completion' }, true, { cause });
       initializationErrorReporter.report(error);
       setSaveError(error.userMessage);
       return false;
@@ -96,7 +91,16 @@ export function OnboardingProvider({ children }: PropsWithChildren): React.JSX.E
     }
   }, [applyCompleteStatus, dogForm, ownerForm]);
 
-  const value = useMemo(() => ({ status, loading, ownerForm, dogForm, saveError, saving, setOwnerForm, setDogForm, continueExistingSetup, completeSetup }), [completeSetup, continueExistingSetup, dogForm, loading, ownerForm, saveError, saving, status]);
+  const resetAfterDevelopmentClear = useCallback(() => {
+    resetAppState();
+    setOwnerForm(emptyOwnerForm);
+    setDogForm(emptyDogForm);
+    setSaveError(null);
+    setRecoveryError(null);
+    setStatus({ state: 'not-started', hasSavedData: false });
+  }, [resetAppState]);
+
+  const value = useMemo(() => ({ status, loading, ownerForm, dogForm, saveError, recoveryError, saving, setOwnerForm, setDogForm, restartSavedSetup, completeSetup, resetAfterDevelopmentClear }), [completeSetup, dogForm, loading, ownerForm, recoveryError, resetAfterDevelopmentClear, restartSavedSetup, saveError, saving, status]);
   return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;
 }
 

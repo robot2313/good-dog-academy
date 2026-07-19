@@ -63,7 +63,7 @@ export function validateDogForm(form: DogFormData): FormValidation<DogFormData> 
   if (form.birthdayEstimated) {
     const age = Number(form.estimatedAgeYears);
     if (!form.estimatedAgeYears.trim() || !Number.isFinite(age) || age <= 0 || age > 30) errors.estimatedAgeYears = 'Enter an age between 0 and 30 years.';
-  } else if (!/^\d{4}-\d{2}-\d{2}$/.test(form.birthday) || Number.isNaN(Date.parse(`${form.birthday}T00:00:00.000Z`))) {
+  } else if (!/^\d{4}-\d{2}-\d{2}$/.test(form.birthday) || Number.isNaN(Date.parse(`${form.birthday}T00:00:00.000Z`)) || Date.parse(`${form.birthday}T00:00:00.000Z`) > Date.now()) {
     errors.birthday = 'Enter a valid birthday as YYYY-MM-DD.';
   }
   if (!form.sex) errors.sex = 'Choose a sex.';

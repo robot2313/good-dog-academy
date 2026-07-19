@@ -58,6 +58,7 @@ export function validateDog(value: unknown): ValidationResult<Dog> {
   if (record.breedUnknown !== true && !isNonEmptyString(record.breed)) errors.push('breed must be provided unless unknown');
   if (typeof record.birthdayEstimated !== 'boolean') errors.push('birthdayEstimated must be boolean');
   if (record.dateOfBirth !== null && !isDateOnly(record.dateOfBirth)) errors.push('dateOfBirth must be a date or null');
+  if (isDateOnly(record.dateOfBirth) && Date.parse(`${record.dateOfBirth}T00:00:00.000Z`) > Date.now()) errors.push('dateOfBirth cannot be in the future');
   if (record.estimatedAgeYears !== null && (!isNonNegativeNumber(record.estimatedAgeYears) || record.estimatedAgeYears <= 0 || record.estimatedAgeYears > 30)) errors.push('estimatedAgeYears must be greater than 0 and at most 30, or null');
   if (record.birthdayEstimated === true && record.estimatedAgeYears === null) errors.push('estimatedAgeYears is required for an estimated birthday');
   if (record.birthdayEstimated === false && record.dateOfBirth === null) errors.push('dateOfBirth is required when birthday is not estimated');

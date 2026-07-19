@@ -5,20 +5,18 @@ import type { DogProfile } from '../types/domain';
 import { calculateProgress } from '../utils/progress';
 
 type AppStateValue = {
-  onboarded: boolean;
   profile: DogProfile;
   completed: string[];
   progress: number;
   setDogName: (name: string) => void;
   setBreed: (breed: string) => void;
-  completeOnboarding: () => void;
   completeLesson: (lessonId: string) => void;
+  resetAppState: () => void;
 };
 
 const AppStateContext = createContext<AppStateValue | undefined>(undefined);
 
 export function AppStateProvider({ children }: PropsWithChildren): React.JSX.Element {
-  const [onboarded, setOnboarded] = useState(false);
   const [profile, setProfile] = useState<DogProfile>({ name: '', breed: '' });
   const [completed, setCompleted] = useState<string[]>([]);
 
@@ -30,22 +28,24 @@ export function AppStateProvider({ children }: PropsWithChildren): React.JSX.Ele
     setProfile((current) => ({ ...current, breed }));
   }, []);
 
-  const completeOnboarding = useCallback(() => setOnboarded(true), []);
-
   const completeLesson = useCallback((lessonId: string) => {
     setCompleted((current) => current.includes(lessonId) ? current : [...current, lessonId]);
   }, []);
 
+  const resetAppState = useCallback(() => {
+    setProfile({ name: '', breed: '' });
+    setCompleted([]);
+  }, []);
+
   const value = useMemo<AppStateValue>(() => ({
-    onboarded,
     profile,
     completed,
     progress: calculateProgress(completed.length, lessons.length),
     setDogName,
     setBreed,
-    completeOnboarding,
     completeLesson,
-  }), [completed, completeLesson, completeOnboarding, onboarded, profile, setBreed, setDogName]);
+    resetAppState,
+  }), [completed, completeLesson, profile, resetAppState, setBreed, setDogName]);
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
 }

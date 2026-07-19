@@ -4,6 +4,7 @@ import { storageKeys } from '../storageKeys';
 export const migration1To2: Migration = {
   fromVersion: 1,
   toVersion: 2,
+  keys: [storageKeys.owners, storageKeys.dogs],
   async migrate(storage) {
     const owners = await storage.getItem<Array<Record<string, unknown>>>(storageKeys.owners);
     if (owners) {

@@ -24,7 +24,7 @@ Domain transaction and ownership services
 
 ## Schema versions
 
-`CURRENT_SCHEMA_VERSION` identifies the storage layout understood by the installed application. At startup, `MigrationManager` reads the stored version. A new database is stamped with the current version. An older database must have a contiguous migration path registered in `src/storage/migrations/index.ts`; migrations run in order and the stored version is updated after each successful step. A newer or invalid version is rejected safely. Version 2 is current. Migration 1→2 adds the Owner onboarding preferences and Dog profile fields introduced in Milestone 3 while preserving existing records.
+`CURRENT_SCHEMA_VERSION` identifies the storage layout understood by the installed application. At startup, `MigrationManager` reads the stored version. A new database is stamped with the current version. An older database must have a contiguous migration path registered in `src/storage/migrations/index.ts`; migrations run in order and the stored version is updated after each successful step. A newer or invalid version is rejected safely. Version 2 is current. Migration 1→2 adds the Owner onboarding preferences and Dog profile fields introduced in Milestone 3 while preserving existing records. Each migration and its schema-version update run through the staged transaction manager, so failed writes restore the prior schema and records.
 
 ## Transactions
 
@@ -44,6 +44,8 @@ Owner
 ```
 
 Deleting a Dog deletes all records keyed by that dog before deleting the Dog. Deleting an Owner applies the dog cascade to every Dog belonging to the Owner, deletes the Owner's NotificationSettings, and then deletes the Owner. Lessons are global catalogue records and are never cascade-deleted. All cascades execute through one application-level transaction.
+
+Development reset uses the same Owner cascade, then removes captured app-managed Dog photo URIs. BehaviourAssessment does not yet exist in the domain; when introduced, its repository must be added to the Dog ownership cascade before that milestone is released.
 
 ## Development data
 

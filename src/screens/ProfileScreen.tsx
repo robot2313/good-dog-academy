@@ -4,6 +4,11 @@ import { AppScreen } from '../components/AppScreen';
 import { useAppState } from '../state/AppStateContext';
 import { styles } from '../theme/styles';
 
+declare const require: (moduleName: string) => { DeveloperToolsSection: () => React.JSX.Element | null };
+const DeveloperToolsSection = __DEV__
+  ? require('../development/reset/DeveloperToolsSection').DeveloperToolsSection
+  : null;
+
 export function ProfileScreen(): React.JSX.Element {
   const { profile } = useAppState();
 
@@ -22,6 +27,7 @@ export function ProfileScreen(): React.JSX.Element {
         <Text style={styles.label}>Current build</Text>
         <Text style={styles.profileValue}>Stable Foundation 1.0</Text>
       </View>
+      {__DEV__ && DeveloperToolsSection ? <DeveloperToolsSection /> : null}
     </AppScreen>
   );
 }

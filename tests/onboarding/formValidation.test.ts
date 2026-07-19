@@ -25,6 +25,7 @@ describe('dog onboarding validation', () => {
   it('accepts a selected photo', () => expect(validateDogForm({ ...validDog, photoUri: 'file:///milo.jpg' }).valid).toBe(true));
   it('accepts an unknown breed', () => expect(validateDogForm({ ...validDog, breed: '', breedUnknown: true }).valid).toBe(true));
   it('accepts an estimated birthday', () => expect(validateDogForm({ ...validDog, birthday: '', birthdayEstimated: true, estimatedAgeYears: '2.5' }).valid).toBe(true));
+  it('rejects a future exact birthday', () => expect(validateDogForm({ ...validDog, birthday: '2999-01-01' }).valid).toBe(false));
   it('rejects incomplete required data', () => expect(validateDogForm(emptyDogForm).valid).toBe(false));
 
   it('enforces kilogram weight boundaries', () => {

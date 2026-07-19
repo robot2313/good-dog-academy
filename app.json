@@ -12,6 +12,15 @@
     "android": {},
     "web": {
       "bundler": "metro"
-    }
+    },
+    "plugins": [
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Good Dog Academy to choose an optional profile photo for your dog."
+        }
+      ]
+    ]
   }
 }

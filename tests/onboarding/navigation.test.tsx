@@ -63,4 +63,19 @@ describe('onboarding navigation', () => {
     expect(await view.findByText('One focused session today.')).toBeTruthy();
     await waitFor(() => expect(view.queryByText('Raise an amazing dog.')).toBeNull());
   });
+
+  it('requires explicit confirmation before deleting incomplete persisted setup', async () => {
+    const repositories = createDomainRepositories(appStorage);
+    await repositories.owners.save(sampleOwner);
+    const view = await render(<App />);
+    expect(await view.findByText('Incomplete setup found')).toBeTruthy();
+
+    await fireEvent.press(view.getByText('Restart Setup'));
+    expect(view.getByText(/Confirm that you want to delete/)).toBeTruthy();
+    await expect(repositories.owners.findById(sampleOwner.id)).resolves.toEqual(sampleOwner);
+
+    await fireEvent.press(view.getByText('Delete incomplete setup and restart'));
+    expect(await view.findByText('Tell us about you.')).toBeTruthy();
+    await expect(repositories.owners.findById(sampleOwner.id)).resolves.toBeNull();
+  });
 });

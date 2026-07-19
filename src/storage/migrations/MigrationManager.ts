@@ -1,6 +1,7 @@
 import type { StorageAdapter } from '../StorageAdapter';
 import type { Migration } from './Migration';
 import { isSchemaVersion, type SchemaVersion } from './SchemaVersion';
+import { StorageTransactionManager } from '../StorageTransactionManager';
 
 export class MigrationError extends Error {
   constructor(
@@ -51,8 +52,11 @@ export class MigrationManager {
       }
 
       try {
-        await migration.migrate(this.storage);
-        await this.storage.setItem(this.versionKey, migration.toVersion);
+        const transactions = new StorageTransactionManager(this.storage);
+        await transactions.run([...migration.keys, this.versionKey], async (storage) => {
+          await migration.migrate(storage);
+          await storage.setItem(this.versionKey, migration.toVersion);
+        });
         version = migration.toVersion;
       } catch (cause) {
         throw new MigrationError('A storage migration failed.', {

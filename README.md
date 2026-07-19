@@ -10,6 +10,7 @@ Completed milestones:
 - **Milestone 2 — Domain foundation:** typed Owner, Dog, BehaviourProfile, Lesson, DailyPlan, TrainingSession, Achievement, Progress, and NotificationSettings models; runtime validators; repositories; and local persistence.
 - **Milestone 2.1 — Domain hardening:** schema migrations, staged transactions, rollback, ownership deletion rules, structured initialization errors, development-only seed separation, and comprehensive domain/repository tests.
 - **Milestone 3 — Onboarding and dog profile:** Welcome → Owner Setup → Dog Setup → existing main application, with validated forms, optional dog photo, reliable persisted completion detection, and atomic Owner/Dog/BehaviourProfile creation.
+- **Milestone 3.1 — Onboarding integrity:** app-managed persistent dog photos, native localized birthday selection, confirmed corrupt-data recovery, atomic migration 1→2 coverage, and legacy onboarding cleanup.
 
 Not implemented yet:
 
@@ -127,9 +128,15 @@ AsyncStorage is accessed only through `StorageAdapter` and validated repositorie
 
 Onboarding completion stages Owner, Dog, and initial BehaviourProfile writes in one application-level transaction. The commit succeeds completely or restores the previous records. No DailyPlan or demo content is created during onboarding.
 
+Selected dog photos remain temporary during form entry. At completion they are copied into the app document directory and only the managed URI is stored. Failed onboarding transactions remove the managed copy. Exact birthdays use the platform-native date picker with future dates disabled; estimated age remains available.
+
 The app enters the main tabs only when persisted Owner, Dog, and BehaviourProfile records exist, validate successfully, and have valid ownership relationships. Missing, incomplete, or corrupt records do not count as completed onboarding.
 
+Incomplete or corrupt onboarding data is never silently cleared. The Welcome screen explains the problem and requires a separate confirmation before ownership-aware, transactional recovery runs.
+
 Development seed data is opt-in under `src/development/seed`; production startup never imports or executes it.
+
+Development builds expose a confirmed **Reset App Data** action under Dog → Developer Tools. It applies Owner/Dog ownership cascades, removes managed dog photos, clears presentation state, and returns immediately to Welcome. The module is guarded by `__DEV__` and is removed from production bundles.
 
 ## Project safeguards
 

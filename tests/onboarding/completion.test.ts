@@ -6,6 +6,7 @@ import { StorageTransactionManager, TransactionError } from '../../src/storage/S
 import type { StorageAdapter } from '../../src/storage/StorageAdapter';
 import { storageKeys } from '../../src/storage/storageKeys';
 import { InMemoryStorageAdapter } from '../support/InMemoryStorageAdapter';
+import type { DogPhotoStorage } from '../../src/features/onboarding/photo/DogPhotoStorage';
 
 const ownerForm = { displayName: 'Taylor', trainingExperience: 'beginner', primaryGoal: 'family-companion' } as const;
 const dogForm = { ...emptyDogForm, name: 'Milo', breed: 'Labrador mix', birthday: '2024-03-12', sex: 'male', weight: '24', energyLevel: 'high' } as const;
@@ -20,12 +21,18 @@ class CommitFailingStorage implements StorageAdapter {
   }
 }
 
+const photoStorage: DogPhotoStorage = {
+  persist: async (_sourceUri, dogId) => `file:///documents/dog-photos/${dogId}.jpg`,
+  remove: async () => undefined,
+};
+
 function createService(storage: StorageAdapter) {
   let counter = 0;
   return new OnboardingCompletionService(
     new DomainTransactionService(new StorageTransactionManager(storage)),
     (prefix) => `${prefix}-${++counter}`,
     () => '2026-07-19T00:00:00.000Z',
+    photoStorage,
   );
 }
 
