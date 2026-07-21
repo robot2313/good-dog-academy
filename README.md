@@ -17,11 +17,12 @@ Completed milestones:
 - **Milestone 6 — Training experience:** the Academy now presents the full 30-lesson catalogue with skill filters, expandable step-by-step instructions, safety guidance, session completion actions, and per-skill progress summaries.
 - **Milestone 7 — Adaptive daily plans:** one persisted plan per dog per day prioritises eligible new learning, weaker measured skills, in-progress work, and balanced reinforcement while respecting prerequisites and minimum ages.
 - **Milestone 8 — Training sessions:** lesson feedback records atomic TrainingSession history, attempts, successful completions, performance ratings, and prerequisite unlocks; completed paths remain available for reinforcement practice.
+- **Milestone 9 — Progress intelligence:** every session updates durable totals, training minutes, calendar streaks, completed paths, daily-plan status, recent activity, and milestone achievements in the same transaction.
 
 Not implemented yet:
 
 - Plan refresh, skip, and manual replacement controls
-- Training history and session-detail screens
+- Detailed session notes and editable training history
 - Authentication or backend services
 - Cloud sync
 - Subscriptions or payments

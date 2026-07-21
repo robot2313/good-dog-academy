@@ -21,6 +21,8 @@ describe('LessonSessionCompletionService', () => {
     expect(result.progress.find((record) => record.lessonId === foundationLesson.id)).toMatchObject({ status: 'completed', attempts: 1, successfulCompletions: 1, bestPerformanceRating: 5 });
     expect(result.progress.find((record) => record.lessonId === recallLesson.id)).toMatchObject({ status: 'available', unlockedAt: '2026-07-22T03:00:00.000Z' });
     expect(result.session).toMatchObject({ id: 'session-1', dogId: sampleDog.id, lessonId: foundationLesson.id, durationMinutes: 5, outcome: 'success' });
+    expect(result.summary).toMatchObject({ sessionsCompleted: 1, totalTrainingMinutes: 5, completedLessonIds: [foundationLesson.id] });
+    expect(result.achievements.map((achievement) => achievement.code)).toEqual(['first-session']);
     await expect(repositories.trainingSessions.findAll()).resolves.toEqual([result.session]);
   });
 
@@ -32,5 +34,15 @@ describe('LessonSessionCompletionService', () => {
     const result = await service.complete(foundationLesson.id, sampleDog.id, 2);
     expect(result.progress[0]).toMatchObject({ status: 'inProgress', attempts: 1, successfulCompletions: 0, bestPerformanceRating: 2 });
     expect(result.session.outcome).toBe('unsuccessful');
+  });
+
+  it('moves a linked daily plan from scheduled to completed', async () => {
+    const storage = new InMemoryStorageAdapter();
+    const repositories = createDomainRepositories(storage);
+    await repositories.lessonProgress.save(lessonProgress());
+    await repositories.dailyPlans.save({ id: 'plan-1', dogId: sampleDog.id, date: '2026-07-22', lessonIds: [foundationLesson.id], status: 'scheduled', createdAt: '2026-07-22T00:00:00.000Z', updatedAt: '2026-07-22T00:00:00.000Z' });
+    const service = new LessonSessionCompletionService(new StorageTransactionManager(storage), LessonCatalogue.load([foundationLesson]), (prefix) => `${prefix}-1`, () => '2026-07-22T03:00:00.000Z');
+    await service.complete(foundationLesson.id, sampleDog.id, 5, 'plan-1');
+    await expect(repositories.dailyPlans.findById('plan-1')).resolves.toMatchObject({ status: 'completed', updatedAt: '2026-07-22T03:00:00.000Z' });
   });
 });
