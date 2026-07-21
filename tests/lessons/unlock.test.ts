@@ -31,6 +31,6 @@ describe('LessonUnlockService', () => {
   });
 
   it('rejects progress that references missing catalogue content', () => {
-    expect(() => service.determineStatuses([lessonProgress({ lessonId: 'lesson:missing' })])).toThrow(expect.objectContaining<Partial<LessonUnlockError>>({ code: 'MISSING_LESSON_REFERENCE' }));
+    expect(() => service.determineStatuses([lessonProgress({ lessonId: 'missing-lesson-reference' })])).toThrow(expect.objectContaining<Partial<LessonUnlockError>>({ code: 'MISSING_LESSON_REFERENCE' }));
   });
 });

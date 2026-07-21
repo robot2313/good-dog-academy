@@ -17,6 +17,7 @@ const statusService = createOnboardingStatusService(appStorage);
 type OnboardingContextValue = {
   status: OnboardingStatus | null;
   loading: boolean;
+  initializationError: string | null;
   ownerForm: OwnerFormData;
   dogForm: DogFormData;
   saveError: string | null;
@@ -28,6 +29,7 @@ type OnboardingContextValue = {
   completeSetup: () => Promise<boolean>;
   resetAfterDevelopmentClear: () => void;
   refreshApplicationStatus: () => Promise<void>;
+  retryInitialization: () => void;
 };
 
 const OnboardingContext = createContext<OnboardingContextValue | undefined>(undefined);
@@ -36,6 +38,7 @@ export function OnboardingProvider({ children }: PropsWithChildren): React.JSX.E
   const { setDogName, setBreed, resetAppState } = useAppState();
   const [status, setStatus] = useState<OnboardingStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initializationError, setInitializationError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
@@ -54,12 +57,21 @@ export function OnboardingProvider({ children }: PropsWithChildren): React.JSX.E
     applyCompleteStatus(await statusService.getStatus());
   }, [applyCompleteStatus]);
 
-  useEffect(() => {
-    void initializeApplication()
-      .then(() => statusService.getStatus())
-      .then(applyCompleteStatus)
-      .finally(() => setLoading(false));
+  const runInitialization = useCallback(async () => {
+    setLoading(true);
+    setInitializationError(null);
+    const result = await initializeApplication();
+    if (!result.ok) {
+      setInitializationError(result.error.userMessage);
+      setLoading(false);
+      return;
+    }
+    applyCompleteStatus(await statusService.getStatus());
+    setLoading(false);
   }, [applyCompleteStatus]);
+
+  useEffect(() => { void runInitialization(); }, [runInitialization]);
+  const retryInitialization = useCallback(() => { void runInitialization(); }, [runInitialization]);
 
   const restartSavedSetup = useCallback(async (): Promise<boolean> => {
     if (!status) return false;
@@ -105,7 +117,7 @@ export function OnboardingProvider({ children }: PropsWithChildren): React.JSX.E
     setStatus({ state: 'not-started', hasSavedData: false });
   }, [resetAppState]);
 
-  const value = useMemo(() => ({ status, loading, ownerForm, dogForm, saveError, recoveryError, saving, setOwnerForm, setDogForm, restartSavedSetup, completeSetup, resetAfterDevelopmentClear, refreshApplicationStatus }), [completeSetup, dogForm, loading, ownerForm, recoveryError, refreshApplicationStatus, resetAfterDevelopmentClear, restartSavedSetup, saveError, saving, status]);
+  const value = useMemo(() => ({ status, loading, initializationError, ownerForm, dogForm, saveError, recoveryError, saving, setOwnerForm, setDogForm, restartSavedSetup, completeSetup, resetAfterDevelopmentClear, refreshApplicationStatus, retryInitialization }), [completeSetup, dogForm, initializationError, loading, ownerForm, recoveryError, refreshApplicationStatus, resetAfterDevelopmentClear, restartSavedSetup, retryInitialization, saveError, saving, status]);
   return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;
 }
 

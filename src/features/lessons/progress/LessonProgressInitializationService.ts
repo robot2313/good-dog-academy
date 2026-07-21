@@ -35,7 +35,7 @@ export class LessonProgressInitializationService {
         const created: LessonProgress[] = [];
 
         for (const definition of this.catalogue.definitions) {
-          if (existingLessonIds.has(definition.id)) continue;
+          if (!definition.isActive || existingLessonIds.has(definition.id)) continue;
           const status = statuses.get(definition.id) ?? 'locked';
           const progress: LessonProgress = {
             id: this.createId('lesson-progress'), ownerId, dogId, lessonId: definition.id, status,

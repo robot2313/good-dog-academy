@@ -1,10 +1,10 @@
 import type { BehaviourSkill } from './BehaviourAssessment';
 
-export type LessonId = `lesson:${string}`;
-export type LessonContentVersion = `${number}.${number}.${number}`;
+export type LessonId = string;
+export type LessonContentVersion = number;
 export type LessonCategory = 'foundation' | 'life-skills' | 'behaviour' | 'safety';
 export type LessonDifficultyLevel = 1 | 2 | 3 | 4 | 5;
-export type LessonTag = 'foundation' | 'home' | 'outdoors' | 'walking' | 'recall' | 'impulse-control' | 'confidence' | 'safety';
+export type LessonTag = 'foundation' | 'home' | 'outdoors' | 'walking' | 'recall' | 'loose-lead-walking' | 'focus' | 'jumping' | 'barking' | 'chewing' | 'reactivity' | 'house-training' | 'impulse-control' | 'confidence' | 'safety';
 
 export type LessonPrerequisite = {
   lessonId: LessonId;
@@ -17,6 +17,7 @@ export type LessonTroubleshooting = {
 };
 
 export type LessonCompletionCriteria = {
+  description: string;
   minimumSuccessfulCompletions: number;
   minimumPerformanceRating: 1 | 2 | 3 | 4 | 5 | null;
 };

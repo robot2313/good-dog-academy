@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AcademyScreen } from '../screens/AcademyScreen';
 import { LoadingState } from '../components/LoadingState';
 import { AppScreen } from '../components/AppScreen';
+import { ErrorState } from '../components/ErrorState';
 import { DogSetupScreen } from '../features/onboarding/screens/DogSetupScreen';
 import { OwnerSetupScreen } from '../features/onboarding/screens/OwnerSetupScreen';
 import { WelcomeScreen } from '../features/onboarding/screens/WelcomeScreen';
@@ -33,9 +34,11 @@ function MainTabs(): React.JSX.Element {
 }
 
 export function AppNavigator(): React.JSX.Element {
-  const { status, loading } = useOnboarding();
+  const { status, loading, initializationError, retryInitialization } = useOnboarding();
 
-  if (loading || !status) return <AppScreen scroll={false}><LoadingState message="Preparing Good Dog Academy…" /></AppScreen>;
+  if (loading) return <AppScreen scroll={false}><LoadingState message="Preparing Good Dog Academy…" /></AppScreen>;
+  if (initializationError) return <AppScreen scroll={false}><ErrorState message={initializationError} onRetry={retryInitialization} /></AppScreen>;
+  if (!status) return <AppScreen scroll={false}><LoadingState message="Preparing Good Dog Academy…" /></AppScreen>;
 
   return (
     <NavigationContainer>

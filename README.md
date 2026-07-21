@@ -1,6 +1,6 @@
 # Good Dog Academy
 
-Good Dog Academy is an Expo React Native dog-training application focused on personalised, adaptive training. The current build includes production onboarding, a dog profile, deterministic behaviour assessment, and the immutable lesson-catalogue foundation needed by future planning work.
+Good Dog Academy is an Expo React Native dog-training application focused on personalised, adaptive training. The current build includes production onboarding, a dog profile, deterministic behaviour assessment, and a validated 30-lesson immutable training catalogue.
 
 ## Current status
 
@@ -13,12 +13,13 @@ Completed milestones:
 - **Milestone 3.1 — Onboarding integrity:** app-managed persistent dog photos, native localized birthday selection, confirmed corrupt-data recovery, atomic migration 1→2 coverage, and legacy onboarding cleanup.
 - **Milestone 4 — Behaviour assessment:** an accessible five-screen assessment covering ten skills, deterministic scoring, raw-response history, atomic BehaviourAssessment/BehaviourProfile persistence, schema migration 2→3, safety messaging, and relationship-aware startup routing.
 - **Milestone 5 — Lesson catalogue foundation:** immutable validated LessonDefinition content, deterministic prerequisite and unlock evaluation, mutable per-dog LessonProgress, atomic idempotent progress initialization, ownership cascades, and schema migration 3→4.
+- **Milestone 5.1 — Initial training content:** 30 production-quality force-free lessons across ten skills, three-stage prerequisite progressions, content-version and inactive-content policies, and a deterministic future Daily Plan eligibility contract.
 
 Not implemented yet:
 
 - Adaptive recommendations
 - Daily plan generation
-- Final production lesson content and lesson UI flows
+- Lesson library and progress UI flows
 - Authentication or backend services
 - Cloud sync
 - Subscriptions or payments
@@ -147,11 +148,17 @@ Corrupt assessment data has a separate recoverable startup state. The app explai
 
 ## Lesson catalogue and progress
 
-`LessonDefinition` records are bundled, deeply frozen application content. They are never stored in AsyncStorage and have no mutable repository. Startup loads and validates the complete catalogue, rejecting malformed definitions, unsupported skills, duplicate IDs, missing prerequisite references, and circular dependency chains with structured errors. Ordering is deterministic by difficulty and stable lesson ID. The production catalogue is intentionally empty until reviewed lesson content is supplied in a later milestone; the existing visible test cards remain presentation-only UI data.
+`LessonDefinition` records are bundled, deeply frozen application content. They are never stored in AsyncStorage and have no mutable repository. Startup loads and validates the complete catalogue, rejecting malformed definitions, unsupported skills, duplicate IDs, missing prerequisite references, and circular dependency chains with structured errors. Ordering is deterministic by difficulty and stable lesson ID.
+
+The initial catalogue contains 30 active lessons: Foundation, Developing, and Advanced lessons for Recall, Loose Lead Walking, Focus, Jumping, Barking, Chewing, Reactivity, House Training, Confidence, and Impulse Control. Definitions are organised into one module per skill under `src/features/lessons/catalogue/definitions`. All lessons use reward-based, force-free methods, practical safety notes, measurable criteria, and complete text-based instructions. Authoring rules are documented in [docs/lesson-authoring-guide.md](docs/lesson-authoring-guide.md).
 
 `LessonProgress` is mutable per-Owner/per-Dog data stored through the standard repository abstraction. It tracks status, attempts, successful completions, performance, difficulty adjustment, unlock dates, and activity timestamps while referencing a stable immutable lesson ID.
 
 The prerequisite engine derives `locked`, `available`, `inProgress`, or `completed` from catalogue requirements and existing progress. All prerequisites must meet their required successful-completion counts. The explicit initialization service creates only missing progress records, preserves existing records, is idempotent, and saves through one transaction. It is not called during onboarding, assessment, migration, or startup.
+
+Lesson IDs are permanent. Content-only revisions increment numeric `contentVersion` without resetting attempts, completions, status, timestamps, ratings, or difficulty adjustment. Inactive definitions remain in the catalogue, are excluded from new initialization and future plans, and retain existing progress so it resumes if the same ID is reactivated.
+
+The pure eligibility service returns structured learning and reinforcement eligibility, status, prerequisite and age checks, activity and recognised-skill flags, difficulty, and deterministic reason codes. Available or in-progress active lessons may be new learning; completed active lessons may be reinforcement; locked, inactive, under-age, or missing-reference content cannot silently become eligible. No Daily Plans are generated yet.
 
 Deleting a Dog or Owner cascade-deletes LessonProgress. Immutable LessonDefinition content is application code and is never included in user-data deletion. Future Daily Plan work can consume the validated catalogue and progress status, but Milestone 5 does not generate plans or recommendations.
 

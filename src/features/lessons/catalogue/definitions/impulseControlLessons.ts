@@ -1,0 +1,31 @@
+import { authorLesson } from '../authorLesson';
+
+export const impulseControlLessons = [
+  authorLesson({
+    id: 'impulse-control-wait-for-reward', title: 'Wait for a Reward', shortDescription: 'Teach a very brief pause before access to something your dog wants.', skill: 'impulse-control', difficultyLevel: 1, estimatedMinutes: 5,
+    goal: 'Your dog pauses for one second while a reward is held safely out of reach.', equipment: ['Small food rewards', 'A quiet familiar room'], prerequisites: [],
+    steps: ['1. Hold one reward in a closed hand at chest height while your dog stands or sits comfortably.', '2. Wait silently for your dog to stop nudging or reaching for one moment.', '3. Mark that brief pause and deliver a different reward from your other hand.', '4. Repeat with an open hand held well above nose level, closing it if the dog reaches.', '5. Finish after five easy one-second pauses and give a clear release cue.'],
+    tips: ['Begin with a fraction of a second.', 'Let the dog choose their body position.', 'Alternate repetitions with free rewards to reduce frustration.'],
+    commonMistakes: ['Expecting a long wait immediately.', 'Holding food close enough to tease the dog.', 'Repeatedly saying “no” instead of marking success.'],
+    troubleshooting: [{ problem: 'The dog paws or mouths the hand.', solution: 'Hold the reward farther away and mark the first tiny pause.' }, { problem: 'The dog walks away.', solution: 'Let them leave and try later with a shorter, easier repetition.' }, { problem: 'The dog becomes vocal or frustrated.', solution: 'Give a free reward, end the session, and use half-second pauses next time.' }],
+    safetyNotes: ['Keep waits short and achievable; do not use food deprivation, prolonged teasing, or physical restraint.'], completionDescription: 'The dog pauses calmly for one second before reward delivery in four of five attempts.', tags: ['foundation', 'impulse-control', 'home'],
+  }),
+  authorLesson({
+    id: 'impulse-control-doorways', title: 'Pause at Doorways', shortDescription: 'Build a calm, released pause at a low-risk doorway without blocking essential access.', skill: 'impulse-control', difficultyLevel: 2, estimatedMinutes: 8,
+    goal: 'Your dog waits briefly as a safe interior door begins to open and moves through after release.', equipment: ['Food rewards', 'A secure lead if needed', 'A quiet interior doorway'], prerequisites: [{ lessonId: 'impulse-control-wait-for-reward', minimumSuccessfulCompletions: 1 }],
+    steps: ['1. Start at an interior doorway with your dog on the safe side and the door closed.', '2. Touch the handle; mark and reward one moment of staying back.', '3. Open the door a few centimetres, closing it gently if the dog moves forward.', '4. When the dog pauses, open fully and give a clear release cue.', '5. Walk through together, reward, and reset for no more than five repetitions.'],
+    tips: ['Practise on an interior door before an external exit.', 'Release quickly while the exercise is new.', 'Reward behind the threshold to reduce rushing.'],
+    commonMistakes: ['Using a dangerous exterior doorway too soon.', 'Pushing the dog backwards with the door or body.', 'Making the dog wait so long that frustration grows.'],
+    troubleshooting: [{ problem: 'The dog rushes whenever the handle moves.', solution: 'Reward calm behaviour near the closed door before touching the handle again.' }, { problem: 'The dog squeezes through the gap.', solution: 'Use a lead and a smaller door movement in a safer interior location.' }, { problem: 'The dog avoids the doorway.', solution: 'Stop the pause exercise and allow free comfortable movement through it.' }],
+    safetyNotes: ['Use secure management near exterior doors and never delay urgent toileting access or trap a worried dog at a threshold.'], completionDescription: 'At a quiet interior doorway, the dog pauses for two seconds as it opens and crosses after release in four of five attempts.', tags: ['impulse-control', 'home', 'safety'],
+  }),
+  authorLesson({
+    id: 'impulse-control-real-world-distractions', title: 'Impulse Control in Daily Life', shortDescription: 'Practise short pauses before safe access to selected everyday rewards.', skill: 'impulse-control', difficultyLevel: 3, estimatedMinutes: 11,
+    goal: 'Your dog can pause briefly before two different real-world rewards without excessive frustration.', equipment: ['Food rewards', 'A secure lead and harness', 'Two safe environmental rewards such as sniffing and greeting a familiar adult'], prerequisites: [{ lessonId: 'impulse-control-doorways', minimumSuccessfulCompletions: 1 }],
+    steps: ['1. Choose one safe reward your dog wants mildly, such as approaching a sniffing spot.', '2. Stop far enough away that the lead remains loose and wait for a brief pause or check-in.', '3. Mark and release your dog to the environmental reward for several seconds.', '4. Move away, reset, and repeat before practising with a second low-intensity reward.', '5. End after four successful releases, mixing in easy food rewards.'],
+    tips: ['Use access to the environment as reinforcement.', 'Keep pauses shorter around harder distractions.', 'Choose rewards that can be offered safely and predictably.'],
+    commonMistakes: ['Demanding long stillness beside an exciting distraction.', 'Using tight lead pressure as the cue to stop.', 'Withholding normal exercise, water, toileting, or social needs.'],
+    troubleshooting: [{ problem: 'The dog cannot pause at the chosen distance.', solution: 'Move farther away or choose a less exciting environmental reward.' }, { problem: 'Frustration increases across repetitions.', solution: 'Use immediate releases for easier choices and finish the session early.' }, { problem: 'The dog lunges towards the reward.', solution: 'Increase distance and use barriers or another safer reward rather than holding the dog in place.' }],
+    safetyNotes: ['Avoid excessive waiting and frustration; do not use access to essential needs as leverage, and skip greetings when safety or comfort is uncertain.'], completionDescription: 'The dog offers a two-second pause before release to each of two mild everyday rewards in four of five opportunities.', tags: ['impulse-control', 'outdoors', 'focus'],
+  }),
+] as const;

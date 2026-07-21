@@ -7,10 +7,22 @@ export type InitializationResult =
   | { ok: true }
   | { ok: false; error: InitializationError };
 
-export async function initializeApplication(): Promise<InitializationResult> {
+export type InitializationDependencies = {
+  migrate: () => Promise<unknown>;
+  loadLessonCatalogue: () => unknown;
+  report: (error: InitializationError) => void;
+};
+
+export async function initializeApplication(overrides: Partial<InitializationDependencies> = {}): Promise<InitializationResult> {
+  const dependencies: InitializationDependencies = {
+    migrate: () => migrationManager.migrateToCurrent(),
+    loadLessonCatalogue: loadBundledLessonCatalogue,
+    report: (error) => initializationErrorReporter.report(error),
+    ...overrides,
+  };
   try {
-    await migrationManager.migrateToCurrent();
-    loadBundledLessonCatalogue();
+    await dependencies.migrate();
+    dependencies.loadLessonCatalogue();
     return { ok: true };
   } catch (cause) {
     const error = cause instanceof MigrationError
@@ -19,7 +31,7 @@ export async function initializeApplication(): Promise<InitializationResult> {
         ? new InitializationError(cause.code, { phase: 'lesson-catalogue-validation', ...cause.context }, false, { cause })
         : new InitializationError('UNKNOWN_INITIALIZATION_ERROR', { phase: 'application-bootstrap' }, true, { cause });
 
-    initializationErrorReporter.report(error);
+    dependencies.report(error);
     return { ok: false, error };
   }
 }

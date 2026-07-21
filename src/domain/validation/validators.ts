@@ -28,7 +28,7 @@ import {
 const levels = ['low', 'medium', 'high'] as const;
 const challenges = ['recall', 'lead-pulling', 'jumping'] as const;
 const lessonCategories = ['foundation', 'life-skills', 'behaviour', 'safety'] as const;
-const lessonTags = ['foundation', 'home', 'outdoors', 'walking', 'recall', 'impulse-control', 'confidence', 'safety'] as const;
+const lessonTags = ['foundation', 'home', 'outdoors', 'walking', 'recall', 'loose-lead-walking', 'focus', 'jumping', 'barking', 'chewing', 'reactivity', 'house-training', 'impulse-control', 'confidence', 'safety'] as const;
 const assessmentOptions = ['never', 'rarely', 'sometimes', 'often', 'almost-always', 'not-sure'] as const;
 const optionValues: Record<(typeof assessmentOptions)[number], number | null> = { never: 0, rarely: 1, sometimes: 2, often: 3, 'almost-always': 4, 'not-sure': null };
 
@@ -130,8 +130,8 @@ export function validateLessonDefinition(value: unknown): ValidationResult<Lesso
   const { record, errors } = recordOrError(value);
   if (!record) return { valid: false, errors };
   ['id', 'title', 'shortDescription', 'goal'].forEach((key) => requireString(record, key, errors));
-  if (typeof record.id !== 'string' || !/^lesson:[a-z0-9]+(?:-[a-z0-9]+)*$/.test(record.id)) errors.push('id must be a stable lesson identifier');
-  if (typeof record.contentVersion !== 'string' || !/^\d+\.\d+\.\d+$/.test(record.contentVersion)) errors.push('contentVersion must use semantic version format');
+  if (typeof record.id !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)+$/.test(record.id)) errors.push('id must be a stable kebab-case lesson identifier');
+  if (!isNonNegativeInteger(record.contentVersion) || record.contentVersion === 0) errors.push('contentVersion must be a positive integer');
   if (!isOneOf(record.skill, behaviourSkills)) errors.push('skill is unsupported');
   if (!isOneOf(record.category, lessonCategories)) errors.push('category is invalid');
   if (!isOneOf(record.difficultyLevel, [1, 2, 3, 4, 5] as const)) errors.push('difficultyLevel must be between 1 and 5');
@@ -145,7 +145,7 @@ export function validateLessonDefinition(value: unknown): ValidationResult<Lesso
     const prerequisiteIds: string[] = [];
     record.prerequisites.forEach((item, index) => {
       if (!isRecord(item)) { errors.push(`prerequisites[${index}] must be an object`); return; }
-      if (typeof item.lessonId !== 'string' || !/^lesson:[a-z0-9]+(?:-[a-z0-9]+)*$/.test(item.lessonId)) errors.push(`prerequisites[${index}].lessonId is invalid`);
+      if (typeof item.lessonId !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)+$/.test(item.lessonId)) errors.push(`prerequisites[${index}].lessonId is invalid`);
       else prerequisiteIds.push(item.lessonId);
       if (!isNonNegativeInteger(item.minimumSuccessfulCompletions) || item.minimumSuccessfulCompletions === 0) errors.push(`prerequisites[${index}].minimumSuccessfulCompletions must be positive`);
     });
@@ -158,6 +158,7 @@ export function validateLessonDefinition(value: unknown): ValidationResult<Lesso
   });
   if (!isRecord(record.completionCriteria)) errors.push('completionCriteria must be an object');
   else {
+    if (!isNonEmptyString(record.completionCriteria.description)) errors.push('completionCriteria.description must be meaningful');
     if (!isNonNegativeInteger(record.completionCriteria.minimumSuccessfulCompletions) || record.completionCriteria.minimumSuccessfulCompletions === 0) errors.push('completionCriteria.minimumSuccessfulCompletions must be positive');
     if (record.completionCriteria.minimumPerformanceRating !== null && !isOneOf(record.completionCriteria.minimumPerformanceRating, [1, 2, 3, 4, 5] as const)) errors.push('completionCriteria.minimumPerformanceRating is invalid');
   }
@@ -170,7 +171,7 @@ export function validateLessonProgress(value: unknown): ValidationResult<LessonP
   const { record, errors } = recordOrError(value);
   if (!record) return { valid: false, errors };
   ['id', 'ownerId', 'dogId', 'lessonId'].forEach((key) => requireString(record, key, errors));
-  if (typeof record.lessonId !== 'string' || !/^lesson:[a-z0-9]+(?:-[a-z0-9]+)*$/.test(record.lessonId)) errors.push('lessonId must be a stable lesson identifier');
+  if (typeof record.lessonId !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)+$/.test(record.lessonId)) errors.push('lessonId must be a stable kebab-case lesson identifier');
   if (!isOneOf(record.status, ['locked', 'available', 'inProgress', 'completed'] as const)) errors.push('status is invalid');
   if (!isNonNegativeInteger(record.attempts)) errors.push('attempts must be a non-negative integer');
   if (!isNonNegativeInteger(record.successfulCompletions)) errors.push('successfulCompletions must be a non-negative integer');
