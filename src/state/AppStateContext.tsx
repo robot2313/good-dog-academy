@@ -1,6 +1,6 @@
 import { createContext, type PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react';
 
-import { lessons } from '../data/lessons';
+import { loadBundledLessonCatalogue } from '../features/lessons/catalogue';
 import type { DogProfile } from '../types/domain';
 import { calculateProgress } from '../utils/progress';
 
@@ -17,6 +17,7 @@ type AppStateValue = {
 const AppStateContext = createContext<AppStateValue | undefined>(undefined);
 
 export function AppStateProvider({ children }: PropsWithChildren): React.JSX.Element {
+  const lessonCount = loadBundledLessonCatalogue().definitions.filter((lesson) => lesson.isActive).length;
   const [profile, setProfile] = useState<DogProfile>({ name: '', breed: '' });
   const [completed, setCompleted] = useState<string[]>([]);
 
@@ -40,12 +41,12 @@ export function AppStateProvider({ children }: PropsWithChildren): React.JSX.Ele
   const value = useMemo<AppStateValue>(() => ({
     profile,
     completed,
-    progress: calculateProgress(completed.length, lessons.length),
+    progress: calculateProgress(completed.length, lessonCount),
     setDogName,
     setBreed,
     completeLesson,
     resetAppState,
-  }), [completed, completeLesson, profile, resetAppState, setBreed, setDogName]);
+  }), [completed, completeLesson, lessonCount, profile, resetAppState, setBreed, setDogName]);
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
 }

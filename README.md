@@ -14,12 +14,13 @@ Completed milestones:
 - **Milestone 4 — Behaviour assessment:** an accessible five-screen assessment covering ten skills, deterministic scoring, raw-response history, atomic BehaviourAssessment/BehaviourProfile persistence, schema migration 2→3, safety messaging, and relationship-aware startup routing.
 - **Milestone 5 — Lesson catalogue foundation:** immutable validated LessonDefinition content, deterministic prerequisite and unlock evaluation, mutable per-dog LessonProgress, atomic idempotent progress initialization, ownership cascades, and schema migration 3→4.
 - **Milestone 5.1 — Initial training content:** 30 production-quality force-free lessons across ten skills, three-stage prerequisite progressions, content-version and inactive-content policies, and a deterministic future Daily Plan eligibility contract.
+- **Milestone 6 — Training experience:** the Academy now presents the full 30-lesson catalogue with skill filters, expandable step-by-step instructions, safety guidance, session completion actions, and per-skill progress summaries.
+- **Milestone 7 — Adaptive daily plans:** one persisted plan per dog per day prioritises eligible new learning, weaker measured skills, in-progress work, and balanced reinforcement while respecting prerequisites and minimum ages.
 
 Not implemented yet:
 
-- Adaptive recommendations
-- Daily plan generation
-- Lesson library and progress UI flows
+- Plan refresh, skip, and manual replacement controls
+- Persisted lesson-session history and prerequisite-aware UI locking
 - Authentication or backend services
 - Cloud sync
 - Subscriptions or payments
