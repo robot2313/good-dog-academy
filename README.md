@@ -18,10 +18,11 @@ Completed milestones:
 - **Milestone 7 — Adaptive daily plans:** one persisted plan per dog per day prioritises eligible new learning, weaker measured skills, in-progress work, and balanced reinforcement while respecting prerequisites and minimum ages.
 - **Milestone 8 — Training sessions:** lesson feedback records atomic TrainingSession history, attempts, successful completions, performance ratings, and prerequisite unlocks; completed paths remain available for reinforcement practice.
 - **Milestone 9 — Progress intelligence:** every session updates durable totals, training minutes, calendar streaks, completed paths, daily-plan status, recent activity, and milestone achievements in the same transaction.
+- **Milestone 10 — Daily Plan control:** owners can swap scheduled lessons for deterministic eligible alternatives or confirm a rest day, with every plan transition persisted safely and completed plans protected from later changes.
 
 Not implemented yet:
 
-- Plan refresh, skip, and manual replacement controls
+- Manual lesson selection and future-date scheduling
 - Detailed session notes and editable training history
 - Authentication or backend services
 - Cloud sync

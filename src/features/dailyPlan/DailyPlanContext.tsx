@@ -3,14 +3,18 @@ import { createContext, type PropsWithChildren, useContext, useEffect, useMemo, 
 import type { DailyPlan } from '../../domain/models';
 import { domainRepositories } from '../../services/domainRepositories';
 import { createLocalId } from '../../utils/ids';
+import { appStorage } from '../../services/appStorage';
+import { StorageTransactionManager } from '../../storage/StorageTransactionManager';
 import { useLessonProgress } from '../lessons/progress/LessonProgressContext';
 import { loadBundledLessonCatalogue } from '../lessons/catalogue';
 import { useOnboarding } from '../onboarding/OnboardingContext';
 import { DailyPlanGenerator, dogAgeInMonths } from './DailyPlanGenerator';
+import { DailyPlanManagementService } from './DailyPlanManagementService';
 
-type DailyPlanContextValue = { plan: DailyPlan | null; loading: boolean; error: string | null };
+type DailyPlanContextValue = { plan: DailyPlan | null; loading: boolean; saving: boolean; error: string | null; refreshPlan: () => Promise<void>; skipPlan: () => Promise<void> };
 const DailyPlanContext = createContext<DailyPlanContextValue | undefined>(undefined);
 const generator = new DailyPlanGenerator(loadBundledLessonCatalogue());
+const management = new DailyPlanManagementService(new StorageTransactionManager(appStorage), generator, () => new Date().toISOString());
 
 export function DailyPlanProvider({ children }: PropsWithChildren): React.JSX.Element {
   const { status } = useOnboarding();
@@ -18,6 +22,7 @@ export function DailyPlanProvider({ children }: PropsWithChildren): React.JSX.El
   const [plan, setPlan] = useState<DailyPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (status?.state !== 'complete' || progressLoading || records.length === 0) { setPlan(null); return; }
@@ -47,7 +52,24 @@ export function DailyPlanProvider({ children }: PropsWithChildren): React.JSX.El
     return () => { active = false; };
   }, [progressLoading, records, status]);
 
-  const value = useMemo(() => ({ plan, loading, error }), [error, loading, plan]);
+  const refreshPlan = async (): Promise<void> => {
+    if (!plan || status?.state !== 'complete') return;
+    setSaving(true); setError(null);
+    try {
+      setPlan(await management.refresh(plan.id, status.dog.id, status.behaviourProfile, dogAgeInMonths(status.dog.dateOfBirth, status.dog.estimatedAgeYears, new Date()), records));
+    } catch { setError('Today’s plan could not be refreshed.'); }
+    finally { setSaving(false); }
+  };
+
+  const skipPlan = async (): Promise<void> => {
+    if (!plan || status?.state !== 'complete') return;
+    setSaving(true); setError(null);
+    try { setPlan(await management.skip(plan.id, status.dog.id)); }
+    catch { setError('Today’s plan could not be skipped.'); }
+    finally { setSaving(false); }
+  };
+
+  const value = useMemo(() => ({ plan, loading, saving, error, refreshPlan, skipPlan }), [error, loading, plan, saving, status, records]);
   return <DailyPlanContext.Provider value={value}>{children}</DailyPlanContext.Provider>;
 }
 

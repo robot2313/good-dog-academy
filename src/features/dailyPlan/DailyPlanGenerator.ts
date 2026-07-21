@@ -5,11 +5,12 @@ import { LessonEligibilityService } from '../lessons/eligibility';
 export class DailyPlanGenerator {
   constructor(private readonly catalogue: LessonCatalogue) {}
 
-  generate(profile: BehaviourProfile, dogAgeMonths: number, progress: readonly LessonProgress[], limit = 2): LessonId[] {
+  generate(profile: BehaviourProfile, dogAgeMonths: number, progress: readonly LessonProgress[], limit = 2, excludedLessonIds: readonly LessonId[] = []): LessonId[] {
+    const excluded = new Set(excludedLessonIds);
     const eligibility = new LessonEligibilityService(this.catalogue);
     const candidates = this.catalogue.definitions
       .map((lesson) => ({ lesson, result: eligibility.evaluate(lesson.id, dogAgeMonths, progress) }))
-      .filter(({ result }) => result.eligible)
+      .filter(({ lesson, result }) => result.eligible && !excluded.has(lesson.id))
       .sort((a, b) => {
         const learningOrder = Number(b.result.canBeNewLearning) - Number(a.result.canBeNewLearning);
         if (learningOrder !== 0) return learningOrder;
