@@ -3,7 +3,7 @@ import { createContext, type PropsWithChildren, useCallback, useContext, useEffe
 import type { Achievement, LessonPerformanceRating, LessonProgress, Progress, TrainingSession } from '../../../domain/models';
 import { domainRepositories } from '../../../services/domainRepositories';
 import { useOnboarding } from '../../onboarding/OnboardingContext';
-import { lessonProgressInitializationService, lessonSessionCompletionService } from './lessonProgressServices';
+import { lessonProgressInitializationService, lessonSessionCompletionService, trainingSessionNotesService } from './lessonProgressServices';
 
 type LessonProgressContextValue = {
   records: readonly LessonProgress[];
@@ -13,6 +13,7 @@ type LessonProgressContextValue = {
   summary: Progress | null;
   achievements: readonly Achievement[];
   completeLesson: (lessonId: string, rating: LessonPerformanceRating, dailyPlanId?: string | null) => Promise<void>;
+  updateSessionNotes: (sessionId: string, notes: string) => Promise<boolean>;
 };
 
 const LessonProgressContext = createContext<LessonProgressContextValue | undefined>(undefined);
@@ -58,7 +59,20 @@ export function LessonProgressProvider({ children }: PropsWithChildren): React.J
     }
   }, [status]);
 
-  const value = useMemo(() => ({ records, loading, error, sessions, summary, achievements, completeLesson }), [achievements, completeLesson, error, loading, records, sessions, summary]);
+  const updateSessionNotes = useCallback(async (sessionId: string, notes: string): Promise<boolean> => {
+    if (status?.state !== 'complete') return false;
+    setError(null);
+    try {
+      const updated = await trainingSessionNotesService.update(sessionId, status.dog.id, notes);
+      setSessions((current) => current.map((session) => session.id === sessionId ? updated : session));
+      return true;
+    } catch {
+      setError('These session notes could not be saved. Please try again.');
+      return false;
+    }
+  }, [status]);
+
+  const value = useMemo(() => ({ records, loading, error, sessions, summary, achievements, completeLesson, updateSessionNotes }), [achievements, completeLesson, error, loading, records, sessions, summary, updateSessionNotes]);
   return <LessonProgressContext.Provider value={value}>{children}</LessonProgressContext.Provider>;
 }
 

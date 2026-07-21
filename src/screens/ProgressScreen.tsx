@@ -1,14 +1,19 @@
 import { Text, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { AppScreen } from '../components/AppScreen';
 import { loadBundledLessonCatalogue } from '../features/lessons/catalogue';
 import { useLessonProgress } from '../features/lessons/progress/LessonProgressContext';
 import { styles } from '../theme/styles';
+import { SecondaryTextButton } from '../components/SecondaryTextButton';
+import type { RootStackParamList } from '../types/navigation';
 
 const catalogue = loadBundledLessonCatalogue();
 
 export function ProgressScreen(): React.JSX.Element {
   const { records, sessions, summary, achievements } = useLessonProgress();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const completed = records.filter((record) => record.status === 'completed').map((record) => record.lessonId);
   const progress = records.length === 0 ? 0 : Math.round((completed.length / records.length) * 100);
   const lessons = catalogue.definitions.filter((lesson) => lesson.isActive);
@@ -46,6 +51,7 @@ export function ProgressScreen(): React.JSX.Element {
             <Text style={session.outcome === 'success' ? styles.completeText : styles.notStartedText}>{session.outcome?.replace('-', ' ')}</Text>
           </View>;
         })}
+        {sessions.length > 0 ? <SecondaryTextButton title="View all sessions and notes" onPress={() => navigation.navigate('SessionHistory')} /> : null}
       </View>
 
       <View style={styles.card}>

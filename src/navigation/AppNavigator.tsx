@@ -13,6 +13,7 @@ import { useOnboarding } from '../features/onboarding/OnboardingContext';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { ProgressScreen } from '../screens/ProgressScreen';
 import { TodayScreen } from '../screens/TodayScreen';
+import { SessionHistoryScreen } from '../screens/SessionHistoryScreen';
 import type { MainTabParamList, RootStackParamList } from '../types/navigation';
 import { MainTabBar } from './MainTabBar';
 import { AssessmentIntroScreen } from '../features/assessment/screens/AssessmentIntroScreen';
@@ -43,7 +44,10 @@ export function AppNavigator(): React.JSX.Element {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {status.state === 'complete' ? <Stack.Screen name="Main" component={MainTabs} />
+        {status.state === 'complete' ? <>
+            <Stack.Screen name="Main" component={MainTabs} />
+            <Stack.Screen name="SessionHistory" component={SessionHistoryScreen} />
+          </>
           : status.state === 'assessment-required' || status.state === 'assessment-corrupt' ? <>
               <Stack.Screen name="AssessmentIntro" component={AssessmentIntroScreen} />
               <Stack.Screen name="AssessmentEveryday">{(props) => <AssessmentSectionScreen {...props} section="everyday" />}</Stack.Screen>

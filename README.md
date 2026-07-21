@@ -19,11 +19,12 @@ Completed milestones:
 - **Milestone 8 — Training sessions:** lesson feedback records atomic TrainingSession history, attempts, successful completions, performance ratings, and prerequisite unlocks; completed paths remain available for reinforcement practice.
 - **Milestone 9 — Progress intelligence:** every session updates durable totals, training minutes, calendar streaks, completed paths, daily-plan status, recent activity, and milestone achievements in the same transaction.
 - **Milestone 10 — Daily Plan control:** owners can swap scheduled lessons for deterministic eligible alternatives or confirm a rest day, with every plan transition persisted safely and completed plans protected from later changes.
+- **Milestone 11 — Training journal:** a complete navigable session history supports ownership-checked, transactional notes so owners can preserve observations, context, and next-session ideas alongside each outcome.
 
 Not implemented yet:
 
 - Manual lesson selection and future-date scheduling
-- Detailed session notes and editable training history
+- Session search, filters, and data export
 - Authentication or backend services
 - Cloud sync
 - Subscriptions or payments
