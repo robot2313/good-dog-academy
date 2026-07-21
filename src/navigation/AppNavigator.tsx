@@ -14,6 +14,7 @@ import { ProfileScreen } from '../screens/ProfileScreen';
 import { ProgressScreen } from '../screens/ProgressScreen';
 import { TodayScreen } from '../screens/TodayScreen';
 import { SessionHistoryScreen } from '../screens/SessionHistoryScreen';
+import { WeeklyPlannerScreen } from '../screens/WeeklyPlannerScreen';
 import type { MainTabParamList, RootStackParamList } from '../types/navigation';
 import { MainTabBar } from './MainTabBar';
 import { AssessmentIntroScreen } from '../features/assessment/screens/AssessmentIntroScreen';
@@ -47,6 +48,7 @@ export function AppNavigator(): React.JSX.Element {
         {status.state === 'complete' ? <>
             <Stack.Screen name="Main" component={MainTabs} />
             <Stack.Screen name="SessionHistory" component={SessionHistoryScreen} />
+            <Stack.Screen name="WeeklyPlanner" component={WeeklyPlannerScreen} />
           </>
           : status.state === 'assessment-required' || status.state === 'assessment-corrupt' ? <>
               <Stack.Screen name="AssessmentIntro" component={AssessmentIntroScreen} />

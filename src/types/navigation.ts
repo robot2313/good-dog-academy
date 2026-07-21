@@ -9,6 +9,7 @@ export type RootStackParamList = {
   AssessmentResults: undefined;
   Main: undefined;
   SessionHistory: undefined;
+  WeeklyPlanner: undefined;
 };
 
 export type MainTabParamList = {
