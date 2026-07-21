@@ -14,12 +14,18 @@ Completed milestones:
 - **Milestone 4 — Behaviour assessment:** an accessible five-screen assessment covering ten skills, deterministic scoring, raw-response history, atomic BehaviourAssessment/BehaviourProfile persistence, schema migration 2→3, safety messaging, and relationship-aware startup routing.
 - **Milestone 5 — Lesson catalogue foundation:** immutable validated LessonDefinition content, deterministic prerequisite and unlock evaluation, mutable per-dog LessonProgress, atomic idempotent progress initialization, ownership cascades, and schema migration 3→4.
 - **Milestone 5.1 — Initial training content:** 30 production-quality force-free lessons across ten skills, three-stage prerequisite progressions, content-version and inactive-content policies, and a deterministic future Daily Plan eligibility contract.
+- **Milestone 6 — Training experience:** the Academy now presents the full 30-lesson catalogue with skill filters, expandable step-by-step instructions, safety guidance, session completion actions, and per-skill progress summaries.
+- **Milestone 7 — Adaptive daily plans:** one persisted plan per dog per day prioritises eligible new learning, weaker measured skills, in-progress work, and balanced reinforcement while respecting prerequisites and minimum ages.
+- **Milestone 8 — Training sessions:** lesson feedback records atomic TrainingSession history, attempts, successful completions, performance ratings, and prerequisite unlocks; completed paths remain available for reinforcement practice.
+- **Milestone 9 — Progress intelligence:** every session updates durable totals, training minutes, calendar streaks, completed paths, daily-plan status, recent activity, and milestone achievements in the same transaction.
+- **Milestone 10 — Daily Plan control:** owners can swap scheduled lessons for deterministic eligible alternatives or confirm a rest day, with every plan transition persisted safely and completed plans protected from later changes.
+- **Milestone 11 — Training journal:** a complete navigable session history supports ownership-checked, transactional notes so owners can preserve observations, context, and next-session ideas alongside each outcome.
+- **Milestone 12 — Seven-day planner:** the app creates an idempotent personalised training week, rotates eligible skills, preserves existing and completed days, supports reversible rest days, and validates manual one-or-two-lesson schedules.
 
 Not implemented yet:
 
-- Adaptive recommendations
-- Daily plan generation
-- Lesson library and progress UI flows
+- Calendar reminders and notification delivery
+- Session search, filters, and data export
 - Authentication or backend services
 - Cloud sync
 - Subscriptions or payments
