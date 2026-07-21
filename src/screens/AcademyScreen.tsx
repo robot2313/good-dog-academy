@@ -41,7 +41,7 @@ export function AcademyScreen(): React.JSX.Element {
           key={lesson.id}
           lesson={lesson}
           completed={records.find((record) => record.lessonId === lesson.id)?.status === 'completed'}
-          onComplete={() => void completeLesson(lesson.id)}
+          onComplete={(rating) => void completeLesson(lesson.id, rating)}
         />
       ))}
     </AppScreen>

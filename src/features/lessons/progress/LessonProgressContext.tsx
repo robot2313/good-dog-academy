@@ -1,21 +1,17 @@
 import { createContext, type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import type { LessonProgress } from '../../../domain/models';
-import { domainRepositories } from '../../../services/domainRepositories';
+import type { LessonPerformanceRating, LessonProgress } from '../../../domain/models';
 import { useOnboarding } from '../../onboarding/OnboardingContext';
-import { loadBundledLessonCatalogue } from '../catalogue';
-import { LessonUnlockService } from './LessonUnlockService';
-import { lessonProgressInitializationService } from './lessonProgressServices';
+import { lessonProgressInitializationService, lessonSessionCompletionService } from './lessonProgressServices';
 
 type LessonProgressContextValue = {
   records: readonly LessonProgress[];
   loading: boolean;
   error: string | null;
-  completeLesson: (lessonId: string) => Promise<void>;
+  completeLesson: (lessonId: string, rating: LessonPerformanceRating) => Promise<void>;
 };
 
 const LessonProgressContext = createContext<LessonProgressContextValue | undefined>(undefined);
-const catalogue = loadBundledLessonCatalogue();
 
 export function LessonProgressProvider({ children }: PropsWithChildren): React.JSX.Element {
   const { status } = useOnboarding();
@@ -33,27 +29,16 @@ export function LessonProgressProvider({ children }: PropsWithChildren): React.J
       .finally(() => setLoading(false));
   }, [status]);
 
-  const completeLesson = useCallback(async (lessonId: string) => {
-    const current = records.find((record) => record.lessonId === lessonId);
-    if (!current || current.status === 'locked') return;
-    const now = new Date().toISOString();
-    const completedRecord: LessonProgress = {
-      ...current,
-      attempts: current.attempts + 1,
-      successfulCompletions: current.successfulCompletions + 1,
-      lastAttemptedAt: now,
-      lastCompletedAt: now,
-      updatedAt: now,
-    };
-    const nextRecords = records.map((record) => record.id === current.id ? completedRecord : record);
-    const statuses = new LessonUnlockService(catalogue).determineStatuses(nextRecords);
-    const updated = nextRecords.map((record) => {
-      const nextStatus = statuses.get(record.lessonId) ?? record.status;
-      return { ...record, status: nextStatus, unlockedAt: nextStatus === 'locked' ? null : record.unlockedAt ?? now, updatedAt: now };
-    });
-    for (const record of updated) await domainRepositories.lessonProgress.save(record);
-    setRecords(updated);
-  }, [records]);
+  const completeLesson = useCallback(async (lessonId: string, rating: LessonPerformanceRating) => {
+    if (status?.state !== 'complete') return;
+    setError(null);
+    try {
+      const result = await lessonSessionCompletionService.complete(lessonId, status.dog.id, rating);
+      setRecords(result.progress);
+    } catch {
+      setError('This training session could not be saved. Please try again.');
+    }
+  }, [status]);
 
   const value = useMemo(() => ({ records, loading, error, completeLesson }), [completeLesson, error, loading, records]);
   return <LessonProgressContext.Provider value={value}>{children}</LessonProgressContext.Provider>;

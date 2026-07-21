@@ -42,7 +42,7 @@ export function TodayScreen(): React.JSX.Element {
       {planLoading ? <Text style={styles.body}>Preparing today’s personalised plan…</Text> : null}
       {planError ? <View style={styles.errorCard}><Text style={styles.body}>{planError}</Text></View> : null}
       {recommendedLessons.map((lesson) => (
-        <LessonCard key={lesson.id} lesson={lesson} completed={false} onComplete={() => void completeLesson(lesson.id)} />
+        <LessonCard key={lesson.id} lesson={lesson} completed={false} onComplete={(rating) => void completeLesson(lesson.id, rating)} />
       ))}
       {!planLoading && !planError && recommendedLessons.length === 0 ? (
         <View style={styles.card}><Text style={styles.sectionTitle}>Foundation complete</Text><Text style={styles.body}>Explore the Academy for your next developing lesson.</Text></View>
