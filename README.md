@@ -22,11 +22,11 @@ Completed milestones:
 - **Milestone 11 — Training journal:** a complete navigable session history supports ownership-checked, transactional notes so owners can preserve observations, context, and next-session ideas alongside each outcome.
 - **Milestone 12 — Seven-day planner:** the app creates an idempotent personalised training week, rotates eligible skills, preserves existing and completed days, supports reversible rest days, and validates manual one-or-two-lesson schedules.
 - **Milestone 13 — Training reminders:** persistent local preferences provide morning, midday, evening, or off presets; phone delivery is permission-aware, disabling cancels schedules, and web safely preserves preferences without pretending to deliver notifications.
+- **Milestone 14 — Journal search and export:** session history supports text search, result and skill filters, clear empty states, and privacy-conscious CSV export of the visible results on web and mobile.
 
 Not implemented yet:
 
 - Backend sync and cross-device notification delivery
-- Session search, filters, and data export
 - Authentication or backend services
 - Cloud sync
 - Subscriptions or payments
