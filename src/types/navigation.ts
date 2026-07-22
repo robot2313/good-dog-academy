@@ -8,7 +8,8 @@ export type RootStackParamList = {
   AssessmentControl: undefined;
   AssessmentResults: undefined;
   Main: undefined;
-  LessonSummary: { lessonId: string };
+  LessonSummary: { lessonId: string; dailyPlanId?: string };
+  LessonSession: { lessonId: string; dailyPlanId?: string };
 };
 
 export type MainTabParamList = {

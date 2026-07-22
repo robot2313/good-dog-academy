@@ -23,5 +23,9 @@ export function LessonSummaryScreen({ navigation, route }: Props): React.JSX.Ele
     error={error}
     onRetry={retry}
     onBack={() => navigation.goBack()}
+    onStart={() => navigation.navigate('LessonSession', {
+      lessonId: route.params.lessonId,
+      ...(route.params.dailyPlanId ? { dailyPlanId: route.params.dailyPlanId } : {}),
+    })}
   />;
 }

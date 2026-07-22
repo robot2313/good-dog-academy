@@ -3,6 +3,7 @@ import { Text, View } from 'react-native';
 import { AppScreen } from '../../../components/AppScreen';
 import { ErrorState } from '../../../components/ErrorState';
 import { LoadingState } from '../../../components/LoadingState';
+import { PrimaryButton } from '../../../components/PrimaryButton';
 import { SecondaryTextButton } from '../../../components/SecondaryTextButton';
 import type { LessonDefinition, LessonId } from '../../../domain/models';
 import { styles } from '../../../theme/styles';
@@ -22,9 +23,10 @@ type LessonSummaryScreenViewProps = {
   error: unknown | null;
   onRetry: () => void;
   onBack: () => void;
+  onStart: () => void;
 };
 
-export function LessonSummaryScreenView({ lessonId, lessonDefinition, dogName, service, loading, error, onRetry, onBack }: LessonSummaryScreenViewProps): React.JSX.Element {
+export function LessonSummaryScreenView({ lessonId, lessonDefinition, dogName, service, loading, error, onRetry, onBack, onStart }: LessonSummaryScreenViewProps): React.JSX.Element {
   let lesson: LessonLibraryItem | null = null;
   let derivedError = error;
   if (!loading && !derivedError) {
@@ -69,9 +71,13 @@ export function LessonSummaryScreenView({ lessonId, lessonDefinition, dogName, s
       <Text style={styles.librarySummaryLockReason}>{lesson.lock.reason}</Text>
       {lesson.lock.missingPrerequisiteNames.length > 0 ? <Text style={styles.librarySummarySupportText}>Required first: {lesson.lock.missingPrerequisiteNames.join(', ')}</Text> : null}
     </View> : <View style={styles.librarySummaryNotice}>
-      <Text style={styles.librarySummaryNoticeTitle}>Read-only coaching guide</Text>
-      <Text style={styles.librarySummarySupportText}>Guided sessions and training controls are planned for a later milestone.</Text>
+      <Text style={styles.librarySummaryNoticeTitle}>Guided practice available</Text>
+      <Text style={styles.librarySummarySupportText}>Follow the steps with a gentle timer, coaching check-ins and a final session rating.</Text>
     </View>}
+    {lesson.state !== 'LOCKED' && lessonDefinition?.id === lesson.id ? <PrimaryButton
+      title={lesson.state === 'COMPLETED' ? 'Practise this lesson again' : 'Start guided session'}
+      onPress={onStart}
+    /> : null}
     {lessonDefinition?.id === lesson.id ? <LessonCoachingGuide lesson={lessonDefinition} /> : null}
   </AppScreen>;
 }

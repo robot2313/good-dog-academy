@@ -174,8 +174,17 @@ describe('Lesson Library UI', () => {
 });
 
 describe('Lesson Summary coaching guide', () => {
+  it('starts guided practice only from an available lesson while preserving coaching', () => {
+    const onStart = jest.fn();
+    const view = render(<LessonSummaryScreenView lessonId={foundationLesson.id} lessonDefinition={foundationLesson} dogName="Scout" service={availableService} loading={false} error={null} onRetry={jest.fn()} onBack={jest.fn()} onStart={onStart} />);
+    expect(view.getByRole('header', { name: 'Picture the task' })).toBeTruthy();
+    expect(view.getByText('Guided practice available')).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: 'Start guided session' }));
+    expect(onStart).toHaveBeenCalledTimes(1);
+  });
+
   it('shows locked guidance and accessible illustrations without playback controls', () => {
-    const view = render(<LessonSummaryScreenView lessonId={recallLesson.id} lessonDefinition={recallLesson} dogName="Scout" service={availableService} loading={false} error={null} onRetry={jest.fn()} onBack={jest.fn()} />);
+    const view = render(<LessonSummaryScreenView lessonId={recallLesson.id} lessonDefinition={recallLesson} dogName="Scout" service={availableService} loading={false} error={null} onRetry={jest.fn()} onBack={jest.fn()} onStart={jest.fn()} />);
     expect(view.getByText('LESSON SUMMARY')).toBeTruthy();
     expect(view.getByText(recallLesson.title)).toBeTruthy();
     expect(view.getByText('Locked')).toBeTruthy();
@@ -193,7 +202,7 @@ describe('Lesson Summary coaching guide', () => {
 
   it('handles invalid lesson IDs safely and returns to the library', () => {
     const onBack = jest.fn();
-    const view = render(<LessonSummaryScreenView lessonId="missing-library-lesson" lessonDefinition={null} dogName="Scout" service={availableService} loading={false} error={null} onRetry={jest.fn()} onBack={onBack} />);
+    const view = render(<LessonSummaryScreenView lessonId="missing-library-lesson" lessonDefinition={null} dogName="Scout" service={availableService} loading={false} error={null} onRetry={jest.fn()} onBack={onBack} onStart={jest.fn()} />);
     expect(view.getByText(/no longer available/)).toBeTruthy();
     fireEvent.press(view.getByRole('button', { name: 'Back to Lesson Library' }));
     expect(onBack).toHaveBeenCalledTimes(1);
