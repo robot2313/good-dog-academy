@@ -17,10 +17,11 @@ Completed milestones:
 - **Milestone 6.1 — Personalised recommendation engine:** pure deterministic ranking of eligible new-learning and reinforcement lessons using assessment scores, progress state, practice need, recency, age, prerequisites, time limits, and skill diversity.
 - **Milestone 6 — Deterministic Daily Plan Engine:** production typed plans, supported time budgets, latest-assessment and ownership integrity, recent-plan rotation, local-day idempotency, transactional persistence, schema migration 4→5, and a default 15-minute application entry point.
 - **Milestone 7.1 — Lesson Library Foundation:** a read-only, selected-dog-aware service exposes immutable lesson metadata, deterministic skill groups, derived progress states, prerequisite explanations, case-insensitive search, combinable filters, and typed errors for the future library UI. See [Milestone 7.1 documentation](docs/milestone-7-1-lesson-library-foundation.md).
+- **Milestones 7.2 and 7.3 — Lesson Library UI, Search, and Filters:** the Academy tab now provides an accessible, phone-friendly lesson browser with selected-dog context, deterministic skill sections, textual progress states, prerequisite guidance, service-backed search, combinable filters, distinct recovery states, and a minimal safe summary route. See [Milestones 7.2 and 7.3 documentation](docs/milestone-7-2-7-3-lesson-library-ui-search-filters.md).
 
 Not implemented yet:
 
-- Lesson Library UI and progress UI flows
+- Full lesson details, playback, and progress-writing UI flows
 - Authentication or backend services
 - Cloud sync
 - Subscriptions or payments

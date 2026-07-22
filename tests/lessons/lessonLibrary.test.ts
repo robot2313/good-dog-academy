@@ -105,6 +105,17 @@ describe('LessonLibraryService', () => {
     expect(service.filterLessons({})).toEqual(service.getAllLessons());
   });
 
+  it('combines search with filters and groups only the matching lessons', () => {
+    const service = new LessonLibraryService(catalogue, sampleDog.id, []);
+    const matches = service.queryLessons('fixture', { skill: 'recall', difficulty: 2, state: 'LOCKED' });
+    const groups = service.getGroupedLessons(matches);
+
+    expect(matches.map((lesson) => lesson.id)).toEqual([recallLesson.id]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0]).toMatchObject({ skill: 'recall', title: 'Recall' });
+    expect(groups[0].lessons.map((lesson) => lesson.id)).toEqual([recallLesson.id]);
+  });
+
   it('gracefully returns empty collections for an empty catalogue', () => {
     const service = new LessonLibraryService(LessonCatalogue.load([]), sampleDog.id, []);
     expect(service.getAllLessons()).toEqual([]);

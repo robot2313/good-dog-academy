@@ -23,8 +23,7 @@ export class LessonLibraryService {
     return this.items;
   }
 
-  getGroupedLessons(): readonly LessonGroup[] {
-    const lessons = this.getAllLessons();
+  getGroupedLessons(lessons: readonly LessonLibraryItem[] = this.getAllLessons()): readonly LessonGroup[] {
     return Object.freeze(behaviourSkills.flatMap((skill) => {
       const groupLessons = lessons.filter((lesson) => lesson.skill === skill);
       return groupLessons.length === 0 ? [] : [Object.freeze({ skill, title: titleCase(skill.replaceAll('-', ' ')), lessons: Object.freeze(groupLessons) })];
@@ -42,7 +41,15 @@ export class LessonLibraryService {
   }
 
   filterLessons(filters: LessonFilter): readonly LessonLibraryItem[] {
-    return Object.freeze(this.getAllLessons().filter((lesson) => (
+    return this.applyFilters(this.getAllLessons(), filters);
+  }
+
+  queryLessons(query: string, filters: LessonFilter): readonly LessonLibraryItem[] {
+    return this.applyFilters(this.searchLessons(query), filters);
+  }
+
+  private applyFilters(lessons: readonly LessonLibraryItem[], filters: LessonFilter): readonly LessonLibraryItem[] {
+    return Object.freeze(lessons.filter((lesson) => (
       (filters.skill === undefined || lesson.skill === filters.skill)
       && (filters.difficulty === undefined || lesson.difficulty === filters.difficulty)
       && (filters.state === undefined || lesson.state === filters.state)

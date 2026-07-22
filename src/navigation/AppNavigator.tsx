@@ -18,6 +18,7 @@ import { MainTabBar } from './MainTabBar';
 import { AssessmentIntroScreen } from '../features/assessment/screens/AssessmentIntroScreen';
 import { AssessmentResultsScreen } from '../features/assessment/screens/AssessmentResultsScreen';
 import { AssessmentSectionScreen } from '../features/assessment/screens/AssessmentSectionScreen';
+import { LessonSummaryScreen } from '../features/lessons/library/LessonSummaryScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -43,7 +44,10 @@ export function AppNavigator(): React.JSX.Element {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {status.state === 'complete' ? <Stack.Screen name="Main" component={MainTabs} />
+        {status.state === 'complete' ? <>
+            <Stack.Screen name="Main" component={MainTabs} />
+            <Stack.Screen name="LessonSummary" component={LessonSummaryScreen} />
+          </>
           : status.state === 'assessment-required' || status.state === 'assessment-corrupt' ? <>
               <Stack.Screen name="AssessmentIntro" component={AssessmentIntroScreen} />
               <Stack.Screen name="AssessmentEveryday">{(props) => <AssessmentSectionScreen {...props} section="everyday" />}</Stack.Screen>
