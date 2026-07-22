@@ -16,10 +16,11 @@ Completed milestones:
 - **Milestone 5.1 — Initial training content:** 30 production-quality force-free lessons across ten skills, three-stage prerequisite progressions, content-version and inactive-content policies, and a deterministic future Daily Plan eligibility contract.
 - **Milestone 6.1 — Personalised recommendation engine:** pure deterministic ranking of eligible new-learning and reinforcement lessons using assessment scores, progress state, practice need, recency, age, prerequisites, time limits, and skill diversity.
 - **Milestone 6 — Deterministic Daily Plan Engine:** production typed plans, supported time budgets, latest-assessment and ownership integrity, recent-plan rotation, local-day idempotency, transactional persistence, schema migration 4→5, and a default 15-minute application entry point.
+- **Milestone 7.1 — Lesson Library Foundation:** a read-only, selected-dog-aware service exposes immutable lesson metadata, deterministic skill groups, derived progress states, prerequisite explanations, case-insensitive search, combinable filters, and typed errors for the future library UI. See [Milestone 7.1 documentation](docs/milestone-7-1-lesson-library-foundation.md).
 
 Not implemented yet:
 
-- Lesson library and progress UI flows
+- Lesson Library UI and progress UI flows
 - Authentication or backend services
 - Cloud sync
 - Subscriptions or payments
