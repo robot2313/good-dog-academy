@@ -21,10 +21,11 @@ Completed milestones:
 - **Milestone 10 — Daily Plan control:** owners can swap scheduled lessons for deterministic eligible alternatives or confirm a rest day, with every plan transition persisted safely and completed plans protected from later changes.
 - **Milestone 11 — Training journal:** a complete navigable session history supports ownership-checked, transactional notes so owners can preserve observations, context, and next-session ideas alongside each outcome.
 - **Milestone 12 — Seven-day planner:** the app creates an idempotent personalised training week, rotates eligible skills, preserves existing and completed days, supports reversible rest days, and validates manual one-or-two-lesson schedules.
+- **Milestone 13 — Training reminders:** persistent local preferences provide morning, midday, evening, or off presets; phone delivery is permission-aware, disabling cancels schedules, and web safely preserves preferences without pretending to deliver notifications.
 
 Not implemented yet:
 
-- Calendar reminders and notification delivery
+- Backend sync and cross-device notification delivery
 - Session search, filters, and data export
 - Authentication or backend services
 - Cloud sync

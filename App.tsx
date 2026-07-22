@@ -6,19 +6,22 @@ import { AppStateProvider } from './src/state/AppStateContext';
 import { AssessmentProvider } from './src/features/assessment/AssessmentContext';
 import { LessonProgressProvider } from './src/features/lessons/progress/LessonProgressContext';
 import { DailyPlanProvider } from './src/features/dailyPlan/DailyPlanContext';
+import { ReminderProvider } from './src/features/notifications/ReminderContext';
 
 export default function App(): React.JSX.Element {
   return (
     <SafeAreaProvider>
       <AppStateProvider>
         <OnboardingProvider>
-          <LessonProgressProvider>
-            <DailyPlanProvider>
-              <AssessmentProvider>
-                <AppNavigator />
-              </AssessmentProvider>
-            </DailyPlanProvider>
-          </LessonProgressProvider>
+          <ReminderProvider>
+            <LessonProgressProvider>
+              <DailyPlanProvider>
+                <AssessmentProvider>
+                  <AppNavigator />
+                </AssessmentProvider>
+              </DailyPlanProvider>
+            </LessonProgressProvider>
+          </ReminderProvider>
         </OnboardingProvider>
       </AppStateProvider>
     </SafeAreaProvider>

@@ -1,20 +1,23 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import type { LessonDefinition, LessonPerformanceRating } from '../domain/models';
+import type { LessonDefinition, LessonPerformanceRating, LessonProgressStatus } from '../domain/models';
 import { styles } from '../theme/styles';
 import { PrimaryButton } from './PrimaryButton';
 
 type LessonCardProps = {
   lesson: LessonDefinition;
-  completed: boolean;
+  status: LessonProgressStatus;
+  lockedMessage?: string;
   onComplete: (rating: LessonPerformanceRating) => void;
 };
 
-export function LessonCard({ lesson, completed, onComplete }: LessonCardProps): React.JSX.Element {
+export function LessonCard({ lesson, status, lockedMessage, onComplete }: LessonCardProps): React.JSX.Element {
   const [expanded, setExpanded] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const submitFeedback = (rating: LessonPerformanceRating) => { onComplete(rating); setShowFeedback(false); };
+  const completed = status === 'completed';
+  const locked = status === 'locked';
 
   return (
     <View style={styles.card}>
@@ -35,13 +38,13 @@ export function LessonCard({ lesson, completed, onComplete }: LessonCardProps): 
         </View>
       ) : null}
       {completed ? <View style={styles.completedBadge}><Text style={styles.completedBadgeText}>✓ Path completed</Text></View> : null}
-      {showFeedback ? (
+      {locked ? <View style={styles.lockedLesson}><Text style={styles.lockedLessonTitle}>Locked</Text><Text style={styles.lockedLessonText}>{lockedMessage ?? 'Complete the prerequisite lesson path to unlock this session.'}</Text></View> : showFeedback ? (
         <View style={styles.feedbackPanel}>
           <Text style={styles.label}>How did this session go?</Text>
           <View style={styles.feedbackRow}>
-            <Pressable style={styles.feedbackButton} onPress={() => submitFeedback(2)}><Text style={styles.feedbackButtonText}>Needs practice</Text></Pressable>
-            <Pressable style={styles.feedbackButton} onPress={() => submitFeedback(3)}><Text style={styles.feedbackButtonText}>Good</Text></Pressable>
-            <Pressable style={[styles.feedbackButton, styles.feedbackButtonStrong]} onPress={() => submitFeedback(5)}><Text style={[styles.feedbackButtonText, styles.feedbackButtonTextStrong]}>Great</Text></Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Session needs more practice" style={styles.feedbackButton} onPress={() => submitFeedback(2)}><Text style={styles.feedbackButtonText}>Needs practice</Text></Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Session went well" style={styles.feedbackButton} onPress={() => submitFeedback(3)}><Text style={styles.feedbackButtonText}>Good</Text></Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Session went great" style={[styles.feedbackButton, styles.feedbackButtonStrong]} onPress={() => submitFeedback(5)}><Text style={[styles.feedbackButtonText, styles.feedbackButtonTextStrong]}>Great</Text></Pressable>
           </View>
         </View>
       ) : <PrimaryButton title={completed ? 'Practice again' : 'Finish session'} onPress={() => setShowFeedback(true)} />}

@@ -15,7 +15,7 @@ import type { RootStackParamList } from '../types/navigation';
 
 export function TodayScreen(): React.JSX.Element {
   const { profile } = useAppState();
-  const { records, completeLesson } = useLessonProgress();
+  const { records, error: progressError, completeLesson } = useLessonProgress();
   const { plan, loading: planLoading, saving: planSaving, error: planError, refreshPlan, skipPlan } = useDailyPlan();
   const [confirmSkip, setConfirmSkip] = useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -47,9 +47,10 @@ export function TodayScreen(): React.JSX.Element {
       <Text style={styles.eyebrowDark}>RECOMMENDED NEXT</Text>
       {planLoading ? <Text style={styles.body}>Preparing today’s personalised plan…</Text> : null}
       {planError ? <View style={styles.errorCard}><Text style={styles.body}>{planError}</Text></View> : null}
+      {progressError ? <View style={styles.errorCard}><Text style={styles.body}>{progressError}</Text></View> : null}
       {plan?.status === 'skipped' ? <View style={styles.restDayCard}><Text style={styles.sectionTitle}>Rest day saved</Text><Text style={styles.body}>A calm day is part of good training. Your streak and past progress are unchanged.</Text></View> : null}
       {recommendedLessons.map((lesson) => (
-        <LessonCard key={lesson.id} lesson={lesson} completed={false} onComplete={(rating) => void completeLesson(lesson.id, rating, plan?.id)} />
+        <LessonCard key={lesson.id} lesson={lesson} status={records.find((record) => record.lessonId === lesson.id)?.status ?? 'locked'} onComplete={(rating) => void completeLesson(lesson.id, rating, plan?.id)} />
       ))}
       {!planLoading && !planError && recommendedLessons.length === 0 ? (
         <View style={styles.card}><Text style={styles.sectionTitle}>Foundation complete</Text><Text style={styles.body}>Explore the Academy for your next developing lesson.</Text></View>
