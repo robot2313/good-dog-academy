@@ -31,7 +31,8 @@ describe('Lesson Library navigation', () => {
     expect(view.getByText(sampleDog.name)).toBeTruthy();
     fireEvent.press(view.getByRole('button', { name: 'Name Response. Recall. Level 1. 6 minutes. Available.' }));
     expect(await view.findByText('LESSON SUMMARY')).toBeTruthy();
-    expect(view.getByText('Summary only')).toBeTruthy();
+    expect(view.getByText('Read-only coaching guide')).toBeTruthy();
+    expect(view.getByRole('image', { name: /Recall training illustration/ })).toBeTruthy();
     expect(view.queryByText(/start training/i)).toBeNull();
 
     fireEvent.press(view.getByRole('button', { name: 'Back' }));
@@ -39,6 +40,7 @@ describe('Lesson Library navigation', () => {
     fireEvent.press(view.getByRole('button', { name: 'Short-Distance Recall. Recall. Level 2. 9 minutes. Locked. Complete Name Response first.' }));
     expect(await view.findByText('WHY THIS IS LOCKED')).toBeTruthy();
     expect(view.getByText('Complete Name Response first.')).toBeTruthy();
+    expect(view.getByRole('header', { name: 'Picture the task' })).toBeTruthy();
     expect(view.queryByText(/start training/i)).toBeNull();
   });
 });

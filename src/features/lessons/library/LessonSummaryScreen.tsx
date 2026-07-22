@@ -12,9 +12,11 @@ export function LessonSummaryScreen({ navigation, route }: Props): React.JSX.Ele
   const { catalogue, selectedDog, progressRecords, loading, error, retry } = useLessonLibraryData();
   const selectedDogId = selectedDog?.id ?? null;
   const service = useMemo(() => new LessonLibraryService(catalogue, selectedDogId, progressRecords), [catalogue, progressRecords, selectedDogId]);
+  const lessonDefinition = catalogue.findById(route.params.lessonId);
 
   return <LessonSummaryScreenView
     lessonId={route.params.lessonId}
+    lessonDefinition={lessonDefinition}
     dogName={selectedDog?.name ?? null}
     service={service}
     loading={loading}

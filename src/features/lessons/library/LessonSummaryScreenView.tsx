@@ -4,8 +4,9 @@ import { AppScreen } from '../../../components/AppScreen';
 import { ErrorState } from '../../../components/ErrorState';
 import { LoadingState } from '../../../components/LoadingState';
 import { SecondaryTextButton } from '../../../components/SecondaryTextButton';
-import type { LessonId } from '../../../domain/models';
+import type { LessonDefinition, LessonId } from '../../../domain/models';
 import { styles } from '../../../theme/styles';
+import { LessonCoachingGuide } from '../coaching/LessonCoachingGuide';
 import { lessonDifficultyLabels, lessonLibraryErrorMessage, skillLabel } from './lessonLibraryPresentation';
 import { LessonLibraryError } from './LessonLibraryError';
 import type { LessonLibraryService } from './LessonLibraryService';
@@ -14,6 +15,7 @@ import { LessonStateBadge } from './LessonStateBadge';
 
 type LessonSummaryScreenViewProps = {
   lessonId: LessonId;
+  lessonDefinition: LessonDefinition | null;
   dogName: string | null;
   service: LessonLibraryService;
   loading: boolean;
@@ -22,7 +24,7 @@ type LessonSummaryScreenViewProps = {
   onBack: () => void;
 };
 
-export function LessonSummaryScreenView({ lessonId, dogName, service, loading, error, onRetry, onBack }: LessonSummaryScreenViewProps): React.JSX.Element {
+export function LessonSummaryScreenView({ lessonId, lessonDefinition, dogName, service, loading, error, onRetry, onBack }: LessonSummaryScreenViewProps): React.JSX.Element {
   let lesson: LessonLibraryItem | null = null;
   let derivedError = error;
   if (!loading && !derivedError) {
@@ -67,8 +69,9 @@ export function LessonSummaryScreenView({ lessonId, dogName, service, loading, e
       <Text style={styles.librarySummaryLockReason}>{lesson.lock.reason}</Text>
       {lesson.lock.missingPrerequisiteNames.length > 0 ? <Text style={styles.librarySummarySupportText}>Required first: {lesson.lock.missingPrerequisiteNames.join(', ')}</Text> : null}
     </View> : <View style={styles.librarySummaryNotice}>
-      <Text style={styles.librarySummaryNoticeTitle}>Summary only</Text>
-      <Text style={styles.librarySummarySupportText}>Full lesson details and training controls are intentionally deferred to Milestone 7.4.</Text>
+      <Text style={styles.librarySummaryNoticeTitle}>Read-only coaching guide</Text>
+      <Text style={styles.librarySummarySupportText}>Guided sessions and training controls are planned for a later milestone.</Text>
     </View>}
+    {lessonDefinition?.id === lesson.id ? <LessonCoachingGuide lesson={lessonDefinition} /> : null}
   </AppScreen>;
 }
