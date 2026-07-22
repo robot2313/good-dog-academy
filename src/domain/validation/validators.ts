@@ -11,7 +11,7 @@ import type {
   Progress,
   TrainingSession,
 } from '../models';
-import { behaviourSkills } from '../models';
+import { behaviourSkills, dailyPlanTargetMinutes } from '../models';
 import {
   finishValidation,
   isDateOnly,
@@ -192,10 +192,41 @@ export function validateLessonProgress(value: unknown): ValidationResult<LessonP
 export function validateDailyPlan(value: unknown): ValidationResult<DailyPlan> {
   const { record, errors } = recordOrError(value);
   if (!record) return { valid: false, errors };
-  ['id', 'dogId'].forEach((key) => requireString(record, key, errors));
-  if (!isDateOnly(record.date)) errors.push('date must use YYYY-MM-DD');
-  if (!isStringArray(record.lessonIds)) errors.push('lessonIds must contain non-empty strings');
-  if (!isOneOf(record.status, ['scheduled', 'in-progress', 'completed', 'skipped'] as const)) errors.push('status is invalid');
+  ['id', 'ownerId', 'dogId', 'timezone', 'sourceAssessmentId'].forEach((key) => requireString(record, key, errors));
+  if (!isDateOnly(record.localDate)) errors.push('localDate must use YYYY-MM-DD');
+  try {
+    if (isNonEmptyString(record.timezone)) new Intl.DateTimeFormat('en-AU', { timeZone: record.timezone });
+  } catch {
+    errors.push('timezone must be a valid IANA timezone');
+  }
+  if (!isOneOf(record.targetMinutes, dailyPlanTargetMinutes)) errors.push('targetMinutes is unsupported');
+  if (!isNonNegativeInteger(record.estimatedMinutes) || record.estimatedMinutes === 0) errors.push('estimatedMinutes must be a positive integer');
+  if (!isOneOf(record.focusSkill, behaviourSkills)) errors.push('focusSkill is invalid');
+  if (!isOneOf(record.status, ['planned', 'completed', 'skipped'] as const)) errors.push('status is invalid');
+  const reasonCodes = ['LOW_SKILL_SCORE', 'UNKNOWN_SKILL', 'IN_PROGRESS', 'AVAILABLE_NEW_LEARNING', 'NEEDS_PRACTICE', 'REINFORCEMENT_DUE', 'RECENTLY_PLANNED_PENALTY'] as const;
+  if (!Array.isArray(record.items) || record.items.length < 1 || record.items.length > 2) {
+    errors.push('items must contain one or two items');
+  } else {
+    const lessonIds: string[] = [];
+    record.items.forEach((item, index) => {
+      if (!isRecord(item)) { errors.push(`items[${index}] must be an object`); return; }
+      requireString(item, 'lessonId', errors);
+      if (typeof item.lessonId === 'string') lessonIds.push(item.lessonId);
+      if (!isOneOf(item.skill, behaviourSkills)) errors.push(`items[${index}].skill is invalid`);
+      if (!isOneOf(item.role, ['primary', 'reinforcement'] as const)) errors.push(`items[${index}].role is invalid`);
+      if (!isNonNegativeInteger(item.plannedMinutes) || item.plannedMinutes === 0) errors.push(`items[${index}].plannedMinutes must be positive`);
+      if (!Array.isArray(item.reasonCodes) || !item.reasonCodes.every((reason) => isOneOf(reason, reasonCodes))) errors.push(`items[${index}].reasonCodes is invalid`);
+      if (item.order !== index + 1) errors.push(`items[${index}].order must match its position`);
+    });
+    if (record.items[0] && isRecord(record.items[0]) && record.items[0].role !== 'primary') errors.push('the primary item must appear first');
+    if (record.items.filter((item) => isRecord(item) && item.role === 'primary').length !== 1) errors.push('items must contain exactly one primary');
+    if (record.items.filter((item) => isRecord(item) && item.role === 'reinforcement').length > 1) errors.push('items may contain at most one reinforcement');
+    if (new Set(lessonIds).size !== lessonIds.length) errors.push('items must not repeat a lesson');
+    const minutes = record.items.reduce((total, item) => total + (isRecord(item) && isNonNegativeInteger(item.plannedMinutes) ? item.plannedMinutes : 0), 0);
+    if (isNonNegativeInteger(record.estimatedMinutes) && minutes !== record.estimatedMinutes) errors.push('estimatedMinutes must equal item minutes');
+    if (record.items[0] && isRecord(record.items[0]) && record.focusSkill !== record.items[0].skill) errors.push('focusSkill must match the primary item');
+  }
+  requireIsoDate(record, 'generatedAt', errors);
   requireIsoDate(record, 'createdAt', errors);
   requireIsoDate(record, 'updatedAt', errors);
   return finishValidation<DailyPlan>(value, errors);

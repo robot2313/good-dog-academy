@@ -40,7 +40,7 @@ Lesson catalogue
 
 `CURRENT_SCHEMA_VERSION` identifies the storage layout understood by the installed application. At startup, `MigrationManager` reads the stored version. A new database is stamped with the current version. An older database must have a contiguous migration path registered in `src/storage/migrations/index.ts`; migrations run in order and the stored version is updated after each successful step. A newer or invalid version is rejected safely.
 
-Version 4 is current. Migration 1→2 adds the Owner onboarding preferences and Dog profile fields introduced in Milestone 3. Migration 2→3 replaces the obsolete single confidence field with a complete typed `skillScores` map, `unknownSkills`, and an optional `assessmentId`. Migration 3→4 introduces the LessonProgress storage namespace without automatically creating progress; any pre-release records are preserved. Each migration and its schema-version update run through the staged transaction manager, so failed writes restore the prior schema and records. Re-running startup at version 4 is idempotent.
+Version 5 is current. Migration 1→2 adds Owner onboarding preferences and Dog profile fields. Migration 2→3 introduces complete skill scores and assessment linkage. Migration 3→4 introduces LessonProgress without automatically creating records. Migration 4→5 atomically retires unverifiable presentation-only DailyPlan drafts before the production plan shape is used. Each migration and its version update use the staged transaction manager, so failed writes restore prior state. Re-running startup at version 5 is idempotent.
 
 ## Transactions
 
@@ -83,7 +83,7 @@ Content versions are not stored in LessonProgress. Increasing `contentVersion` u
 
 Production content is reward-based, force-free, non-diagnostic, and usable without video. Automated audits enforce content depth, permanent IDs, stage chains, durations, measurable criteria, and prohibited-method policy. Reactivity content requires below-threshold distance, secure equipment, planned exits, no forced greetings, and professional or veterinary escalation when risk or sudden change warrants it. See `docs/lesson-authoring-guide.md` for the complete authoring contract.
 
-A future Daily Plan engine may read the frozen catalogue together with validated LessonProgress to select eligible content. Milestone 5 does not generate DailyPlans, recommendations, training sessions, or achievements.
+The Daily Plan engine reads the frozen catalogue through the eligibility service and combines the latest profile-linked assessment, dog age, LessonProgress, and seven recent plans. It creates at most two typed items, persists once per owner/dog/local date in a transaction, and reuses the dated plan on subsequent requests. It never creates training sessions or achievements.
 
 ## Behaviour assessment
 

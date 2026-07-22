@@ -4,6 +4,7 @@ import { InMemoryStorageAdapter } from '../support/InMemoryStorageAdapter';
 import { migration1To2 } from '../../src/storage/migrations/Migration1To2';
 import { migration2To3 } from '../../src/storage/migrations/Migration2To3';
 import { migration3To4 } from '../../src/storage/migrations/Migration3To4';
+import { migration4To5 } from '../../src/storage/migrations/Migration4To5';
 import { behaviourSkills } from '../../src/domain/models';
 import { lessonProgress } from '../support/lessonFixtures';
 import { storageKeys } from '../../src/storage/storageKeys';
@@ -196,5 +197,18 @@ describe('schema migration 3 to 4', () => {
     const once = storage.snapshot();
     await manager.migrateToCurrent();
     expect(storage.snapshot()).toEqual(once);
+  });
+});
+
+describe('schema migration 4 to 5', () => {
+  it('retires unverifiable pre-production plans and preserves unrelated data', async () => {
+    const storage = new InMemoryStorageAdapter();
+    await storage.setItem(storageKeys.schemaVersion, 4);
+    await storage.setItem(storageKeys.owners, [version1Owner]);
+    await storage.setItem(storageKeys.dailyPlans, [{ id: 'legacy', dogId: 'dog-v1', date: '2026-07-19', lessonIds: ['marker'], status: 'scheduled' }]);
+    await new MigrationManager(storage, storageKeys.schemaVersion, 5, [migration4To5]).migrateToCurrent();
+    await expect(storage.getItem(storageKeys.dailyPlans)).resolves.toEqual([]);
+    await expect(storage.getItem(storageKeys.owners)).resolves.toEqual([version1Owner]);
+    await expect(storage.getItem(storageKeys.schemaVersion)).resolves.toBe(5);
   });
 });

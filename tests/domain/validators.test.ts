@@ -38,7 +38,7 @@ const cases: Case[] = [
   { name: 'BehaviourProfile', valid: sampleBehaviourProfile, validate: validateBehaviourProfile, requiredField: 'dogId', invalid: { ...sampleBehaviourProfile, energyLevel: 'extreme' }, boundary: { ...sampleBehaviourProfile, challenges: [], notes: '' } },
   { name: 'BehaviourAssessment', valid: sampleBehaviourAssessment, validate: validateBehaviourAssessment, requiredField: 'ownerId', invalid: { ...sampleBehaviourAssessment, schemaVersion: 2 }, boundary: { ...sampleBehaviourAssessment, unknownSkills: [], calculatedScores: { ...sampleBehaviourAssessment.calculatedScores, recall: 0 } } },
   { name: 'LessonProgress', valid: lessonProgress(), validate: validateLessonProgress, requiredField: 'dogId', invalid: { ...lessonProgress(), status: 'started' }, boundary: { ...lessonProgress(), status: 'locked', unlockedAt: null, currentDifficultyAdjustment: -2 } },
-  { name: 'DailyPlan', valid: sampleDailyPlan, validate: validateDailyPlan, requiredField: 'dogId', invalid: { ...sampleDailyPlan, status: 'unknown' }, boundary: { ...sampleDailyPlan, lessonIds: [] } },
+  { name: 'DailyPlan', valid: sampleDailyPlan, validate: validateDailyPlan, requiredField: 'dogId', invalid: { ...sampleDailyPlan, status: 'unknown' }, boundary: { ...sampleDailyPlan, targetMinutes: 5 } },
   { name: 'TrainingSession', valid: sampleTrainingSession, validate: validateTrainingSession, requiredField: 'lessonId', invalid: { ...sampleTrainingSession, outcome: 'mixed' }, boundary: { ...sampleTrainingSession, dailyPlanId: null, completedAt: null, outcome: null, durationMinutes: 0 } },
   { name: 'Achievement', valid: sampleAchievement, validate: validateAchievement, requiredField: 'code', invalid: { ...sampleAchievement, earnedAt: 'not-a-date' }, boundary: { ...sampleAchievement, title: 'A', description: 'A' } },
   { name: 'Progress', valid: sampleProgress, validate: validateProgress, requiredField: 'dogId', invalid: { ...sampleProgress, sessionsCompleted: -1 }, boundary: { ...sampleProgress, completedLessonIds: [], sessionsCompleted: 0, currentStreakDays: 0, bestStreakDays: 0, totalTrainingMinutes: 0 } },
@@ -68,7 +68,7 @@ describe('additional validator boundaries', () => {
 
   it('rejects zero dog weight and malformed dates', () => {
     expect(validateDog({ ...sampleDog, weightKg: 0 }).valid).toBe(false);
-    expect(validateDailyPlan({ ...sampleDailyPlan, date: '19/07/2026' }).valid).toBe(false);
+    expect(validateDailyPlan({ ...sampleDailyPlan, localDate: '19/07/2026' }).valid).toBe(false);
   });
 
   it('rejects invalid challenge and non-integer progress values', () => {

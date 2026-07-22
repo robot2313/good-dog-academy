@@ -25,7 +25,12 @@ export const sampleBehaviourAssessment: BehaviourAssessment = { id: 'behaviour-a
 export const sampleBehaviourProfile: BehaviourProfile = { id: 'behaviour-profile-sample-001', dogId: sampleDog.id, energyLevel: 'high', foodMotivation: 'high', challenges: ['recall', 'lead-pulling'], skillScores: sampleAssessmentResult.calculatedScores, unknownSkills: sampleAssessmentResult.unknownSkills, assessmentId: sampleBehaviourAssessment.id, notes: 'Engages well indoors and needs support around outdoor distractions.', createdAt, updatedAt: createdAt };
 
 const legacyPresentationLessonId = 'marker';
-export const sampleDailyPlan: DailyPlan = { id: 'daily-plan-sample-001', dogId: sampleDog.id, date: '2026-07-19', lessonIds: [legacyPresentationLessonId], status: 'in-progress', createdAt, updatedAt: createdAt };
+export const sampleDailyPlan: DailyPlan = {
+  id: 'daily-plan-sample-001', ownerId: sampleOwner.id, dogId: sampleDog.id, localDate: '2026-07-19',
+  timezone: 'Australia/Adelaide', targetMinutes: 15, estimatedMinutes: 5, focusSkill: 'focus',
+  items: [{ lessonId: legacyPresentationLessonId, skill: 'focus', role: 'primary', plannedMinutes: 5, reasonCodes: ['AVAILABLE_NEW_LEARNING'], order: 1 }],
+  status: 'planned', sourceAssessmentId: sampleBehaviourAssessment.id, generatedAt: createdAt, createdAt, updatedAt: createdAt,
+};
 export const sampleTrainingSession: TrainingSession = { id: 'training-session-sample-001', dogId: sampleDog.id, lessonId: legacyPresentationLessonId, dailyPlanId: sampleDailyPlan.id, startedAt: '2026-07-19T00:15:00.000Z', completedAt: '2026-07-19T00:23:00.000Z', durationMinutes: 8, outcome: 'success', notes: 'Milo responded consistently in the quiet living room.' };
 export const sampleAchievement: Achievement = { id: 'achievement-sample-001', dogId: sampleDog.id, code: 'FIRST_SESSION', title: 'First Step', description: 'Completed the first Good Dog Academy training session.', earnedAt: '2026-07-19T00:23:00.000Z' };
 export const sampleProgress: Progress = { id: 'progress-sample-001', dogId: sampleDog.id, completedLessonIds: [legacyPresentationLessonId], sessionsCompleted: 1, currentStreakDays: 1, bestStreakDays: 1, totalTrainingMinutes: 8, updatedAt: '2026-07-19T00:23:00.000Z' };

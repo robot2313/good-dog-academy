@@ -14,11 +14,11 @@ Completed milestones:
 - **Milestone 4 — Behaviour assessment:** an accessible five-screen assessment covering ten skills, deterministic scoring, raw-response history, atomic BehaviourAssessment/BehaviourProfile persistence, schema migration 2→3, safety messaging, and relationship-aware startup routing.
 - **Milestone 5 — Lesson catalogue foundation:** immutable validated LessonDefinition content, deterministic prerequisite and unlock evaluation, mutable per-dog LessonProgress, atomic idempotent progress initialization, ownership cascades, and schema migration 3→4.
 - **Milestone 5.1 — Initial training content:** 30 production-quality force-free lessons across ten skills, three-stage prerequisite progressions, content-version and inactive-content policies, and a deterministic future Daily Plan eligibility contract.
+- **Milestone 6.1 — Personalised recommendation engine:** pure deterministic ranking of eligible new-learning and reinforcement lessons using assessment scores, progress state, practice need, recency, age, prerequisites, time limits, and skill diversity.
+- **Milestone 6 — Deterministic Daily Plan Engine:** production typed plans, supported time budgets, latest-assessment and ownership integrity, recent-plan rotation, local-day idempotency, transactional persistence, schema migration 4→5, and a default 15-minute application entry point.
 
 Not implemented yet:
 
-- Adaptive recommendations
-- Daily plan generation
 - Lesson library and progress UI flows
 - Authentication or backend services
 - Cloud sync
@@ -158,7 +158,7 @@ The prerequisite engine derives `locked`, `available`, `inProgress`, or `complet
 
 Lesson IDs are permanent. Content-only revisions increment numeric `contentVersion` without resetting attempts, completions, status, timestamps, ratings, or difficulty adjustment. Inactive definitions remain in the catalogue, are excluded from new initialization and future plans, and retain existing progress so it resumes if the same ID is reactivated.
 
-The pure eligibility service returns structured learning and reinforcement eligibility, status, prerequisite and age checks, activity and recognised-skill flags, difficulty, and deterministic reason codes. Available or in-progress active lessons may be new learning; completed active lessons may be reinforcement; locked, inactive, under-age, or missing-reference content cannot silently become eligible. No Daily Plans are generated yet.
+The eligibility service remains the sole lesson gate. The Daily Plan engine combines its result with the latest profile-linked assessment, dog age, progress, and seven recent plans. It creates exactly one primary item and at most one reinforcement, stores the selected supported budget, persists once per owner/dog/local date inside the transaction layer, and returns that same plan on later requests.
 
 Deleting a Dog or Owner cascade-deletes LessonProgress. Immutable LessonDefinition content is application code and is never included in user-data deletion. Future Daily Plan work can consume the validated catalogue and progress status, but Milestone 5 does not generate plans or recommendations.
 
