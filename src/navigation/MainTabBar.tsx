@@ -16,9 +16,24 @@ export function MainTabBar({ state, descriptors, navigation }: BottomTabBarProps
             navigation.navigate(route.name, route.params);
           }
         };
+        const onLongPress = () => {
+          navigation.emit({ type: 'tabLongPress', target: route.key });
+        };
 
         return (
-          <Pressable key={route.key} onPress={onPress} style={styles.tabButton} accessibilityRole="button" accessibilityState={focused ? { selected: true } : {}}>
+          <Pressable
+            key={route.key}
+            accessibilityLabel={`${String(label)} tab`}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: focused }}
+            onLongPress={onLongPress}
+            onPress={onPress}
+            style={({ pressed }) => [
+              styles.tabButton,
+              focused && styles.tabButtonActive,
+              pressed && styles.pressed,
+            ]}
+          >
             <View style={[styles.tabDot, focused && styles.tabDotActive]} />
             <Text style={[styles.tabText, focused && styles.tabTextActive]}>{label}</Text>
           </Pressable>

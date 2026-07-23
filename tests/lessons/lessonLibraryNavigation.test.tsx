@@ -24,7 +24,7 @@ describe('Lesson Library navigation', () => {
 
   it('opens available and locked summaries through the existing Academy tab', async () => {
     const view = render(<App />);
-    expect(await view.findByText('One focused session today.')).toBeTruthy();
+    expect(await view.findByText(/focused lesson(?:s)? today\./)).toBeTruthy();
     fireEvent.press(view.getByText('Academy'));
 
     expect(await view.findByText('Lesson Library')).toBeTruthy();

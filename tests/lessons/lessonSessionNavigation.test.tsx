@@ -29,7 +29,7 @@ describe('guided Lesson Session navigation', () => {
 
   it('saves once and refreshes the existing summary and library immediately', async () => {
     const view = render(<App />);
-    expect(await view.findByText('One focused session today.')).toBeTruthy();
+    expect(await view.findByText(/focused lesson(?:s)? today\./)).toBeTruthy();
     fireEvent.press(view.getByText('Academy'));
     expect(await view.findByText('Lesson Library')).toBeTruthy();
 
@@ -74,7 +74,7 @@ describe('guided Lesson Session navigation', () => {
 
   it('leaves an active session without creating persistent records', async () => {
     const view = render(<App />);
-    expect(await view.findByText('One focused session today.')).toBeTruthy();
+    expect(await view.findByText(/focused lesson(?:s)? today\./)).toBeTruthy();
     fireEvent.press(view.getByText('Academy'));
     expect(await view.findByText('Lesson Library')).toBeTruthy();
     fireEvent.press(view.getByRole('button', {
@@ -96,5 +96,37 @@ describe('guided Lesson Session navigation', () => {
         successfulCompletions: 0,
       })]),
     );
+  });
+
+  it('propagates dailyPlanId from Today through Lesson Summary to Guided Session', async () => {
+    const view = render(<App />);
+    expect(await view.findByText(/focused lesson(?:s)? today\./)).toBeTruthy();
+
+    const planLessonButtons = await view.findAllByRole('button', {
+      name: /^View /,
+    });
+    fireEvent.press(planLessonButtons[0]);
+    expect(await view.findByText('LESSON SUMMARY')).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: 'Start guided session' }));
+
+    expect(await view.findByText('GUIDED SESSION')).toBeTruthy();
+    fireEvent.press(view.getByRole('button', {
+      name: /^Begin \d+-minute session$/,
+    }));
+    fireEvent.press(view.getByRole('button', {
+      name: 'Finish and rate session',
+    }));
+    fireEvent.press(view.getByRole('button', { name: /^5 out of 5/ }));
+    fireEvent.press(view.getByRole('button', { name: 'Save session' }));
+    expect(await view.findByText('SESSION SAVED')).toBeTruthy();
+
+    const repositories = createDomainRepositories(appStorage);
+    const [plans, sessions] = await Promise.all([
+      repositories.dailyPlans.findAll(),
+      repositories.trainingSessions.findAll(),
+    ]);
+    expect(plans).toHaveLength(1);
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0].dailyPlanId).toBe(plans[0].id);
   });
 });

@@ -5,8 +5,6 @@ import { Text, View } from 'react-native';
 
 import { AppScreen } from '../components/AppScreen';
 import { PrimaryButton } from '../components/PrimaryButton';
-import { lessons } from '../data/lessons';
-import { useAppState } from '../state/AppStateContext';
 import { styles } from '../theme/styles';
 import type { MainTabParamList, RootStackParamList } from '../types/navigation';
 
@@ -16,17 +14,13 @@ type Props = CompositeScreenProps<
 >;
 
 export function ProgressScreen({ navigation }: Props): React.JSX.Element {
-  const { completed, progress } = useAppState();
-
   return (
     <AppScreen>
       <Text style={styles.eyebrowDark}>TRAINING INTELLIGENCE</Text>
-      <Text style={styles.pageTitle}>Progress</Text>
-      <View style={styles.progressHero}>
-        <Text style={styles.progressValue}>{progress}%</Text>
-        <Text style={styles.progressLabel}>Foundation completed</Text>
-        <View style={styles.progressTrack}><View style={[styles.progressFill, { width: `${progress}%` }]} /></View>
-      </View>
+      <Text accessibilityRole="header" style={styles.pageTitle}>Progress</Text>
+      <Text style={styles.body}>
+        Your completed guided sessions are saved per dog and form the reliable record of your training.
+      </Text>
       <View style={styles.progressHistoryCard}>
         <Text accessibilityRole="header" style={styles.sectionTitle}>Training history</Text>
         <Text style={styles.body}>Review completed guided sessions, outcomes, rating ranges, and saved notes.</Text>
@@ -36,15 +30,14 @@ export function ProgressScreen({ navigation }: Props): React.JSX.Element {
         />
       </View>
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Completed lessons</Text>
-        {lessons.map((lesson) => (
-          <View key={lesson.id} style={styles.progressRow}>
-            <Text style={styles.body}>{lesson.title}</Text>
-            <Text style={completed.includes(lesson.id) ? styles.completeText : styles.notStartedText}>
-              {completed.includes(lesson.id) ? 'Completed' : 'Not started'}
-            </Text>
-          </View>
-        ))}
+        <Text accessibilityRole="header" style={styles.sectionTitle}>Continue training</Text>
+        <Text style={styles.body}>
+          Open the Academy to review lesson progress and choose another available skill.
+        </Text>
+        <PrimaryButton
+          title="Browse the Academy"
+          onPress={() => navigation.navigate('Academy')}
+        />
       </View>
     </AppScreen>
   );

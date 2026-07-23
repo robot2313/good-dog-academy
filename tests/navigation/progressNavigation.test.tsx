@@ -29,14 +29,17 @@ describe('Progress session-history navigation', () => {
     jest.useRealTimers();
   });
 
-  it('opens Session History without replacing the existing Progress content', async () => {
+  it('opens Session History without rendering legacy four-lesson progress', async () => {
     const view = render(<App />);
-    expect(await view.findByText('One focused session today.')).toBeTruthy();
+    expect(await view.findByText(/focused lesson(?:s)? today\./)).toBeTruthy();
 
     fireEvent.press(view.getByText('Progress'));
+    expect(await view.findByRole('header', { name: 'Progress' })).toBeTruthy();
     expect(await view.findByRole('button', { name: 'View session history' })).toBeTruthy();
-    expect(view.getByText('Foundation completed')).toBeTruthy();
-    expect(view.getByText('Completed lessons')).toBeTruthy();
+    expect(view.getByText(/completed guided sessions are saved per dog/)).toBeTruthy();
+    expect(view.queryByText('Foundation completed')).toBeNull();
+    expect(view.queryByText('Completed lessons')).toBeNull();
+    expect(view.queryByText('Build a Marker Word')).toBeNull();
 
     fireEvent.press(view.getByRole('button', { name: 'View session history' }));
     expect(await view.findByRole('header', { name: 'Training history' })).toBeTruthy();
@@ -57,7 +60,7 @@ describe('Progress session-history navigation', () => {
     await repositories.trainingSessions.save(otherSession);
 
     const view = render(<App />);
-    expect(await view.findByText('One focused session today.')).toBeTruthy();
+    expect(await view.findByText(/focused lesson(?:s)? today\./)).toBeTruthy();
     fireEvent.press(view.getByText('Progress'));
     fireEvent.press(await view.findByRole('button', { name: 'View session history' }));
 
