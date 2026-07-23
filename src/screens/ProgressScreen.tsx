@@ -1,11 +1,21 @@
+import type { CompositeScreenProps } from '@react-navigation/native';
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Text, View } from 'react-native';
 
 import { AppScreen } from '../components/AppScreen';
+import { PrimaryButton } from '../components/PrimaryButton';
 import { lessons } from '../data/lessons';
 import { useAppState } from '../state/AppStateContext';
 import { styles } from '../theme/styles';
+import type { MainTabParamList, RootStackParamList } from '../types/navigation';
 
-export function ProgressScreen(): React.JSX.Element {
+type Props = CompositeScreenProps<
+  BottomTabScreenProps<MainTabParamList, 'Progress'>,
+  NativeStackScreenProps<RootStackParamList, 'Main'>
+>;
+
+export function ProgressScreen({ navigation }: Props): React.JSX.Element {
   const { completed, progress } = useAppState();
 
   return (
@@ -16,6 +26,14 @@ export function ProgressScreen(): React.JSX.Element {
         <Text style={styles.progressValue}>{progress}%</Text>
         <Text style={styles.progressLabel}>Foundation completed</Text>
         <View style={styles.progressTrack}><View style={[styles.progressFill, { width: `${progress}%` }]} /></View>
+      </View>
+      <View style={styles.progressHistoryCard}>
+        <Text accessibilityRole="header" style={styles.sectionTitle}>Training history</Text>
+        <Text style={styles.body}>Review completed guided sessions, outcomes, rating ranges, and saved notes.</Text>
+        <PrimaryButton
+          title="View session history"
+          onPress={() => navigation.navigate('SessionHistory')}
+        />
       </View>
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Completed lessons</Text>

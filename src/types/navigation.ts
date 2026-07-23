@@ -10,6 +10,8 @@ export type RootStackParamList = {
   Main: undefined;
   LessonSummary: { lessonId: string; dailyPlanId?: string };
   LessonSession: { lessonId: string; dailyPlanId?: string };
+  SessionHistory: undefined;
+  SessionDetail: { sessionId: string };
 };
 
 export type MainTabParamList = {
