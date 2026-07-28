@@ -9,7 +9,11 @@ type MetricProps = {
 
 export function Metric({ value, label }: MetricProps): React.JSX.Element {
   return (
-    <View style={styles.metric}>
+    <View
+      accessible
+      accessibilityLabel={`${label}: ${value}`}
+      style={styles.metric}
+    >
       <Text style={styles.metricValue}>{value}</Text>
       <Text style={styles.metricLabel}>{label}</Text>
     </View>

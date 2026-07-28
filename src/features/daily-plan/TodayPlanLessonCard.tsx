@@ -1,6 +1,9 @@
 import { Text, View } from 'react-native';
 
+import { LessonThumbnail } from '../../components/LessonThumbnail';
+import { PremiumCard } from '../../components/PremiumCard';
 import { PrimaryButton } from '../../components/PrimaryButton';
+import { StatusPill, type StatusPillTone } from '../../components/StatusPill';
 import { styles } from '../../theme/styles';
 import type { TodayPlanItemView } from './TodayPlanTypes';
 
@@ -21,27 +24,37 @@ export function TodayPlanLessonCard({
     : planOpen
       ? 'Ready to practise'
       : 'Plan closed';
+  const statusLabel = item.lessonAvailable ? status : 'Unavailable';
+  const statusTone: StatusPillTone = !item.lessonAvailable
+    ? 'error'
+    : item.completed
+      ? 'success'
+      : planOpen
+        ? 'warning'
+        : 'neutral';
 
   return (
-    <View
+    <PremiumCard
+      tone={item.completed ? 'selected' : 'elevated'}
       style={styles.todayPlanLessonCard}
     >
       <View style={styles.todayPlanLessonTopRow}>
         <Text style={styles.todayPlanSkillLabel}>{skill}</Text>
-        <View style={[
-          styles.todayPlanStatusBadge,
-          item.completed && styles.todayPlanStatusBadgeCompleted,
-          !item.lessonAvailable && styles.todayPlanStatusBadgeUnavailable,
-        ]}>
-          <Text style={styles.todayPlanStatusText}>
-            {item.lessonAvailable ? status : 'Unavailable'}
+        <StatusPill label={statusLabel} tone={statusTone} />
+      </View>
+      <View style={styles.todayPlanLessonVisualRow}>
+        <LessonThumbnail
+          decorative
+          skill={item.skill}
+          lessonTitle={item.title}
+        />
+        <View style={styles.todayPlanLessonCopy}>
+          <Text accessibilityRole="header" style={styles.todayPlanLessonTitle}>
+            {item.title}
           </Text>
+          <Text style={styles.todayPlanLessonDescription}>{item.description}</Text>
         </View>
       </View>
-      <Text accessibilityRole="header" style={styles.todayPlanLessonTitle}>
-        {item.title}
-      </Text>
-      <Text style={styles.todayPlanLessonDescription}>{item.description}</Text>
       <Text style={styles.todayPlanLessonMetadata}>
         {item.role === 'primary' ? 'Main lesson' : 'Reinforcement'} · {item.plannedMinutes} min
         {item.difficultyLevel ? ` · Level ${item.difficultyLevel}` : ''}
@@ -65,7 +78,7 @@ export function TodayPlanLessonCard({
           </Text>
         </View>
       )}
-    </View>
+    </PremiumCard>
   );
 }
 

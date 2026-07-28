@@ -4,10 +4,13 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Text, View } from 'react-native';
 
 import { AppScreen } from '../components/AppScreen';
+import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
 import { LoadingState } from '../components/LoadingState';
 import { Metric } from '../components/Metric';
+import { PremiumCard } from '../components/PremiumCard';
 import { PrimaryButton } from '../components/PrimaryButton';
+import { SectionHeader } from '../components/SectionHeader';
 import { TodayPlanLessonCard } from '../features/daily-plan/TodayPlanLessonCard';
 import { useTodayPlan } from '../features/daily-plan/useTodayPlan';
 import type { TodayPlanError } from '../features/daily-plan/TodayPlanError';
@@ -37,17 +40,11 @@ export function TodayScreen({ navigation }: TodayScreenProps): React.JSX.Element
         <Text accessibilityRole="header" style={styles.pageTitle}>
           No Daily Plan lessons today
         </Text>
-        <View style={styles.todayPlanEmptyCard}>
-          <Text accessibilityRole="header" style={styles.sectionTitle}>
-            Keep training at your dog's pace
-          </Text>
-          <Text style={styles.body}>
-            There are no suitable Daily Plan lessons available right now. Browse the Academy to review guidance or choose another available lesson.
-          </Text>
-        </View>
-        <PrimaryButton
-          title="Browse all 30 lessons"
-          onPress={() => navigation.navigate('Academy')}
+        <EmptyState
+          title="Keep training at your dog's pace"
+          message="There are no suitable Daily Plan lessons available right now. Browse the Academy to review guidance or choose another available lesson."
+          actionTitle="Browse all 30 lessons"
+          onAction={() => navigation.navigate('Academy')}
         />
       </AppScreen>
     );
@@ -84,7 +81,7 @@ export function TodayScreen({ navigation }: TodayScreenProps): React.JSX.Element
 
   return (
     <AppScreen>
-      <View style={styles.hero}>
+      <PremiumCard tone="forest" style={styles.hero}>
         <View style={styles.heroTopRow}>
           <View>
             <Text style={styles.eyebrow}>TODAY'S PRIVATE PLAN</Text>
@@ -107,12 +104,12 @@ export function TodayScreen({ navigation }: TodayScreenProps): React.JSX.Element
           <Metric value={`${plan.estimatedMinutes} min`} label="planned" />
           <Metric value={plan.items.length} label={plan.items.length === 1 ? 'lesson' : 'lessons'} />
         </View>
-      </View>
+      </PremiumCard>
       <View style={styles.todayPlanSectionHeader}>
-        <Text accessibilityRole="header" style={styles.sectionTitle}>Today's lessons</Text>
-        <Text style={styles.todayPlanSectionIntro}>
-          Complete these guided sessions in any comfortable order.
-        </Text>
+        <SectionHeader
+          title="Today's lessons"
+          supportingText="Complete these guided sessions in any comfortable order."
+        />
       </View>
       {plan.stale ? (
         <View accessible accessibilityRole="alert" style={styles.todayPlanStaleCard}>
@@ -133,7 +130,7 @@ export function TodayScreen({ navigation }: TodayScreenProps): React.JSX.Element
           })}
         />
       ))}
-      <View style={styles.card}>
+      <PremiumCard tone="elevated">
         <Text accessibilityRole="header" style={styles.sectionTitle}>Explore the Academy</Text>
         <Text style={styles.body}>
           Search all 30 lessons, review coaching guidance, or practise another available skill.
@@ -142,7 +139,7 @@ export function TodayScreen({ navigation }: TodayScreenProps): React.JSX.Element
           title="Browse all 30 lessons"
           onPress={() => navigation.navigate('Academy')}
         />
-      </View>
+      </PremiumCard>
     </AppScreen>
   );
 }
