@@ -1,27 +1,29 @@
 export const colorTokens = {
   background: {
-    canvas: '#F3F0E8',
+    canvas: '#F7F4EE',
     subtle: '#FAF8F3',
   },
   surface: {
-    primary: '#FFFEFB',
+    primary: '#FFFFFF',
     elevated: '#FFFFFF',
     selected: '#DDEBE3',
   },
   brand: {
-    forest: '#173F31',
-    primary: '#2F7056',
-    pressed: '#245943',
-    gold: '#D8B46A',
+    forest: '#355E55',
+    primary: '#355E55',
+    pressed: '#294B44',
+    gold: '#D9855B',
   },
   text: {
-    primary: '#17241D',
-    secondary: '#6D786F',
+    primary: '#202825',
+    secondary: '#66706C',
     inverse: '#FFFFFF',
     disabled: '#858F88',
+    accent: '#A95637',
+    success: '#356947',
   },
   border: {
-    subtle: '#E4DFD4',
+    subtle: '#DED9D0',
     strong: '#D7D0C2',
   },
   status: {
@@ -30,7 +32,7 @@ export const colorTokens = {
     warningSurface: '#FFF6E2',
     warningText: '#75480C',
     errorSurface: '#FFF3F0',
-    errorText: '#8B3328',
+    errorText: '#B85450',
     infoSurface: '#EEF4FA',
     infoText: '#315F7B',
     neutralSurface: '#F1EEE7',

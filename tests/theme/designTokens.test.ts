@@ -10,10 +10,18 @@ import {
 
 describe('premium design tokens', () => {
   it('defines semantic color roles without changing legacy brand values', () => {
-    expect(colorTokens.background.canvas).toBe('#F3F0E8');
-    expect(colorTokens.surface.primary).toBe('#FFFEFB');
-    expect(colorTokens.brand.primary).toBe('#2F7056');
-    expect(colorTokens.text.primary).toBe('#17241D');
+    expect(colorTokens.background.canvas).toBe('#F7F4EE');
+    expect(colorTokens.surface.primary).toBe('#FFFFFF');
+    expect(colorTokens.brand.forest).toBe('#355E55');
+    expect(colorTokens.brand.primary).toBe('#355E55');
+    expect(colorTokens.brand.pressed).toBe('#294B44');
+    expect(colorTokens.brand.gold).toBe('#D9855B');
+    expect(colorTokens.text.primary).toBe('#202825');
+    expect(colorTokens.text.secondary).toBe('#66706C');
+    expect(colorTokens.text.accent).toBe('#A95637');
+    expect(colorTokens.text.success).toBe('#356947');
+    expect(colorTokens.border.subtle).toBe('#DED9D0');
+    expect(colorTokens.status.errorText).toBe('#B85450');
     expect(colorTokens.status.successText).not.toBe(colorTokens.status.errorText);
   });
 

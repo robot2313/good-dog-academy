@@ -3,6 +3,7 @@ import { Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AppScreen } from '../../../components/AppScreen';
+import { LessonCompletionCelebration } from '../../../components/LessonCompletionCelebration';
 import { ErrorState } from '../../../components/ErrorState';
 import { LoadingState } from '../../../components/LoadingState';
 import { SecondaryTextButton } from '../../../components/SecondaryTextButton';
@@ -144,26 +145,67 @@ export function LessonSessionScreen({ navigation, route }: Props): React.JSX.Ele
     </AppScreen>;
   }
 
-  return <LessonSessionScreenView
-    lesson={lesson}
-    dogName={selectedDog?.name ?? 'your dog'}
-    state={state}
-    saveError={saveError}
-    onBegin={() => dispatch({ type: 'begin', startedAt: new Date().toISOString() })}
-    onPause={() => dispatch({ type: 'pause' })}
-    onResume={() => dispatch({ type: 'resume' })}
-    onPrevious={() => dispatch({ type: 'previous', stepCount: lesson.steps.length })}
-    onNext={() => dispatch({ type: 'next', stepCount: lesson.steps.length })}
-    onRecordSuccess={() => dispatch({ type: 'recordSuccess' })}
-    onRecordChallenge={() => dispatch({ type: 'recordChallenge' })}
-    onAcceptReset={() => dispatch({ type: 'acceptReset' })}
-    onFinish={() => dispatch({ type: 'finish' })}
-    onReturnToTraining={() => dispatch({ type: 'returnToTraining' })}
-    onSelectRating={(rating) => dispatch({ type: 'selectRating', rating })}
-    onSave={() => void save()}
-    onCancel={cancel}
-    onDone={() => navigation.goBack()}
-  />;
+  return (
+    <>
+      <LessonSessionScreenView
+        lesson={lesson}
+        dogName={selectedDog?.name ?? 'your dog'}
+        state={state}
+        saveError={saveError}
+        onBegin={() =>
+          dispatch({
+            type: 'begin',
+            startedAt: new Date().toISOString(),
+          })
+        }
+        onPause={() => dispatch({ type: 'pause' })}
+        onResume={() => dispatch({ type: 'resume' })}
+        onPrevious={() =>
+          dispatch({
+            type: 'previous',
+            stepCount: lesson.steps.length,
+          })
+        }
+        onNext={() =>
+          dispatch({
+            type: 'next',
+            stepCount: lesson.steps.length,
+          })
+        }
+        onRecordSuccess={() =>
+          dispatch({ type: 'recordSuccess' })
+        }
+        onRecordChallenge={() =>
+          dispatch({ type: 'recordChallenge' })
+        }
+        onAcceptReset={() =>
+          dispatch({ type: 'acceptReset' })
+        }
+        onFinish={() => dispatch({ type: 'finish' })}
+        onReturnToTraining={() =>
+          dispatch({ type: 'returnToTraining' })
+        }
+        onSelectRating={(rating) =>
+          dispatch({
+            type: 'selectRating',
+            rating,
+          })
+        }
+        onSave={() => void save()}
+        onCancel={cancel}
+        onDone={() => navigation.goBack()}
+      />
+
+      <LessonCompletionCelebration
+        visible={state.phase === 'complete'}
+        dogName={selectedDog?.name ?? 'your dog'}
+        photoUri={selectedDog?.photoUri ?? null}
+        lessonTitle={lesson.title}
+        onContinue={() => navigation.goBack()}
+        testID="lesson-completion-celebration"
+      />
+    </>
+  );
 }
 
 function sessionCompletionMessage(cause: unknown): string {
