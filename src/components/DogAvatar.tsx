@@ -20,11 +20,6 @@ type DogAvatarProps = {
   decorative?: boolean;
 };
 
-type ImageStage = 'photo' | 'fallback' | 'initial';
-
-const fallbackPhoto =
-  require('../../assets/lesson-images/confidence.jpg') as ImageSourcePropType;
-
 export function DogAvatar({
   dogName,
   photoUri,
@@ -32,12 +27,10 @@ export function DogAvatar({
   accessibilityLabel,
   decorative = false,
 }: DogAvatarProps): React.JSX.Element {
-  const [imageStage, setImageStage] = useState<ImageStage>(
-    photoUri ? 'photo' : 'fallback',
-  );
+  const [hasImageError, setHasImageError] = useState(false);
 
   useEffect(() => {
-    setImageStage(photoUri ? 'photo' : 'fallback');
+    setHasImageError(false);
   }, [photoUri]);
 
   const trimmedName = dogName.trim();
@@ -46,19 +39,7 @@ export function DogAvatar({
     accessibilityLabel ??
     `${trimmedName || 'Dog'}'s profile photo`;
 
-  let imageSource: ImageSourcePropType | null = null;
-
-  if (imageStage === 'photo' && photoUri) {
-    imageSource = { uri: photoUri };
-  } else if (imageStage === 'fallback') {
-    imageSource = fallbackPhoto;
-  }
-
-  const handleImageError = (): void => {
-    setImageStage((currentStage) =>
-      currentStage === 'photo' ? 'fallback' : 'initial',
-    );
-  };
+  const showPhoto = Boolean(photoUri && !hasImageError);
 
   return (
     <View
@@ -88,12 +69,12 @@ export function DogAvatar({
           },
         ]}
       >
-        {imageSource ? (
+        {showPhoto && photoUri ? (
           <Image
             accessible={false}
-            source={imageSource}
+            source={{ uri: photoUri }}
             resizeMode="cover"
-            onError={handleImageError}
+            onError={() => setHasImageError(true)}
             style={styles.image}
           />
         ) : (

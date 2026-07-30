@@ -29,15 +29,15 @@ type DogIdentityHeroProps = {
 };
 
 const avatarSizes: Record<DogIdentityHeroSize, number> = {
-  compact: 112,
-  standard: 136,
-  profile: 160,
+  compact: 224,
+  standard: 272,
+  profile: 320,
 };
 
 const identitySizes: Record<DogIdentityHeroSize, number> = {
-  compact: 140,
-  standard: 168,
-  profile: 196,
+  compact: 280,
+  standard: 336,
+  profile: 392,
 };
 
 export function DogIdentityHero({

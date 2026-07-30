@@ -1,4 +1,4 @@
-﻿import {
+import {
   PixelRatio,
   StyleSheet,
   Text,
@@ -58,7 +58,13 @@ export function CurvedDogName({
         <Text
           accessible={false}
           numberOfLines={2}
-          style={styles.straightText}
+          style={[
+            styles.straightText,
+            {
+              fontSize: compact ? 36 : profile ? 48 : 42,
+              lineHeight: compact ? 42 : profile ? 54 : 48,
+            },
+          ]}
         >
           {trimmedName}
         </Text>
@@ -66,8 +72,8 @@ export function CurvedDogName({
     );
   }
 
-  const fontSize = compact ? 14 : profile ? 18 : 16;
-  const inset = Math.max(12, size * 0.08);
+  const fontSize = compact ? 56 : profile ? 72 : 64;
+  const inset = Math.max(16, size * 0.05);
   const radius = (size - inset * 2) / 2;
   const centerY = size / 2;
 
@@ -131,6 +137,7 @@ const styles = StyleSheet.create({
   },
   straightText: {
     ...typographyTokens.cardTitle,
+    fontWeight: '800',
     color: colorTokens.text.primary,
     textAlign: 'center',
   },

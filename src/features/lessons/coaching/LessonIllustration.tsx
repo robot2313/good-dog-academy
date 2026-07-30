@@ -106,14 +106,32 @@ export function LessonIllustration({
         Picture the task
       </Text>
       <View style={styles.lessonIllustrationCard}>
-        <Image
+        <View
           accessible
           accessibilityLabel={illustration.accessibilityLabel}
           accessibilityRole="image"
-          resizeMode="cover"
-          source={illustration.source}
-          style={styles.lessonIllustration}
-        />
+          style={{
+            width: '100%',
+            aspectRatio: 2.2,
+            backgroundColor: '#EDF6F0',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderBottomWidth: 1,
+            borderBottomColor: '#BDD5C7',
+          }}
+        >
+          <Text
+            style={{
+              color: '#1B4D3E',
+              fontSize: 14,
+              fontWeight: '900',
+              letterSpacing: 1.2,
+              textTransform: 'uppercase',
+            }}
+          >
+            {skill.replace(/-/g, ' ')}
+          </Text>
+        </View>
         <View style={styles.illustrationCopy}>
           <Text style={styles.illustrationLabel}>WHAT TO NOTICE</Text>
           <Text style={styles.illustrationText}>{illustration.caption}</Text>

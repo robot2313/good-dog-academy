@@ -17,43 +17,26 @@ export function LessonThumbnail({
 }: LessonThumbnailProps): React.JSX.Element {
   const accessibilityLabel = `${lessonTitle} lesson illustration`;
 
-  if (!skill) {
-    return (
-      <View
-        accessible={!decorative}
-        accessibilityElementsHidden={decorative}
-        accessibilityLabel={decorative ? undefined : accessibilityLabel}
-        accessibilityRole={decorative ? undefined : 'image'}
-        importantForAccessibility={decorative ? 'no-hide-descendants' : 'auto'}
-        style={componentStyles.fallback}
-      >
-        <Text accessibilityElementsHidden style={componentStyles.fallbackMark}>G</Text>
-      </View>
-    );
-  }
+  const skillMark = skill ? skill.split('-').map((w) => w[0]?.toUpperCase()).join('') : 'G';
 
   return (
-    <Image
+    <View
       accessible={!decorative}
       accessibilityElementsHidden={decorative}
       accessibilityLabel={decorative ? undefined : accessibilityLabel}
       accessibilityRole={decorative ? undefined : 'image'}
       importantForAccessibility={decorative ? 'no-hide-descendants' : 'auto'}
-      resizeMode="cover"
-      source={lessonIllustrationForSkill(skill).source}
-      style={componentStyles.image}
-    />
+      style={componentStyles.badge}
+    >
+      <Text accessibilityElementsHidden style={componentStyles.skillMark}>
+        {skillMark}
+      </Text>
+    </View>
   );
 }
 
 const componentStyles = StyleSheet.create({
-  image: {
-    width: 88,
-    height: 88,
-    borderRadius: radiusTokens.lg,
-    backgroundColor: colorTokens.surface.selected,
-  },
-  fallback: {
+  badge: {
     width: 88,
     height: 88,
     borderRadius: radiusTokens.lg,
@@ -63,8 +46,10 @@ const componentStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colorTokens.border.subtle,
   },
-  fallbackMark: {
+  skillMark: {
     ...typographyTokens.sectionTitle,
     color: colorTokens.brand.primary,
+    fontWeight: '900',
+    fontSize: 24,
   },
 });

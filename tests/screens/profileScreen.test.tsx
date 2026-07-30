@@ -50,5 +50,29 @@ describe('ProfileScreen', () => {
     expect(view.getAllByText('Pepper')).toHaveLength(2);
     expect(view.getByText('Border Collie mix')).toBeTruthy();
     expect(view.getByText('Taylor Morgan')).toBeTruthy();
+    expect(view.getByRole('button', { name: 'Add photo' })).toBeTruthy();
+  });
+
+  it('renders photo change and remove controls when dog has a photo', () => {
+    const selectedDog = {
+      ...sampleDog,
+      id: 'dog-canonical-profile',
+      name: 'Pepper',
+      photoUri: 'file:///path/to/photo.jpg',
+    };
+    mockUseOnboarding.mockReturnValue({
+      status: {
+        state: 'complete',
+        hasSavedData: true,
+        owner: sampleOwner,
+        dog: selectedDog,
+        behaviourProfile: sampleBehaviourProfile,
+      },
+    } as ReturnType<typeof useOnboarding>);
+
+    const view = render(<ProfileScreen />);
+
+    expect(view.getByRole('button', { name: 'Change photo' })).toBeTruthy();
+    expect(view.getByRole('button', { name: 'Remove photo' })).toBeTruthy();
   });
 });

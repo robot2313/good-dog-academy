@@ -132,9 +132,9 @@ export function LessonCompletionCelebration({
             </Text>
             <Text
               accessible={false}
-              style={styles.paw}
+              style={styles.decoration}
             >
-              🐾
+              ★
             </Text>
             <Text
               accessible={false}
