@@ -1,6 +1,7 @@
 import { Text, View } from 'react-native';
 
 import { AppScreen } from '../components/AppScreen';
+import { DogIdentityHero } from '../components/DogIdentityHero';
 import { useOnboarding } from '../features/onboarding/OnboardingContext';
 import { styles } from '../theme/styles';
 
@@ -13,11 +14,18 @@ export function ProfileScreen(): React.JSX.Element {
   const { status } = useOnboarding();
   const dog = status?.state === 'complete' ? status.dog : null;
   const owner = status?.state === 'complete' ? status.owner : null;
+  const dogName = dog?.name ?? 'My Dog';
+  const photoUri = dog?.photoUri ?? null;
 
   return (
     <AppScreen>
-      <Text style={styles.eyebrowDark}>DOG PROFILE</Text>
-      <Text accessibilityRole="header" style={styles.pageTitle}>{dog?.name ?? 'My Dog'}</Text>
+      <DogIdentityHero
+        dogName={dogName}
+        photoUri={photoUri}
+        eyebrow="DOG PROFILE"
+        title={dogName}
+        size="profile"
+      />
       <View style={styles.membershipCard}>
         <Text style={styles.membershipEyebrow}>FOUNDER ACCOUNT</Text>
         <Text style={styles.membershipTitle}>Lifetime All Access</Text>

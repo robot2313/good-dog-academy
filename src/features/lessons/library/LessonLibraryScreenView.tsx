@@ -17,6 +17,7 @@ import type { LessonLibraryService } from './LessonLibraryService';
 import type { LessonLibraryItem, LessonState } from './lessonLibraryTypes';
 
 type LessonLibraryScreenViewProps = {
+  hero?: React.JSX.Element;
   dogName: string | null;
   service: LessonLibraryService;
   loading: boolean;
@@ -34,7 +35,7 @@ type LibrarySection = {
 const difficultyOptions: readonly LessonDifficultyLevel[] = [1, 2, 3, 4, 5];
 const stateOptions: readonly LessonState[] = ['AVAILABLE', 'LOCKED', 'IN_PROGRESS', 'COMPLETED'];
 
-export function LessonLibraryScreenView({ dogName, service, loading, error, onRetry, onOpenLesson }: LessonLibraryScreenViewProps): React.JSX.Element {
+export function LessonLibraryScreenView({ hero, dogName, service, loading, error, onRetry, onOpenLesson }: LessonLibraryScreenViewProps): React.JSX.Element {
   const [query, setQuery] = useState('');
   const [selectedSkill, setSelectedSkill] = useState<BehaviourSkill | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<LessonDifficultyLevel | null>(null);
@@ -99,9 +100,13 @@ export function LessonLibraryScreenView({ dogName, service, loading, error, onRe
       stickySectionHeadersEnabled={false}
       contentContainerStyle={styles.libraryListContent}
       ListHeaderComponent={<View style={styles.libraryHeader}>
-        <Text style={styles.eyebrowDark}>ACADEMY</Text>
-        <Text style={styles.pageTitle}>Lesson Library</Text>
-        <Text style={styles.libraryDogContext}>Lesson access and progress for <Text style={styles.libraryDogName}>{dogName ?? 'your dog'}</Text>.</Text>
+        {hero ?? (
+          <>
+            <Text style={styles.eyebrowDark}>ACADEMY</Text>
+            <Text style={styles.pageTitle}>Lesson Library</Text>
+            <Text style={styles.libraryDogContext}>Lesson access and progress for <Text style={styles.libraryDogName}>{dogName ?? 'your dog'}</Text>.</Text>
+          </>
+        )}
 
         <View style={styles.librarySearchField}>
           <TextInput

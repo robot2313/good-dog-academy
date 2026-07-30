@@ -56,6 +56,8 @@ export function DogIdentityHero({
   const identitySize = identitySizes[size];
   const avatarOffset = (identitySize - avatarSize) / 2;
 
+  const titleIncludesName = title.toLowerCase().includes(displayName.toLowerCase());
+
   return (
     <View style={styles.container}>
       <View
@@ -70,6 +72,7 @@ export function DogIdentityHero({
           },
         ]}
       >
+        {!titleIncludesName ? <Text style={styles.srOnly}>{displayName}</Text> : null}
         <View
           style={[
             styles.avatarPosition,
@@ -174,5 +177,12 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     marginTop: spacingTokens.md,
+  },
+  srOnly: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    opacity: 0,
+    overflow: 'hidden',
   },
 });

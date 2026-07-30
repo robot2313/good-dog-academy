@@ -7,13 +7,18 @@ import { LessonLibraryService } from './LessonLibraryService';
 import { LessonLibraryScreenView } from './LessonLibraryScreenView';
 import { useLessonLibraryData } from './LessonLibraryContext';
 
-export function LessonLibraryScreen(): React.JSX.Element {
+export type LessonLibraryScreenProps = {
+  hero?: React.JSX.Element;
+};
+
+export function LessonLibraryScreen({ hero }: LessonLibraryScreenProps = {}): React.JSX.Element {
   const { catalogue, selectedDog, progressRecords, loading, error, retry } = useLessonLibraryData();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const selectedDogId = selectedDog?.id ?? null;
   const service = useMemo(() => new LessonLibraryService(catalogue, selectedDogId, progressRecords), [catalogue, progressRecords, selectedDogId]);
 
   return <LessonLibraryScreenView
+    hero={hero}
     dogName={selectedDog?.name ?? null}
     service={service}
     loading={loading}

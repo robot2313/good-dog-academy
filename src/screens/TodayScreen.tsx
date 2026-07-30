@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Text, View } from 'react-native';
 
 import { AppScreen } from '../components/AppScreen';
+import { DogIdentityHero } from '../components/DogIdentityHero';
 import { EmptyState } from '../components/EmptyState';
 import { ErrorState } from '../components/ErrorState';
 import { LoadingState } from '../components/LoadingState';
@@ -14,6 +15,7 @@ import { SectionHeader } from '../components/SectionHeader';
 import { TodayPlanLessonCard } from '../features/daily-plan/TodayPlanLessonCard';
 import { useTodayPlan } from '../features/daily-plan/useTodayPlan';
 import type { TodayPlanError } from '../features/daily-plan/TodayPlanError';
+import { useOnboarding } from '../features/onboarding/OnboardingContext';
 import { styles } from '../theme/styles';
 import type { MainTabParamList, RootStackParamList } from '../types/navigation';
 
@@ -24,6 +26,9 @@ export type TodayScreenProps = CompositeScreenProps<
 
 export function TodayScreen({ navigation }: TodayScreenProps): React.JSX.Element {
   const { plan, selectedDogName, loading, error, retry } = useTodayPlan();
+  const onboardingDog = getOnboardingDog();
+  const dogName = selectedDogName ?? onboardingDog?.name ?? 'My Dog';
+  const photoUri = onboardingDog?.photoUri ?? null;
 
   if (loading) {
     return (
@@ -81,24 +86,22 @@ export function TodayScreen({ navigation }: TodayScreenProps): React.JSX.Element
 
   return (
     <AppScreen>
-      <PremiumCard tone="forest" style={styles.hero}>
-        <View style={styles.heroTopRow}>
-          <View>
-            <Text style={styles.eyebrow}>TODAY'S PRIVATE PLAN</Text>
-            <Text style={styles.heroDogName}>{selectedDogName ?? 'My Dog'}</Text>
-          </View>
+      <DogIdentityHero
+        dogName={dogName}
+        photoUri={photoUri}
+        eyebrow="TODAY'S PRIVATE PLAN"
+        title={planComplete ? "Today's plan is complete." : planHeading}
+        supportingText="Build reliability through short, successful sessions selected for your dog."
+        size="standard"
+        status={(
           <View style={styles.ownerBadge}>
             <Text style={styles.ownerBadgeText}>
               {planComplete ? 'COMPLETE' : 'READY'}
             </Text>
           </View>
-        </View>
-        <Text style={styles.heroTitle}>
-          {planComplete ? "Today's plan is complete." : planHeading}
-        </Text>
-        <Text style={styles.heroBody}>
-          Build reliability through short, successful sessions selected for your dog.
-        </Text>
+        )}
+      />
+      <PremiumCard tone="forest">
         <View style={styles.metricRow}>
           <Metric value={`${plan.completedItemCount}/${plan.items.length}`} label="completed" />
           <Metric value={`${plan.estimatedMinutes} min`} label="planned" />
@@ -160,4 +163,13 @@ function todayPlanErrorMessage(error: TodayPlanError | null): string {
     return 'Today’s plan is not available for the selected dog.';
   }
   return 'Today’s training plan could not be loaded. Please try again.';
+}
+
+function getOnboardingDog() {
+  try {
+    const { status } = useOnboarding();
+    return status?.state === 'complete' ? status.dog : null;
+  } catch {
+    return null;
+  }
 }

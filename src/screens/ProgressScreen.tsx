@@ -4,7 +4,9 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Text, View } from 'react-native';
 
 import { AppScreen } from '../components/AppScreen';
+import { DogIdentityHero } from '../components/DogIdentityHero';
 import { PrimaryButton } from '../components/PrimaryButton';
+import { useOnboarding } from '../features/onboarding/OnboardingContext';
 import { styles } from '../theme/styles';
 import type { MainTabParamList, RootStackParamList } from '../types/navigation';
 
@@ -14,13 +16,20 @@ type Props = CompositeScreenProps<
 >;
 
 export function ProgressScreen({ navigation }: Props): React.JSX.Element {
+  const dog = getOnboardingDog();
+  const dogName = dog?.name ?? 'My Dog';
+  const photoUri = dog?.photoUri ?? null;
+
   return (
     <AppScreen>
-      <Text style={styles.eyebrowDark}>TRAINING INTELLIGENCE</Text>
-      <Text accessibilityRole="header" style={styles.pageTitle}>Progress</Text>
-      <Text style={styles.body}>
-        Your completed guided sessions are saved per dog and form the reliable record of your training.
-      </Text>
+      <DogIdentityHero
+        dogName={dogName}
+        photoUri={photoUri}
+        eyebrow="TRAINING INTELLIGENCE"
+        title="Progress"
+        supportingText="Your completed guided sessions are saved per dog and form the reliable record of your training."
+        size="standard"
+      />
       <View style={styles.progressHistoryCard}>
         <Text accessibilityRole="header" style={styles.sectionTitle}>Training history</Text>
         <Text style={styles.body}>Review completed guided sessions, outcomes, rating ranges, and saved notes.</Text>
@@ -41,4 +50,13 @@ export function ProgressScreen({ navigation }: Props): React.JSX.Element {
       </View>
     </AppScreen>
   );
+}
+
+function getOnboardingDog() {
+  try {
+    const { status } = useOnboarding();
+    return status?.state === 'complete' ? status.dog : null;
+  } catch {
+    return null;
+  }
 }
