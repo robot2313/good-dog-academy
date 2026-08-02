@@ -1,0 +1,305 @@
+{
+  "provider": "fal",
+  "byLesson": {
+    "recall-name-response": {
+      "lessonId": "recall-name-response",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "recall-name-response.jpg",
+      "bytes": 346545,
+      "sha256": "a1c92060675dec864fab48166a4b38428827554c0410a8bd11d563740eca484a",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "recall-short-distance": {
+      "lessonId": "recall-short-distance",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "recall-short-distance.jpg",
+      "bytes": 407049,
+      "sha256": "a2a848486f2f29201045c5a8f6298695419e4c023a57c60d07d9aa3226344721",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "recall-around-distractions": {
+      "lessonId": "recall-around-distractions",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "recall-around-distractions.jpg",
+      "bytes": 1018264,
+      "sha256": "9b9fef3e1bf552b4c28229d3e0421a35d2be3ed9f9dd7f1b05fe56866df5559c",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "loose-lead-reward-zone": {
+      "lessonId": "loose-lead-reward-zone",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "loose-lead-reward-zone.jpg",
+      "bytes": 393172,
+      "sha256": "dfaef14c752a052240a73b8dc262c9c4901c8fb92fe7867c010ee2f301419ff4",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "loose-lead-direction-changes": {
+      "lessonId": "loose-lead-direction-changes",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "loose-lead-direction-changes.jpg",
+      "bytes": 428856,
+      "sha256": "e1efa8fd7a43b53cb957b32d842a972568da730beba33a7b2dc7ce16cccf441a",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "loose-lead-real-world-distractions": {
+      "lessonId": "loose-lead-real-world-distractions",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "loose-lead-real-world-distractions.jpg",
+      "bytes": 418036,
+      "sha256": "5b2ffae3781077f5c706885f02ff571f50819764e229782f84bfca222e3b76e4",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "focus-check-in": {
+      "lessonId": "focus-check-in",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "focus-check-in.jpg",
+      "bytes": 404825,
+      "sha256": "9bd820072d789945486dfb423d88c13bada7fbce14105c39c977e7cd69ca466b",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "focus-hold-attention": {
+      "lessonId": "focus-hold-attention",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "focus-hold-attention.jpg",
+      "bytes": 373301,
+      "sha256": "a54ae84b99da1af9e7c37344ee7dd0a51e7ab9a814c4369b14e6149b1b4e5226",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "focus-around-distractions": {
+      "lessonId": "focus-around-distractions",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "focus-around-distractions.jpg",
+      "bytes": 452410,
+      "sha256": "ac706a8b17eb1140d5b1f1d7ce07f012f3a7ff28fc4f671b43b0a654d8103b1b",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "jumping-four-paws-down": {
+      "lessonId": "jumping-four-paws-down",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "jumping-four-paws-down.jpg",
+      "bytes": 300174,
+      "sha256": "59353fc445039c55db21739ee6e78798421ab764e2405f1b8cbf41e7aba899a9",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "jumping-calm-greetings": {
+      "lessonId": "jumping-calm-greetings",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "jumping-calm-greetings.jpg",
+      "bytes": 357821,
+      "sha256": "f288dd4bff1e02dab235ef0617d0717a49026df52352f9a313fad5eae8b81ca1",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "jumping-visitors-and-excitement": {
+      "lessonId": "jumping-visitors-and-excitement",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "jumping-visitors-and-excitement.jpg",
+      "bytes": 399389,
+      "sha256": "8a40d0395f3f715951a67f900aac0ec19cb3571ebbf1fddd9f582ef113d8f2c4",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "barking-identify-triggers": {
+      "lessonId": "barking-identify-triggers",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "barking-identify-triggers.jpg",
+      "bytes": 367583,
+      "sha256": "0151abeec9a8d3da6603eb5091538be723c8dedcbf1d53acfc7c8ffd234cb73c",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "barking-quiet-reinforcement": {
+      "lessonId": "barking-quiet-reinforcement",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "barking-quiet-reinforcement.jpg",
+      "bytes": 353182,
+      "sha256": "1f96a6ba891fc21f26af62b4ff6a5b79adc818f21b2a144dd6d8f430c61f8a7b",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "barking-real-world-management": {
+      "lessonId": "barking-real-world-management",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "barking-real-world-management.jpg",
+      "bytes": 559107,
+      "sha256": "d2c2281f5fb8f336d718c0dc497e2588693fdb7e08bfe18f36b740e239dacd1f",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "chewing-appropriate-items": {
+      "lessonId": "chewing-appropriate-items",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "chewing-appropriate-items.jpg",
+      "bytes": 678518,
+      "sha256": "c01a0b843d8b53f160e8ecd243b7c7d3b4fcdcbeef91a44f015597754f20f826",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "chewing-redirection-routine": {
+      "lessonId": "chewing-redirection-routine",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "chewing-redirection-routine.jpg",
+      "bytes": 427767,
+      "sha256": "28303f5bf14fbb4408bf9505c43356bdeb9640cb7569f3d4e600a7ccf12ae3d7",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "chewing-independence-and-prevention": {
+      "lessonId": "chewing-independence-and-prevention",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "chewing-independence-and-prevention.jpg",
+      "bytes": 361067,
+      "sha256": "934a37a08efbe01b72a089bdbbff90763b8eb1330323dd5498ae17daa444feb4",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "reactivity-safe-distance": {
+      "lessonId": "reactivity-safe-distance",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "reactivity-safe-distance.jpg",
+      "bytes": 474516,
+      "sha256": "d623c783b35d1a0e7caaf97a4f85a45bc46c19101e1361340a011bc7750cb2cb",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "reactivity-look-and-disengage": {
+      "lessonId": "reactivity-look-and-disengage",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "reactivity-look-and-disengage.jpg",
+      "bytes": 488597,
+      "sha256": "08407a9a61b504639589468f14436713aae18c098606ab3db2221c6e0146fb78",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "reactivity-controlled-exposure": {
+      "lessonId": "reactivity-controlled-exposure",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "reactivity-controlled-exposure.jpg",
+      "bytes": 556340,
+      "sha256": "0d15f3d74eb2aa0017d44c57a3712b518cff0f4ecf9807d6a63ab22b03772546",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "house-training-routine": {
+      "lessonId": "house-training-routine",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "house-training-routine.jpg",
+      "bytes": 480139,
+      "sha256": "5ba0ef9d43ba918436a00ddcc31806e91874ff926b0f0178b44670a93e6f350a",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "house-training-signal-and-reward": {
+      "lessonId": "house-training-signal-and-reward",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "house-training-signal-and-reward.jpg",
+      "bytes": 566160,
+      "sha256": "08a7483c6ee2177c4dc46a8f07922b49c568c0e2fffd97a7fbb1a17d206c269d",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "house-training-reliability": {
+      "lessonId": "house-training-reliability",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "house-training-reliability.jpg",
+      "bytes": 427457,
+      "sha256": "70e943713f55a93df81316b679f98c545d1e6c529af8014197b8c89ef1272e83",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "confidence-choice-and-exploration": {
+      "lessonId": "confidence-choice-and-exploration",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "confidence-choice-and-exploration.jpg",
+      "bytes": 370786,
+      "sha256": "12ecf8df3ce50245222718ac2ed5b200b9be2b66c4f734ea35f728560f293c90",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "confidence-new-surfaces-and-sounds": {
+      "lessonId": "confidence-new-surfaces-and-sounds",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "confidence-new-surfaces-and-sounds.jpg",
+      "bytes": 390506,
+      "sha256": "9e1a68e1b86193644522e63f6249bc7953352abc50ebfda6c98a46217354c46a",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "confidence-new-environments": {
+      "lessonId": "confidence-new-environments",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "confidence-new-environments.jpg",
+      "bytes": 597411,
+      "sha256": "78f66a59ff7892ce98c3ff76d8a8bbdc4cbb275eff2f14805a52e720f837ff16",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "impulse-control-wait-for-reward": {
+      "lessonId": "impulse-control-wait-for-reward",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "impulse-control-wait-for-reward.jpg",
+      "bytes": 257480,
+      "sha256": "cf9bc0c69367f216ed83ef1247bc4c83bc86b8534dfe81766b01af7872a7912e",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "impulse-control-doorways": {
+      "lessonId": "impulse-control-doorways",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "impulse-control-doorways.jpg",
+      "bytes": 339933,
+      "sha256": "1f3adfe81f56f9237bc21803c3ec5d48d8b567d5f219fa4c1b0a2a9eabd4d89d",
+      "attempts": 1,
+      "status": "generated"
+    },
+    "impulse-control-real-world-distractions": {
+      "lessonId": "impulse-control-real-world-distractions",
+      "provider": "fal",
+      "model": "fal-ai/nano-banana-2",
+      "destinationFilename": "impulse-control-real-world-distractions.jpg",
+      "bytes": 384800,
+      "sha256": "c4528c8cb88451331fb7b94cd6e8cfa3134737adb27aa0c47801c0be00dade1a",
+      "attempts": 1,
+      "status": "generated"
+    }
+  }
+}

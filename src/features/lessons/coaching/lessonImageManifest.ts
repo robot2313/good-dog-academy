@@ -58,7 +58,38 @@ const sharedSkillFallback = {
  * resolves these paths statically at build time and will fail otherwise.
  */
 const uniqueLessonImageSources: Readonly<Record<string, ImageSourcePropType>> =
-  Object.freeze({});
+  Object.freeze({
+    'recall-name-response': require('../../../../assets/lesson-images/by-lesson/recall-name-response.jpg') as ImageSourcePropType,
+    'recall-short-distance': require('../../../../assets/lesson-images/by-lesson/recall-short-distance.jpg') as ImageSourcePropType,
+    'recall-around-distractions': require('../../../../assets/lesson-images/by-lesson/recall-around-distractions.jpg') as ImageSourcePropType,
+    'loose-lead-reward-zone': require('../../../../assets/lesson-images/by-lesson/loose-lead-reward-zone.jpg') as ImageSourcePropType,
+    'loose-lead-direction-changes': require('../../../../assets/lesson-images/by-lesson/loose-lead-direction-changes.jpg') as ImageSourcePropType,
+    'loose-lead-real-world-distractions': require('../../../../assets/lesson-images/by-lesson/loose-lead-real-world-distractions.jpg') as ImageSourcePropType,
+    'focus-check-in': require('../../../../assets/lesson-images/by-lesson/focus-check-in.jpg') as ImageSourcePropType,
+    'focus-hold-attention': require('../../../../assets/lesson-images/by-lesson/focus-hold-attention.jpg') as ImageSourcePropType,
+    'focus-around-distractions': require('../../../../assets/lesson-images/by-lesson/focus-around-distractions.jpg') as ImageSourcePropType,
+    'jumping-four-paws-down': require('../../../../assets/lesson-images/by-lesson/jumping-four-paws-down.jpg') as ImageSourcePropType,
+    'jumping-calm-greetings': require('../../../../assets/lesson-images/by-lesson/jumping-calm-greetings.jpg') as ImageSourcePropType,
+    'jumping-visitors-and-excitement': require('../../../../assets/lesson-images/by-lesson/jumping-visitors-and-excitement.jpg') as ImageSourcePropType,
+    'barking-identify-triggers': require('../../../../assets/lesson-images/by-lesson/barking-identify-triggers.jpg') as ImageSourcePropType,
+    'barking-quiet-reinforcement': require('../../../../assets/lesson-images/by-lesson/barking-quiet-reinforcement.jpg') as ImageSourcePropType,
+    'barking-real-world-management': require('../../../../assets/lesson-images/by-lesson/barking-real-world-management.jpg') as ImageSourcePropType,
+    'chewing-appropriate-items': require('../../../../assets/lesson-images/by-lesson/chewing-appropriate-items.jpg') as ImageSourcePropType,
+    'chewing-redirection-routine': require('../../../../assets/lesson-images/by-lesson/chewing-redirection-routine.jpg') as ImageSourcePropType,
+    'chewing-independence-and-prevention': require('../../../../assets/lesson-images/by-lesson/chewing-independence-and-prevention.jpg') as ImageSourcePropType,
+    'reactivity-safe-distance': require('../../../../assets/lesson-images/by-lesson/reactivity-safe-distance.jpg') as ImageSourcePropType,
+    'reactivity-look-and-disengage': require('../../../../assets/lesson-images/by-lesson/reactivity-look-and-disengage.jpg') as ImageSourcePropType,
+    'reactivity-controlled-exposure': require('../../../../assets/lesson-images/by-lesson/reactivity-controlled-exposure.jpg') as ImageSourcePropType,
+    'house-training-routine': require('../../../../assets/lesson-images/by-lesson/house-training-routine.jpg') as ImageSourcePropType,
+    'house-training-signal-and-reward': require('../../../../assets/lesson-images/by-lesson/house-training-signal-and-reward.jpg') as ImageSourcePropType,
+    'house-training-reliability': require('../../../../assets/lesson-images/by-lesson/house-training-reliability.jpg') as ImageSourcePropType,
+    'confidence-choice-and-exploration': require('../../../../assets/lesson-images/by-lesson/confidence-choice-and-exploration.jpg') as ImageSourcePropType,
+    'confidence-new-surfaces-and-sounds': require('../../../../assets/lesson-images/by-lesson/confidence-new-surfaces-and-sounds.jpg') as ImageSourcePropType,
+    'confidence-new-environments': require('../../../../assets/lesson-images/by-lesson/confidence-new-environments.jpg') as ImageSourcePropType,
+    'impulse-control-wait-for-reward': require('../../../../assets/lesson-images/by-lesson/impulse-control-wait-for-reward.jpg') as ImageSourcePropType,
+    'impulse-control-doorways': require('../../../../assets/lesson-images/by-lesson/impulse-control-doorways.jpg') as ImageSourcePropType,
+    'impulse-control-real-world-distractions': require('../../../../assets/lesson-images/by-lesson/impulse-control-real-world-distractions.jpg') as ImageSourcePropType,
+  });
 
 function fallbackForSkill(skill: string): ImageSourcePropType {
   return (

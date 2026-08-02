@@ -32,6 +32,7 @@
  * compiled with the project's tsc (module=commonjs) and run with Node.
  */
 
+import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -59,11 +60,19 @@ interface LessonState {
 }
 
 // Approximate per-image costs (USD). Estimates only — verify with the provider
-// before any paid run. Used purely for the dry-run cost projection.
+// before any paid run. Used for the cost projection and budget guard.
 const APPROX_COST_USD: Record<ProviderName, number> = {
   fal: 0.039,
   openai: 0.04,
 };
+
+// Hard budget ceiling. Generation stops before this is exceeded.
+const MAX_BUDGET_USD = 5;
+
+// Maximum regeneration attempts per lesson after the first attempt fails.
+const MAX_RETRIES = 2;
+
+const FAL_ENDPOINT_BASE = 'https://fal.run';
 
 const REPO_ROOT = process.cwd();
 const BY_LESSON_DIR = path.join(REPO_ROOT, 'assets', 'lesson-images', 'by-lesson');
@@ -248,7 +257,11 @@ function buildDoc(states: readonly LessonState[]): string {
     lines.push(`- **Destination filename:** \`assets/lesson-images/by-lesson/${spec.destinationFilename}\``);
     lines.push(`- **Generation prompt:** ${spec.prompt}`);
     lines.push(`- **Negative prompt:** ${spec.negativePrompt}`);
-    lines.push(`- **Current image source:** shared skill illustration \`assets/lesson-images/${spec.skill}.jpg\` (temporary fallback)`);
+    const currentSource =
+      status === 'VERIFIED REALISTIC IMAGE EXISTS'
+        ? `verified photograph \`assets/lesson-images/by-lesson/${spec.destinationFilename}\``
+        : `shared skill illustration \`assets/lesson-images/${spec.skill}.jpg\` (temporary fallback)`;
+    lines.push(`- **Current image source:** ${currentSource}`);
     lines.push(`- **Current status:** ${status}`);
     lines.push('');
   }
@@ -292,6 +305,202 @@ function assertGenerationPreconditions(options: CliOptions): void {
   }
 }
 
+function buildPromptForProvider(spec: LessonImageSpec): string {
+  return `${spec.prompt}\n\nStrictly avoid: ${spec.negativePrompt}.`;
+}
+
+/** Extract the first image URL from a fal response of unknown shape. */
+function extractImageUrl(payload: unknown): string | null {
+  if (!payload || typeof payload !== 'object') return null;
+  const record = payload as Record<string, unknown>;
+
+  const fromImages = (value: unknown): string | null => {
+    if (!Array.isArray(value) || value.length === 0) return null;
+    const first = value[0];
+    if (typeof first === 'string') return first;
+    if (first && typeof first === 'object' && typeof (first as Record<string, unknown>).url === 'string') {
+      return (first as Record<string, unknown>).url as string;
+    }
+    return null;
+  };
+
+  return (
+    fromImages(record.images) ??
+    (record.image && typeof record.image === 'object'
+      ? ((record.image as Record<string, unknown>).url as string | undefined) ?? null
+      : null) ??
+    (typeof record.url === 'string' ? record.url : null)
+  );
+}
+
+async function generateViaFal(spec: LessonImageSpec): Promise<Buffer> {
+  const falKey = process.env.FAL_KEY;
+  const falModel = process.env.FAL_MODEL;
+  if (!falKey || !falModel) {
+    throw new Error('FAL_KEY / FAL_MODEL missing at generation time.');
+  }
+
+  const endpoint = `${FAL_ENDPOINT_BASE}/${falModel}`;
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      Authorization: `Key ${falKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      prompt: buildPromptForProvider(spec),
+      num_images: 1,
+      aspect_ratio: '3:2',
+      output_format: 'jpeg',
+    }),
+  });
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '');
+    throw new Error(`fal request failed (${response.status}): ${detail.slice(0, 400)}`);
+  }
+
+  const payload: unknown = await response.json();
+  const imageUrl = extractImageUrl(payload);
+  if (!imageUrl) {
+    throw new Error(`fal response contained no image url. Keys: ${Object.keys(payload as object).join(', ')}`);
+  }
+
+  const imageResponse = await fetch(imageUrl);
+  if (!imageResponse.ok) {
+    throw new Error(`downloading generated image failed (${imageResponse.status}).`);
+  }
+  const buffer = Buffer.from(await imageResponse.arrayBuffer());
+  if (!isValidImage(buffer)) {
+    throw new Error('downloaded file is not a valid JPEG/PNG image.');
+  }
+  return buffer;
+}
+
+interface GenerationRecord {
+  readonly lessonId: string;
+  readonly provider: ProviderName;
+  readonly model: string;
+  readonly destinationFilename: string;
+  readonly bytes: number;
+  readonly sha256: string;
+  readonly attempts: number;
+  readonly status: 'generated' | 'blocked';
+}
+
+function readMetadata(): Record<string, unknown> {
+  try {
+    return JSON.parse(fs.readFileSync(METADATA_PATH, 'utf8')) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
+function writeMetadata(records: readonly GenerationRecord[]): void {
+  const existing = readMetadata();
+  const byLesson: Record<string, unknown> =
+    (existing.byLesson as Record<string, unknown> | undefined) ?? {};
+  for (const record of records) {
+    byLesson[record.lessonId] = record;
+  }
+  const output = { provider: records[0]?.provider ?? null, byLesson };
+  fs.mkdirSync(BY_LESSON_DIR, { recursive: true });
+  fs.writeFileSync(METADATA_PATH, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
+}
+
+async function executeGeneration(
+  selected: readonly LessonState[],
+  options: CliOptions,
+): Promise<void> {
+  const model =
+    options.provider === 'fal'
+      ? (process.env.FAL_MODEL as string)
+      : (process.env.OPENAI_IMAGE_MODEL as string);
+  const perImage = APPROX_COST_USD[options.provider];
+
+  fs.mkdirSync(BY_LESSON_DIR, { recursive: true });
+
+  const records: GenerationRecord[] = [];
+  const blocked: string[] = [];
+  let attemptsSpent = 0;
+
+  for (const state of selected) {
+    // Budget guard: never start a call that could exceed the ceiling.
+    if ((attemptsSpent + 1) * perImage > MAX_BUDGET_USD) {
+      console.error(`BUDGET STOP: next call would exceed $${MAX_BUDGET_USD}. Halting.`);
+      break;
+    }
+
+    const { spec } = state;
+    let saved = false;
+    let attempts = 0;
+
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
+      if ((attemptsSpent + 1) * perImage > MAX_BUDGET_USD) {
+        console.error(`BUDGET STOP before ${spec.lessonId}.`);
+        break;
+      }
+      attempts = attempt + 1;
+      attemptsSpent += 1;
+      try {
+        if (options.provider !== 'fal') {
+          throw new Error('OpenAI provider path not enabled in this run.');
+        }
+        const resolved = await generateViaFal(spec);
+        const target = path.join(BY_LESSON_DIR, spec.destinationFilename);
+        fs.writeFileSync(target, resolved);
+        const sha256 = crypto.createHash('sha256').update(resolved).digest('hex');
+        records.push({
+          lessonId: spec.lessonId,
+          provider: options.provider,
+          model,
+          destinationFilename: spec.destinationFilename,
+          bytes: resolved.length,
+          sha256,
+          attempts,
+          status: 'generated',
+        });
+        console.log(`OK   ${spec.lessonId} (attempt ${attempts}, ${resolved.length} bytes)`);
+        saved = true;
+        break;
+      } catch (error) {
+        console.error(
+          `FAIL ${spec.lessonId} attempt ${attempts}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+
+    if (!saved) {
+      blocked.push(spec.lessonId);
+      records.push({
+        lessonId: spec.lessonId,
+        provider: options.provider,
+        model,
+        destinationFilename: spec.destinationFilename,
+        bytes: 0,
+        sha256: '',
+        attempts,
+        status: 'blocked',
+      });
+    }
+  }
+
+  writeMetadata(records);
+
+  const generated = records.filter((r) => r.status === 'generated');
+  console.log('');
+  console.log('=== GENERATION SUMMARY ===');
+  console.log(line('Provider:', options.provider));
+  console.log(line('Model:', model));
+  console.log(line('Selected:', selected.length));
+  console.log(line('Generated:', generated.length));
+  console.log(line('Blocked:', blocked.length));
+  console.log(line('Total API attempts:', attemptsSpent));
+  console.log(line('Approx cost (USD):', `~$${(attemptsSpent * perImage).toFixed(2)}`));
+  if (blocked.length) console.log(line('Blocked lessons:', blocked.join(', ')));
+  console.log(`SUMMARY_JSON ${JSON.stringify({ generated: generated.length, blocked, attempts: attemptsSpent, cost: Number((attemptsSpent * perImage).toFixed(2)) })}`);
+}
+
 async function main(): Promise<void> {
   const options = parseArgs(process.argv.slice(2));
   const states = computeStates();
@@ -306,15 +515,10 @@ async function main(): Promise<void> {
     return;
   }
 
-  // --- Paid generation path (dormant during dry runs) ---
   assertGenerationPreconditions(options);
   const selected = selectForGeneration(states, options);
   console.log(`Executing generation for ${selected.length} lesson image(s) via ${options.provider}...`);
-  console.error(
-    'Provider HTTP generation is intentionally left for a supervised, approved run. ' +
-      'Wire the verified endpoint call here before enabling paid execution.',
-  );
-  process.exitCode = 2;
+  await executeGeneration(selected, options);
 }
 
 void main().catch((error: unknown) => {

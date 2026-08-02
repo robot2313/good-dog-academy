@@ -40,8 +40,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/recall-name-response.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a friendly Golden Retriever puppy turning its head and making happy eye contact with its crouching owner in a bright modern living room, the owner’s hand visible holding a small reward low near the knees. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling
-- **Current image source:** shared skill illustration `assets/lesson-images/recall.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/recall-name-response.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Short-Distance Recall
 
@@ -58,8 +58,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/recall-short-distance.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of an Australian Shepherd running enthusiastically across a sunny green backyard lawn towards its owner who is crouching with open arms and a visible treat. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling
-- **Current image source:** shared skill illustration `assets/lesson-images/recall.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/recall-short-distance.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Recall Around Distractions
 
@@ -76,8 +76,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/recall-around-distractions.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a happy mixed-breed dog sprinting past a park bench on a loose trailing long line straight towards its owner who stands with open arms encouraging it, a quiet park in the background. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling, no stepped-on line
-- **Current image source:** shared skill illustration `assets/lesson-images/recall.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/recall-around-distractions.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Find the Reward Zone
 
@@ -94,8 +94,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/loose-lead-reward-zone.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a handler walking forward along a green park path handing a treat down beside their hip to a happy Yellow Labrador walking level with their leg, the lead hanging in a loose J-shaped curve. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling
-- **Current image source:** shared skill illustration `assets/lesson-images/loose-lead-walking.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/loose-lead-reward-zone.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Calm Direction Changes
 
@@ -112,8 +112,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/loose-lead-direction-changes.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of an owner smoothly turning on a paved park path while a medium brown dog curves naturally alongside them on a loose relaxed leash. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling, no harsh jerking
-- **Current image source:** shared skill illustration `assets/lesson-images/loose-lead-walking.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/loose-lead-direction-changes.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Loose Lead in the Real World
 
@@ -130,8 +130,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/loose-lead-real-world-distractions.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of an adult dog walking calmly and loosely beside its owner along a suburban pavement past parked cars and green front lawns, the lead completely slack. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling, no leash strain
-- **Current image source:** shared skill illustration `assets/lesson-images/loose-lead-walking.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/loose-lead-real-world-distractions.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Voluntary Check-Ins
 
@@ -148,8 +148,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/focus-check-in.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a Black Labrador walking outdoors on a loose lead turning its head up to make happy eye contact with its handler at a grassy park edge. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling, no tight collar
-- **Current image source:** shared skill illustration `assets/lesson-images/focus.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/focus-check-in.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Hold Attention Briefly
 
@@ -166,8 +166,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/focus-hold-attention.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a Standard Poodle sitting indoors and holding steady, relaxed eye contact with its handler who holds a reward near chest level in a warm living room. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling, no forced chin hold
-- **Current image source:** shared skill illustration `assets/lesson-images/focus.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/focus-hold-attention.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Focus Around Distractions
 
@@ -184,8 +184,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/focus-around-distractions.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a calm German Shepherd sitting and checking in with its owner in an open park while a cyclist rides by far away on a distant trail. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling, no reactive lunging
-- **Current image source:** shared skill illustration `assets/lesson-images/focus.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/focus-around-distractions.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Four Paws Down
 
@@ -202,8 +202,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/jumping-four-paws-down.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a Boxer standing calmly with all four paws firmly on the floor of a living room entryway being greeted with low, gentle hands and a calm chest scratch. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling, no jumping, no paws on chest
-- **Current image source:** shared skill illustration `assets/lesson-images/jumping.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/jumping-four-paws-down.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Calm Greetings
 
@@ -220,8 +220,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/jumping-calm-greetings.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a friendly Labradoodle standing calmly beside its owner in a home hallway while a visiting friend gently extends a calm hand to pet it, the lead loose. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling, no jumping on the visitor
-- **Current image source:** shared skill illustration `assets/lesson-images/jumping.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/jumping-calm-greetings.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Visitors and Excitement
 
@@ -238,8 +238,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/jumping-visitors-and-excitement.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a medium mixed-breed dog sitting politely on an entry mat inside a hallway as a guest steps in through the open front door, the owner nearby. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling, no lunging, no jumping
-- **Current image source:** shared skill illustration `assets/lesson-images/jumping.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/jumping-visitors-and-excitement.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Identify Barking Triggers
 
@@ -256,8 +256,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/barking-identify-triggers.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a friendly mixed-breed dog sitting calmly on a rug and looking out of a modern floor-to-ceiling window in a cosy living room while the owner observes quietly from an armchair in the background. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling
-- **Current image source:** shared skill illustration `assets/lesson-images/barking.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/barking-identify-triggers.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Reinforce Quiet Moments
 
@@ -274,8 +274,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/barking-quiet-reinforcement.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a Border Collie lying quietly on a dog bed and looking up towards its owner who kneels beside it calmly offering a treat at nose level in a bright living room. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling
-- **Current image source:** shared skill illustration `assets/lesson-images/barking.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/barking-quiet-reinforcement.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Real-World Barking Management
 
@@ -292,8 +292,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/barking-real-world-management.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of an owner walking a medium mixed-breed dog on a slack lead past a suburban garden fence, the dog turning calmly towards the owner with relaxed ears. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling
-- **Current image source:** shared skill illustration `assets/lesson-images/barking.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/barking-real-world-management.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Choose Appropriate Chews
 
@@ -310,8 +310,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/chewing-appropriate-items.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a young Golden Retriever puppy resting on a clean wooden floor happily chewing a durable rubber dog chew toy in a bright living room. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling, no shoes or forbidden household items near the dog
-- **Current image source:** shared skill illustration `assets/lesson-images/chewing.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/chewing-appropriate-items.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### A Calm Redirection Routine
 
@@ -328,8 +328,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/chewing-redirection-routine.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of an owner kneeling and calmly offering a safe chew toy to a young Yellow Labrador that is leaving a shoe on the carpet to take the chew toy, a cosy living room. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling, no conflict, no scolding
-- **Current image source:** shared skill illustration `assets/lesson-images/chewing.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/chewing-redirection-routine.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Independence and Prevention
 
@@ -346,8 +346,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/chewing-independence-and-prevention.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of an adult tricolour Beagle relaxing comfortably on a plush dog mat with an assortment of safe chew toys and bones arranged around it in a clean modern living room. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling
-- **Current image source:** shared skill illustration `assets/lesson-images/chewing.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/chewing-independence-and-prevention.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Find a Safe Working Distance
 
@@ -364,8 +364,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/reactivity-safe-distance.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a handler and a calm German Shepherd standing on a grassy hill giving the dog a treat, while another dog walks far away on a distant park trail below. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling, no barking, no reaction
-- **Current image source:** shared skill illustration `assets/lesson-images/reactivity.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/reactivity-safe-distance.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Look and Disengage
 
@@ -382,8 +382,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/reactivity-look-and-disengage.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a calm Collie on a slack long line turning its head back from a distant trigger towards its handler to take a treat, at a quiet park edge near trees. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling, no lunging
-- **Current image source:** shared skill illustration `assets/lesson-images/reactivity.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/reactivity-look-and-disengage.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Carefully Controlled Exposure
 
@@ -400,8 +400,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/reactivity-controlled-exposure.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a handler walking a calm dog behind a natural green park hedge that acts as a visual barrier, the dog relaxed and focused on the handler. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling, no barrier frustration
-- **Current image source:** shared skill illustration `assets/lesson-images/reactivity.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/reactivity-controlled-exposure.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Build a Toileting Routine
 
@@ -418,8 +418,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/house-training-routine.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a young puppy sniffing the lush green grass in a suburban backyard near an open patio door under bright morning sunlight, the owner standing nearby. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling
-- **Current image source:** shared skill illustration `assets/lesson-images/house-training.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/house-training-routine.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Signal and Reward
 
@@ -436,8 +436,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/house-training-signal-and-reward.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of an owner bending down to give a treat and warm praise to a small happy terrier mix in a sunny residential garden. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling
-- **Current image source:** shared skill illustration `assets/lesson-images/house-training.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/house-training-signal-and-reward.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Build House-Training Reliability
 
@@ -454,8 +454,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/house-training-reliability.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of an adult Golden Retriever sitting patiently by a glass back door and looking out into the garden with a gently wagging tail in a bright modern sunroom. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling
-- **Current image source:** shared skill illustration `assets/lesson-images/house-training.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/house-training-reliability.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Choice and Exploration
 
@@ -472,8 +472,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/confidence-choice-and-exploration.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a curious scruffy rescue terrier-mix voluntarily sniffing an open cardboard box in a sunlit living room while the owner stands back calmly giving the dog space and time. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling, no forcing, no pulling
-- **Current image source:** shared skill illustration `assets/lesson-images/confidence.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/confidence-choice-and-exploration.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### New Surfaces and Sounds
 
@@ -490,8 +490,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/confidence-new-surfaces-and-sounds.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a blue-merle Australian Shepherd stepping one paw onto a textured rubber balance pad in an indoor training room while its owner crouches beside it smiling with a treat. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling, no force, no pushing
-- **Current image source:** shared skill illustration `assets/lesson-images/confidence.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/confidence-new-surfaces-and-sounds.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Explore New Environments
 
@@ -508,8 +508,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/confidence-new-environments.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a Cocker Spaniel exploring a quiet green park pathway on a loose long line, sniffing the grass happily while its owner follows a few metres behind. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling, no tight leash, no crowd
-- **Current image source:** shared skill illustration `assets/lesson-images/confidence.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/confidence-new-environments.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Wait for a Reward
 
@@ -526,8 +526,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/impulse-control-wait-for-reward.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a smooth-coated Hungarian Vizsla sitting calmly and patiently facing an open human palm holding a treat, pausing before taking it, in a bright kitchen. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling, no snatching
-- **Current image source:** shared skill illustration `assets/lesson-images/impulse-control.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/impulse-control-wait-for-reward.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Pause at Doorways
 
@@ -544,8 +544,8 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/impulse-control-doorways.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a Border Collie sitting quietly in front of an open front door in a home entryway, looking up at its handler and waiting calmly for the release cue. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling, no physical blocking
-- **Current image source:** shared skill illustration `assets/lesson-images/impulse-control.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/impulse-control-doorways.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 
 ### Impulse Control in Daily Life
 
@@ -562,6 +562,6 @@
 - **Destination filename:** `assets/lesson-images/by-lesson/impulse-control-real-world-distractions.jpg`
 - **Generation prompt:** Photorealistic candid documentary-style colour photograph of a Golden Retriever holding a calm, relaxed down-stay on a home patio while its owner sets a food bowl on the ground a short distance away. Shot on a full-frame DSLR with a 35mm lens, natural light, shallow depth of field, true-to-life canine anatomy, gentle positive-reinforcement dog training, 3:2 landscape composition suitable for mobile cropping, high resolution, sharp focus.
 - **Negative prompt:** cartoon, illustration, drawing, painting, digital painting, storybook art, anime, 3d render, cgi, render, vector art, sketch, watercolour, flat shading, text, caption, watermark, logo, signature, border, deformed anatomy, extra limbs, missing limbs, fused paws, distorted face, prong collar, choke chain, choke collar, shock collar, e-collar, tight leash, tense leash, choking, yanking, fear, cowering, punishment, intimidation, harsh handling, no pushing, no holding down
-- **Current image source:** shared skill illustration `assets/lesson-images/impulse-control.jpg` (temporary fallback)
-- **Current status:** NOT YET CREATED
+- **Current image source:** verified photograph `assets/lesson-images/by-lesson/impulse-control-real-world-distractions.jpg`
+- **Current status:** VERIFIED REALISTIC IMAGE EXISTS
 

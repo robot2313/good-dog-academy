@@ -35,21 +35,26 @@ describe('lesson image manifest', () => {
     expect(getLessonImageSource(id, 'recall')).toBe(lessonImageManifest[id].source);
   });
 
-  it('uses the compatibility fallback for an unknown or missing lesson id', () => {
-    // Unknown id falls back to the requested skill's shared image.
-    expect(getLessonImageSource('not-a-real-lesson', 'confidence')).toBe(
+  it('uses the shared skill fallback only for an unknown or missing lesson id', () => {
+    // An unknown id returns a stable shared fallback for the requested skill...
+    const unknownConfidence = getLessonImageSource('not-a-real-lesson', 'confidence');
+    expect(unknownConfidence).toBe(getLessonImageSource('also-not-real', 'confidence'));
+    expect(unknownConfidence).toBe(getLessonImageSource(null, 'confidence'));
+    // ...which is NOT any real lesson's unique photograph.
+    expect(unknownConfidence).not.toBe(
       lessonImageManifest['confidence-choice-and-exploration'].source,
     );
-    // Missing id with no skill hint falls back to the recall image.
-    expect(getLessonImageSource(null)).toBe(
-      lessonImageManifest['recall-name-response'].source,
-    );
+    // A missing id with no skill hint falls back to a stable last-resort image.
+    expect(getLessonImageSource(null)).toBe(getLessonImageSource('unknown', null));
   });
 
-  it('does not present a shared skill fallback as a unique lesson image', () => {
-    // No verified per-lesson photograph is wired in yet, so no entry may claim one.
-    for (const entry of Object.values(lessonImageManifest)) {
-      expect(entry.hasUniqueImage).toBe(false);
+  it('serves a unique photograph for every active lesson (no shared fallback renders)', () => {
+    for (const id of activeLessonIds) {
+      const entry = lessonImageManifest[id];
+      expect(entry.hasUniqueImage).toBe(true);
+      // The lesson renders its own photo, distinct from the shared skill fallback.
+      expect(getLessonImageSource(id, entry.skill)).toBe(entry.source);
+      expect(entry.source).not.toBe(getLessonImageSource('unknown-lesson', entry.skill));
     }
   });
 
