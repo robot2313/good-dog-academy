@@ -7,22 +7,44 @@ import {
 import { getLessonImageSource } from '../../src/features/lessons/coaching/lessonImageManifest';
 import { styles } from '../../src/theme/styles';
 
+const frame = styles.lessonIllustrationFrame as Record<string, unknown>;
+const image = styles.lessonIllustration as Record<string, unknown>;
+const card = styles.lessonIllustrationCard as Record<string, unknown>;
+
 describe('lesson illustration layout', () => {
-  it('uses a 3:2 landscape aspect ratio with no conflicting fixed height', () => {
-    const style = styles.lessonIllustration as Record<string, unknown>;
-    expect(style.aspectRatio).toBe(3 / 2);
-    expect(style.width).toBe('100%');
-    // A fixed tall height would fight the aspect ratio and crop the landscape image.
-    expect('height' in style).toBe(false);
+  it('gives the frame the full card width and a 3:2 landscape ratio (no fixed height)', () => {
+    expect(frame.width).toBe('100%');
+    expect(frame.aspectRatio).toBe(3 / 2);
+    // A fixed numeric height would fight the aspect ratio and crop the landscape image.
+    expect('height' in frame).toBe(false);
   });
 
-  it('keeps rounded corners and clipping on the illustration wrapper', () => {
-    const card = styles.lessonIllustrationCard as Record<string, unknown>;
+  it('fills the frame with the image and centres it inside a neutral background', () => {
+    expect(image.width).toBe('100%');
+    expect(image.height).toBe('100%');
+    expect(frame.backgroundColor).toBe('#F7F4EE');
+    expect(frame.alignItems).toBe('center');
+    expect(frame.justifyContent).toBe('center');
+  });
+
+  it('clips to rounded corners without transforms or absolute positioning', () => {
+    expect(frame.overflow).toBe('hidden');
     expect(card.overflow).toBe('hidden');
     expect(typeof card.borderRadius).toBe('number');
+    for (const style of [card, frame, image]) {
+      expect('transform' in style).toBe(false);
+      expect(style.position).not.toBe('absolute');
+      expect('translateX' in style).toBe(false);
+      expect('translateY' in style).toBe(false);
+      expect('scale' in style).toBe(false);
+    }
+    // No negative margins pulling the image out of the frame.
+    for (const key of ['marginTop', 'marginLeft', 'marginRight', 'marginBottom']) {
+      expect(Number(image[key] ?? 0)).toBeGreaterThanOrEqual(0);
+    }
   });
 
-  it('renders the lesson-specific image resolved by lesson id, shown in full without distortion', () => {
+  it('renders the lesson-specific image resolved by lesson id, shown in full with contain', () => {
     const lessonId = 'recall-name-response';
     const skill = 'recall' as const;
     const label = lessonIllustrationForSkill(skill).accessibilityLabel;
@@ -30,16 +52,10 @@ describe('lesson illustration layout', () => {
     const view = render(
       <LessonIllustration skill={skill} lessonId={lessonId} commonMistake="Some mistake" />,
     );
-    const image = view.getByLabelText(label);
+    const rendered = view.getByLabelText(label);
 
-    expect(image.props.source).toBe(getLessonImageSource(lessonId, skill));
-    // contain guarantees the whole training action stays visible (no aggressive crop).
-    expect(image.props.resizeMode).toBe('contain');
-
-    const imageStyle = image.props.style as Record<string, unknown>;
-    expect(imageStyle.aspectRatio).toBe(3 / 2);
-    expect(imageStyle.width).toBe('100%');
-    expect('height' in imageStyle).toBe(false);
+    expect(rendered.props.source).toBe(getLessonImageSource(lessonId, skill));
+    expect(rendered.props.resizeMode).toBe('contain');
   });
 
   it('preserves the accessibility label on the illustration image', () => {

@@ -111,14 +111,16 @@ export function LessonIllustration({
         Picture the task
       </Text>
       <View style={styles.lessonIllustrationCard}>
-        <Image
-          accessible
-          accessibilityLabel={illustration.accessibilityLabel}
-          accessibilityRole="image"
-          resizeMode="contain"
-          source={imageSource}
-          style={styles.lessonIllustration}
-        />
+        <View style={styles.lessonIllustrationFrame}>
+          <Image
+            accessible
+            accessibilityLabel={illustration.accessibilityLabel}
+            accessibilityRole="image"
+            resizeMode="contain"
+            source={imageSource}
+            style={styles.lessonIllustration}
+          />
+        </View>
         <View style={styles.illustrationCopy}>
           <Text style={styles.illustrationLabel}>WHAT TO NOTICE</Text>
           <Text style={styles.illustrationText}>{illustration.caption}</Text>
