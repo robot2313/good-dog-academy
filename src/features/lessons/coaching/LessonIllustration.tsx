@@ -9,8 +9,11 @@ interface LessonIllustrationDetails {
   readonly caption: string;
 }
 
+import { getLessonImageSource } from './lessonImageManifest';
+
 interface LessonIllustrationProps {
   readonly skill: BehaviourSkill;
+  readonly lessonId?: string;
   readonly commonMistake?: string;
 }
 
@@ -96,9 +99,11 @@ export function lessonIllustrationForSkill(
 
 export function LessonIllustration({
   skill,
+  lessonId,
   commonMistake,
 }: LessonIllustrationProps) {
   const illustration = lessonIllustrationForSkill(skill);
+  const imageSource = getLessonImageSource(lessonId ?? null, skill);
 
   return (
     <View style={styles.lessonIllustrationSection}>
@@ -106,32 +111,14 @@ export function LessonIllustration({
         Picture the task
       </Text>
       <View style={styles.lessonIllustrationCard}>
-        <View
+        <Image
           accessible
           accessibilityLabel={illustration.accessibilityLabel}
           accessibilityRole="image"
-          style={{
-            width: '100%',
-            aspectRatio: 2.2,
-            backgroundColor: '#EDF6F0',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderBottomWidth: 1,
-            borderBottomColor: '#BDD5C7',
-          }}
-        >
-          <Text
-            style={{
-              color: '#1B4D3E',
-              fontSize: 14,
-              fontWeight: '900',
-              letterSpacing: 1.2,
-              textTransform: 'uppercase',
-            }}
-          >
-            {skill.replace(/-/g, ' ')}
-          </Text>
-        </View>
+          resizeMode="cover"
+          source={imageSource}
+          style={styles.lessonIllustration}
+        />
         <View style={styles.illustrationCopy}>
           <Text style={styles.illustrationLabel}>WHAT TO NOTICE</Text>
           <Text style={styles.illustrationText}>{illustration.caption}</Text>

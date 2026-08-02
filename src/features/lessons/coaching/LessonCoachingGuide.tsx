@@ -31,6 +31,7 @@ export function LessonCoachingGuide({ lesson }: LessonCoachingGuideProps) {
 
       <LessonIllustration
         commonMistake={lesson.commonMistakes[0]}
+        lessonId={lesson.id}
         skill={lesson.skill}
       />
 

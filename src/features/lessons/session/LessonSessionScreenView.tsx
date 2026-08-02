@@ -263,7 +263,7 @@ export function LessonSessionScreenView({
       <Text style={styles.lessonGoal}>{lesson.goal}</Text>
       <Text style={styles.coachingMeta}>About {lesson.estimatedMinutes} minutes · pause or finish early at any time.</Text>
     </View>
-    <LessonIllustration skill={lesson.skill} commonMistake={lesson.commonMistakes[0]} />
+    <LessonIllustration skill={lesson.skill} lessonId={lesson.id} commonMistake={lesson.commonMistakes[0]} />
     <View style={styles.card}>
       <Text accessibilityRole="header" style={styles.sectionTitle}>Get ready</Text>
       <Text style={styles.body}>Have everything within reach before you begin:</Text>

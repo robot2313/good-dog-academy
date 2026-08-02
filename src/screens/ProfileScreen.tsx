@@ -7,8 +7,7 @@ import { DogIdentityHero } from '../components/DogIdentityHero';
 import { InlineValidationMessage } from '../components/InlineValidationMessage';
 import { SecondaryTextButton } from '../components/SecondaryTextButton';
 import { useOnboarding } from '../features/onboarding/OnboardingContext';
-import { dogPhotoStorage } from '../features/onboarding/photo/dogPhotoStorageInstance';
-import { domainRepositories } from '../services/domainRepositories';
+import { dogPhotoUpdateService } from '../features/onboarding/photo/dogPhotoUpdateServiceInstance';
 import { styles } from '../theme/styles';
 
 declare const require: (moduleName: string) => { DeveloperToolsSection: () => React.JSX.Element | null };
@@ -43,21 +42,11 @@ export function ProfileScreen(): React.JSX.Element {
     if (!result.canceled && result.assets[0]) {
       try {
         setIsUpdatingPhoto(true);
-        const persistentUri = await dogPhotoStorage.persist(result.assets[0].uri, dog.id);
-        if (dog.photoUri && dog.photoUri !== persistentUri) {
-          try {
-            await dogPhotoStorage.remove(dog.photoUri);
-          } catch {
-            /* cleanup non-fatal */
-          }
-        }
-        const updatedDog = {
-          ...dog,
-          photoUri: persistentUri,
-          updatedAt: new Date().toISOString(),
-        };
-        await domainRepositories.dogs.save(updatedDog);
-        await refreshApplicationStatus();
+        await dogPhotoUpdateService.replacePhoto(
+          dog,
+          result.assets[0].uri,
+          refreshApplicationStatus,
+        );
       } catch {
         setPhotoError('Unable to save photo. Please try again.');
       } finally {
@@ -71,18 +60,7 @@ export function ProfileScreen(): React.JSX.Element {
     setPhotoError(null);
     try {
       setIsUpdatingPhoto(true);
-      try {
-        await dogPhotoStorage.remove(dog.photoUri);
-      } catch {
-        /* cleanup non-fatal */
-      }
-      const updatedDog = {
-        ...dog,
-        photoUri: null,
-        updatedAt: new Date().toISOString(),
-      };
-      await domainRepositories.dogs.save(updatedDog);
-      await refreshApplicationStatus();
+      await dogPhotoUpdateService.removePhoto(dog, refreshApplicationStatus);
     } catch {
       setPhotoError('Unable to remove photo.');
     } finally {
