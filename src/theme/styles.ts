@@ -117,7 +117,7 @@ export const styles = StyleSheet.create({
   coachingSectionIntro: { color: colors.muted, fontSize: 13, lineHeight: 19, marginTop: 3 },
   lessonIllustrationSection: { gap: 8 },
   lessonIllustrationCard: { borderRadius: 18, overflow: 'hidden', backgroundColor: colors.card, borderWidth: 1, borderColor: colors.line },
-  lessonIllustration: { width: '100%', aspectRatio: 1.5, backgroundColor: colors.mint },
+  lessonIllustration: { width: '100%', aspectRatio: 3 / 2, backgroundColor: '#F7F4EE' },
   illustrationCopy: { padding: 14, gap: 5 },
   illustrationLabel: { color: colors.green, fontSize: 9, lineHeight: 13, letterSpacing: 1, fontWeight: '900' },
   illustrationText: { color: colors.text, fontSize: 14, lineHeight: 21 },

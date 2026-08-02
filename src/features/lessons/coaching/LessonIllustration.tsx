@@ -115,7 +115,7 @@ export function LessonIllustration({
           accessible
           accessibilityLabel={illustration.accessibilityLabel}
           accessibilityRole="image"
-          resizeMode="cover"
+          resizeMode="contain"
           source={imageSource}
           style={styles.lessonIllustration}
         />
