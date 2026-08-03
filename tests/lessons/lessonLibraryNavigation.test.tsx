@@ -29,6 +29,10 @@ describe('Lesson Library navigation', () => {
 
     expect(await view.findByText('Lesson Library')).toBeTruthy();
     expect(view.getByText(sampleDog.name)).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: `Troubleshoot a training problem for ${sampleDog.name}` }));
+    expect(await view.findByRole('header', { name: `What is ${sampleDog.name} struggling with?` })).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: 'Back' }));
+    expect(await view.findByText('Lesson Library')).toBeTruthy();
     fireEvent.press(view.getByRole('button', { name: 'Name Response. Recall. Level 1. 6 minutes. Available.' }));
     expect(await view.findByText('GET READY')).toBeTruthy();
     expect(view.getByRole('header', { name: 'Before we start' })).toBeTruthy();
