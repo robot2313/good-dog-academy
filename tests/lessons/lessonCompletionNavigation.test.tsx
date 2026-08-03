@@ -41,7 +41,10 @@ async function driveToSave(view: ReturnType<typeof renderSession>['view']) {
   fireEvent.press(await view.findByRole('button', { name: 'Start Lesson' }));
   fireEvent.press(await view.findByRole('button', { name: 'Complete Lesson' }));
   fireEvent.press(await view.findByRole('button', { name: /^5 out of 5/ }));
-  fireEvent.press(view.getByRole('button', { name: 'Save session' }));
+  await act(async () => {
+    fireEvent.press(view.getByRole('button', { name: 'Save session' }));
+    await Promise.resolve();
+  });
 }
 
 describe('lesson completion navigation', () => {

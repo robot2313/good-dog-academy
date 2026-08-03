@@ -51,4 +51,13 @@ export class ExpoDogPhotoStorage implements DogPhotoStorage {
       throw new DogPhotoStorageError('Unable to remove a managed dog photo.', { uri }, { cause });
     }
   }
+
+  async removeAllManagedPhotos(): Promise<void> {
+    try {
+      const directory = new Directory(Paths.document, 'dog-photos');
+      if (directory.exists) directory.delete();
+    } catch (cause) {
+      throw new DogPhotoStorageError('Unable to remove managed dog photos.', {}, { cause });
+    }
+  }
 }

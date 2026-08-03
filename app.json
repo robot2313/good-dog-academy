@@ -1,15 +1,31 @@
 {
   "expo": {
     "name": "Good Dog Academy",
-    "slug": "good-dog-academy-stable-base",
+    "slug": "good-dog-academy",
+    "description": "Private, practical dog training plans and guided lessons for everyday life.",
     "version": "1.0.0",
+    "icon": "./assets/branding/app-icon.png",
+    "scheme": "gooddogacademy",
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0E0E0E",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.robot2313.gooddogacademy",
+      "buildNumber": "1"
     },
-    "android": {},
+    "android": {
+      "package": "com.robot2313.gooddogacademy",
+      "versionCode": 1,
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/branding/app-mark.png",
+        "backgroundColor": "#0E0E0E"
+      }
+    },
     "web": {
       "bundler": "metro"
     },
@@ -19,6 +35,15 @@
         "expo-image-picker",
         {
           "photosPermission": "Allow Good Dog Academy to choose an optional profile photo for your dog."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0E0E0E",
+          "image": "./assets/branding/app-mark.png",
+          "imageWidth": 200,
+          "resizeMode": "contain"
         }
       ]
     ]

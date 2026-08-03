@@ -1,14 +1,17 @@
 import * as ImagePicker from 'expo-image-picker';
+import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { AppScreen } from '../components/AppScreen';
+import { AppButton } from '../components/AppButton';
 import { DogIdentityHero } from '../components/DogIdentityHero';
 import { InlineValidationMessage } from '../components/InlineValidationMessage';
 import { SecondaryTextButton } from '../components/SecondaryTextButton';
 import { useOnboarding } from '../features/onboarding/OnboardingContext';
 import { dogPhotoUpdateService } from '../features/onboarding/photo/dogPhotoUpdateServiceInstance';
 import { styles } from '../theme/styles';
+import type { RootStackParamList } from '../types/navigation';
 
 declare const require: (moduleName: string) => { DeveloperToolsSection: () => React.JSX.Element | null };
 const DeveloperToolsSection = __DEV__
@@ -16,6 +19,7 @@ const DeveloperToolsSection = __DEV__
   : null;
 
 export function ProfileScreen(): React.JSX.Element {
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { status, refreshApplicationStatus } = useOnboarding();
   const dog = status && 'dog' in status ? status.dog : null;
   const owner = status && 'owner' in status ? status.owner : null;
@@ -114,6 +118,11 @@ export function ProfileScreen(): React.JSX.Element {
         <Text style={styles.profileValue}>{owner?.displayName ?? 'Not specified'}</Text>
         <Text style={styles.label}>Current build</Text>
         <Text style={styles.profileValue}>Stable Foundation 1.0</Text>
+      </View>
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Privacy and your data</Text>
+        <Text style={styles.body}>See what is stored on this device or permanently delete all app data.</Text>
+        <AppButton title="Privacy and Your Data" variant="secondary" onPress={() => navigation.navigate('Privacy')} />
       </View>
       {__DEV__ && DeveloperToolsSection ? <DeveloperToolsSection /> : null}
     </AppScreen>

@@ -12,6 +12,7 @@ export type RootStackParamList = {
   Main: NavigatorScreenParams<MainTabParamList> | undefined;
   Journey: undefined;
   Troubleshooter: undefined;
+  Privacy: undefined;
   LessonSummary: { lessonId: string; dailyPlanId?: string };
   LessonSession: { lessonId: string; dailyPlanId?: string };
   SessionHistory: undefined;

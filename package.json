@@ -1,5 +1,5 @@
 {
-  "name": "good-dog-academy-stable-base",
+  "name": "good-dog-academy",
   "version": "1.0.0",
   "main": "expo/AppEntry.js",
   "scripts": {
@@ -19,7 +19,9 @@
     "expo": "~54.0.35",
     "expo-file-system": "~19.0.23",
     "expo-image-picker": "~17.0.11",
+    "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
+    "expo-system-ui": "~6.0.9",
     "react": "19.1.0",
     "react-native": "0.81.5",
     "react-native-safe-area-context": "~5.6.0",

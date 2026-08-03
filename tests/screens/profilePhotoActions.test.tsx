@@ -10,6 +10,11 @@ jest.mock('../../src/features/onboarding/OnboardingContext', () => ({
   useOnboarding: jest.fn(),
 }));
 
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual('@react-navigation/native'),
+  useNavigation: () => ({ navigate: jest.fn() }),
+}));
+
 jest.mock('../../src/features/onboarding/photo/dogPhotoUpdateServiceInstance', () => ({
   dogPhotoUpdateService: {
     replacePhoto: jest.fn(async () => undefined),

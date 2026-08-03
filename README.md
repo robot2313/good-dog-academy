@@ -18,14 +18,18 @@ Completed milestones:
 - **Milestone 6 — Deterministic Daily Plan Engine:** production typed plans, supported time budgets, latest-assessment and ownership integrity, recent-plan rotation, local-day idempotency, transactional persistence, schema migration 4→5, and a default 15-minute application entry point.
 - **Milestone 7.1 — Lesson Library Foundation:** a read-only, selected-dog-aware service exposes immutable lesson metadata, deterministic skill groups, derived progress states, prerequisite explanations, case-insensitive search, combinable filters, and typed errors for the future library UI. See [Milestone 7.1 documentation](docs/milestone-7-1-lesson-library-foundation.md).
 - **Milestones 7.2 and 7.3 — Lesson Library UI, Search, and Filters:** the Academy tab now provides an accessible, phone-friendly lesson browser with selected-dog context, deterministic skill sections, textual progress states, prerequisite guidance, service-backed search, combinable filters, distinct recovery states, and a minimal safe summary route. See [Milestones 7.2 and 7.3 documentation](docs/milestone-7-2-7-3-lesson-library-ui-search-filters.md).
+- **Milestone 7.4 — Functional training experience:** Today plans, lesson preparation, guided sessions, completion persistence, and one-time celebration now form a complete local training loop.
+- **Milestone 8 — Training history and progress:** saved sessions can be reviewed from the Progress experience, with per-dog history and detail views.
+- **Milestone 9 — Premium personalised experience:** dark charcoal-and-gold visual design, selected-dog identity, optional managed profile photography, production lesson imagery, and a dog-training troubleshooter.
+- **Milestone 10 — Release-ready MVP (in progress):** permanent app identity, production icon and splash branding, EAS build profiles, in-app privacy disclosure, and confirmed local-data deletion. See [Milestone 10 documentation](docs/milestone-10-release-readiness.md).
 
 Not implemented yet:
 
-- Full lesson details, playback, and progress-writing UI flows
 - Authentication or backend services
 - Cloud sync
 - Subscriptions or payments
 - AI APIs or hosted video
+- Hosted privacy-policy URL and final App Store / Play listing metadata
 
 The project intentionally remains on **Expo SDK 54** and is compatible with Expo Go for that SDK.
 
@@ -169,6 +173,8 @@ Incomplete or corrupt onboarding data is never silently cleared. The Welcome scr
 Development seed data is opt-in under `src/development/seed`; production startup never imports or executes it.
 
 Development builds expose a confirmed **Reset App Data** action under Dog → Developer Tools. It applies Owner/Dog ownership cascades, removes managed dog photos, clears presentation state, and returns immediately to Welcome. The module is guarded by `__DEV__` and is removed from production bundles.
+
+Production builds expose **Privacy and Your Data** under Dog. It explains the app's local-only data model, provides the privacy contact, and offers a confirmed **Delete All App Data** action. Storage keys are cleared through the transaction layer; managed dog photos are also removed, and the app returns to Welcome.
 
 ## Project safeguards
 

@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 
 import {
   sampleBehaviourAssessment,
@@ -14,8 +14,16 @@ jest.mock('../../src/features/onboarding/OnboardingContext', () => ({
 }));
 
 const mockUseOnboarding = jest.mocked(useOnboarding);
+const mockNavigate = jest.fn();
+
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual('@react-navigation/native'),
+  useNavigation: () => ({ navigate: mockNavigate }),
+}));
 
 describe('ProfileScreen', () => {
+  beforeEach(() => jest.clearAllMocks());
+
   it('renders the canonical selected owner and dog from OnboardingContext', () => {
     const selectedDog = {
       ...sampleDog,
@@ -51,6 +59,8 @@ describe('ProfileScreen', () => {
     expect(view.getByText('Border Collie mix')).toBeTruthy();
     expect(view.getByText('Taylor Morgan')).toBeTruthy();
     expect(view.getByRole('button', { name: 'Add photo' })).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: 'Privacy and Your Data' }));
+    expect(mockNavigate).toHaveBeenCalledWith('Privacy');
   });
 
   it('renders photo change and remove controls when dog has a photo', () => {

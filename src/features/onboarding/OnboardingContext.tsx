@@ -27,6 +27,7 @@ type OnboardingContextValue = {
   setDogForm: React.Dispatch<React.SetStateAction<DogFormData>>;
   restartSavedSetup: () => Promise<boolean>;
   completeSetup: () => Promise<boolean>;
+  resetAfterLocalDataClear: () => void;
   resetAfterDevelopmentClear: () => void;
   refreshApplicationStatus: () => Promise<void>;
   retryInitialization: () => void;
@@ -117,7 +118,9 @@ export function OnboardingProvider({ children }: PropsWithChildren): React.JSX.E
     setStatus({ state: 'not-started', hasSavedData: false });
   }, [resetAppState]);
 
-  const value = useMemo(() => ({ status, loading, initializationError, ownerForm, dogForm, saveError, recoveryError, saving, setOwnerForm, setDogForm, restartSavedSetup, completeSetup, resetAfterDevelopmentClear, refreshApplicationStatus, retryInitialization }), [completeSetup, dogForm, initializationError, loading, ownerForm, recoveryError, refreshApplicationStatus, resetAfterDevelopmentClear, restartSavedSetup, retryInitialization, saveError, saving, status]);
+  const resetAfterLocalDataClear = resetAfterDevelopmentClear;
+
+  const value = useMemo(() => ({ status, loading, initializationError, ownerForm, dogForm, saveError, recoveryError, saving, setOwnerForm, setDogForm, restartSavedSetup, completeSetup, resetAfterLocalDataClear, resetAfterDevelopmentClear, refreshApplicationStatus, retryInitialization }), [completeSetup, dogForm, initializationError, loading, ownerForm, recoveryError, refreshApplicationStatus, resetAfterDevelopmentClear, resetAfterLocalDataClear, restartSavedSetup, retryInitialization, saveError, saving, status]);
   return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;
 }
 
