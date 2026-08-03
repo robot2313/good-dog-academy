@@ -59,14 +59,14 @@ const componentStyles = StyleSheet.create({
   },
   error: {
     backgroundColor: colorTokens.status.errorSurface,
-    borderColor: '#D49A91',
+    borderColor: '#5A3A38',
   },
   errorText: {
     color: colorTokens.status.errorText,
   },
   info: {
     backgroundColor: colorTokens.status.infoSurface,
-    borderColor: '#C8D8E6',
+    borderColor: '#2A3A48',
   },
   infoText: {
     color: colorTokens.status.infoText,

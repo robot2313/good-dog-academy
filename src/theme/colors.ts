@@ -10,5 +10,5 @@ export const colors = {
   text: colorTokens.text.primary,
   muted: colorTokens.text.secondary,
   line: colorTokens.border.subtle,
-  white: colorTokens.text.inverse,
+  white: '#FFFFFF',
 } as const;

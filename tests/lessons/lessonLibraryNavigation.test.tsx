@@ -22,25 +22,24 @@ describe('Lesson Library navigation', () => {
     jest.useRealTimers();
   });
 
-  it('opens available and locked summaries through the existing Academy tab', async () => {
+  it('opens available and locked Get Ready screens through the existing Academy tab', async () => {
     const view = render(<App />);
-    expect(await view.findByText(/focused lesson(?:s)? today\./)).toBeTruthy();
+    expect(await view.findByRole('button', { name: 'Your journey so far' })).toBeTruthy();
     fireEvent.press(view.getByText('Academy'));
 
     expect(await view.findByText('Lesson Library')).toBeTruthy();
     expect(view.getByText(sampleDog.name)).toBeTruthy();
     fireEvent.press(view.getByRole('button', { name: 'Name Response. Recall. Level 1. 6 minutes. Available.' }));
-    expect(await view.findByText('LESSON SUMMARY')).toBeTruthy();
-    expect(view.getByText('Guided practice available')).toBeTruthy();
+    expect(await view.findByText('GET READY')).toBeTruthy();
+    expect(view.getByRole('header', { name: 'Before we start' })).toBeTruthy();
     expect(view.getByRole('image', { name: /Recall training illustration/ })).toBeTruthy();
-    expect(view.getByRole('button', { name: 'Start guided session' })).toBeTruthy();
+    expect(view.getByRole('button', { name: 'Next' })).toBeTruthy();
 
     fireEvent.press(view.getByRole('button', { name: 'Back' }));
     expect(await view.findByText('Lesson Library')).toBeTruthy();
     fireEvent.press(view.getByRole('button', { name: 'Short-Distance Recall. Recall. Level 2. 9 minutes. Locked. Complete Name Response first.' }));
     expect(await view.findByText('WHY THIS IS LOCKED')).toBeTruthy();
     expect(view.getByText('Complete Name Response first.')).toBeTruthy();
-    expect(view.getByRole('header', { name: 'Picture the task' })).toBeTruthy();
-    expect(view.queryByRole('button', { name: 'Start guided session' })).toBeNull();
+    expect(view.queryByRole('button', { name: 'Next' })).toBeNull();
   });
 });

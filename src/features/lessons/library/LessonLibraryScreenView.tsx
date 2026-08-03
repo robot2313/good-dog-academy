@@ -90,7 +90,7 @@ export function LessonLibraryScreenView({ hero, dogName, service, loading, error
   }
 
   return <SafeAreaView style={styles.safe}>
-    <StatusBar style="dark" />
+    <StatusBar style="light" />
     <SectionList<LessonLibraryItem, LibrarySection>
       sections={sections}
       keyExtractor={(lesson) => lesson.id}
@@ -112,7 +112,7 @@ export function LessonLibraryScreenView({ hero, dogName, service, loading, error
           <TextInput
             accessibilityLabel="Search lessons"
             placeholder="Search lessons"
-            placeholderTextColor="#929A94"
+            placeholderTextColor="#8A8A8A"
             value={query}
             onChangeText={setQuery}
             autoCapitalize="none"

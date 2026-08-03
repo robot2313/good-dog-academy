@@ -8,6 +8,14 @@ export type GuidedSessionPhase =
   | 'complete'
   | 'cancelled';
 
+export type GuidedSessionCheckInSnapshot = {
+  readonly successfulRepetitions: number;
+  readonly needsHelpRepetitions: number;
+  readonly consecutiveChallenges: number;
+  readonly resetSuggested: boolean;
+  readonly running: boolean;
+};
+
 export type GuidedSessionState = {
   readonly phase: GuidedSessionPhase;
   readonly sessionId: string;
@@ -21,6 +29,12 @@ export type GuidedSessionState = {
   readonly consecutiveChallenges: number;
   readonly resetSuggested: boolean;
   readonly selectedRating: LessonPerformanceRating | null;
+  /**
+   * One-level undo record for the most recent Success / Try Again check-in.
+   * Lets the guided screen reverse a single accidental tap without a second
+   * counter store. Null when there is nothing to undo.
+   */
+  readonly undoSnapshot: GuidedSessionCheckInSnapshot | null;
 };
 
 export type GuidedSessionAction =
@@ -32,6 +46,7 @@ export type GuidedSessionAction =
   | { readonly type: 'next'; readonly stepCount: number }
   | { readonly type: 'recordSuccess' }
   | { readonly type: 'recordChallenge' }
+  | { readonly type: 'undo' }
   | { readonly type: 'acceptReset' }
   | { readonly type: 'finish' }
   | { readonly type: 'returnToTraining' }
@@ -63,6 +78,17 @@ export function createGuidedSessionState(
     consecutiveChallenges: 0,
     resetSuggested: false,
     selectedRating: null,
+    undoSnapshot: null,
+  };
+}
+
+function checkInSnapshot(state: GuidedSessionState): GuidedSessionCheckInSnapshot {
+  return {
+    successfulRepetitions: state.successfulRepetitions,
+    needsHelpRepetitions: state.needsHelpRepetitions,
+    consecutiveChallenges: state.consecutiveChallenges,
+    resetSuggested: state.resetSuggested,
+    running: state.running,
   };
 }
 
@@ -110,10 +136,12 @@ export function guidedSessionReducer(
             ...state,
             successfulRepetitions: state.successfulRepetitions + 1,
             consecutiveChallenges: 0,
+            undoSnapshot: checkInSnapshot(state),
           }
         : state;
     case 'recordChallenge': {
       if (state.phase !== 'training' || state.resetSuggested) return state;
+      const snapshot = checkInSnapshot(state);
       const consecutiveChallenges = state.consecutiveChallenges + 1;
       const resetSuggested = consecutiveChallenges >= 2;
       return {
@@ -122,8 +150,13 @@ export function guidedSessionReducer(
         consecutiveChallenges,
         resetSuggested,
         running: resetSuggested ? false : state.running,
+        undoSnapshot: snapshot,
       };
     }
+    case 'undo':
+      return state.phase === 'training' && state.undoSnapshot !== null
+        ? { ...state, ...state.undoSnapshot, undoSnapshot: null }
+        : state;
     case 'acceptReset':
       return state.phase === 'training' && state.resetSuggested
         ? {
@@ -131,6 +164,7 @@ export function guidedSessionReducer(
             consecutiveChallenges: 0,
             resetSuggested: false,
             running: state.remainingSeconds > 0,
+            undoSnapshot: null,
           }
         : state;
     case 'finish':

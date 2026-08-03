@@ -99,6 +99,44 @@ describe('guided training session state', () => {
     });
   });
 
+  it('undoes only the most recent success or try-again check-in', () => {
+    const running = guidedSessionReducer(createGuidedSessionState(5, 'session-1'), {
+      type: 'begin',
+      startedAt,
+    });
+    expect(running.undoSnapshot).toBeNull();
+    // Nothing to undo yet.
+    expect(guidedSessionReducer(running, { type: 'undo' })).toBe(running);
+
+    const oneSuccess = guidedSessionReducer(running, { type: 'recordSuccess' });
+    const twoSuccess = guidedSessionReducer(oneSuccess, { type: 'recordSuccess' });
+    expect(twoSuccess.successfulRepetitions).toBe(2);
+
+    const undone = guidedSessionReducer(twoSuccess, { type: 'undo' });
+    expect(undone.successfulRepetitions).toBe(1);
+    // Single-level undo only — the snapshot is consumed.
+    expect(undone.undoSnapshot).toBeNull();
+    expect(guidedSessionReducer(undone, { type: 'undo' })).toBe(undone);
+  });
+
+  it('undo reverses a try-again tap, including a suggested reset', () => {
+    const running = guidedSessionReducer(createGuidedSessionState(5, 'session-1'), {
+      type: 'begin',
+      startedAt,
+    });
+    const first = guidedSessionReducer(running, { type: 'recordChallenge' });
+    const second = guidedSessionReducer(first, { type: 'recordChallenge' });
+    expect(second).toMatchObject({ needsHelpRepetitions: 2, resetSuggested: true, running: false });
+
+    const undone = guidedSessionReducer(second, { type: 'undo' });
+    expect(undone).toMatchObject({
+      needsHelpRepetitions: 1,
+      consecutiveChallenges: 1,
+      resetSuggested: false,
+      running: true,
+    });
+  });
+
   it('requires feedback and a rating before entering the saving phase', () => {
     const running = guidedSessionReducer(createGuidedSessionState(5, 'session-1'), {
       type: 'begin',

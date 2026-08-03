@@ -27,29 +27,31 @@ describe('guided Lesson Session navigation', () => {
     jest.useRealTimers();
   });
 
-  it('saves once and refreshes the existing summary and library immediately', async () => {
+  it('completes a lesson, returns Home, and celebrates over the updated Home', async () => {
     const view = render(<App />);
-    expect(await view.findByText(/focused lesson(?:s)? today\./)).toBeTruthy();
+    expect(await view.findByRole('button', { name: 'Your journey so far' })).toBeTruthy();
     fireEvent.press(view.getByText('Academy'));
     expect(await view.findByText('Lesson Library')).toBeTruthy();
 
     fireEvent.press(view.getByRole('button', {
       name: 'Name Response. Recall. Level 1. 6 minutes. Available.',
     }));
-    expect(await view.findByText('LESSON SUMMARY')).toBeTruthy();
-    fireEvent.press(view.getByRole('button', { name: 'Start guided session' }));
+    expect(await view.findByText('GET READY')).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: 'Next' }));
 
-    expect(await view.findByText('GUIDED SESSION')).toBeTruthy();
-    fireEvent.press(view.getByRole('button', { name: 'Begin 6-minute session' }));
-    expect(view.getByText('SESSION RUNNING')).toBeTruthy();
-    fireEvent.press(view.getByRole('button', { name: 'Finish and rate session' }));
+    expect(await view.findByRole('header', { name: 'Before You Begin' })).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: 'Start Lesson' }));
+
+    expect(await view.findByText('SESSION RUNNING')).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: 'Complete Lesson' }));
     expect(view.getByRole('header', { name: 'How did it feel?' })).toBeTruthy();
     fireEvent.press(view.getByRole('button', { name: /^5 out of 5/ }));
     const saveButton = view.getByRole('button', { name: 'Save session' });
     fireEvent.press(saveButton);
     fireEvent.press(saveButton);
 
-    expect(await view.findByText('SESSION SAVED')).toBeTruthy();
+    // Celebration appears over the Home screen after a successful save.
+    expect(await view.findByText('Lesson complete!')).toBeTruthy();
     const repositories = createDomainRepositories(appStorage);
     await waitFor(async () => {
       await expect(repositories.trainingSessions.findAll()).resolves.toHaveLength(1);
@@ -57,36 +59,35 @@ describe('guided Lesson Session navigation', () => {
     await expect(repositories.progress.findAll()).resolves.toEqual([]);
     await expect(repositories.achievements.findAll()).resolves.toEqual([]);
 
-    fireEvent.press(view.getByRole('button', { name: 'Back to lesson' }));
-    expect(await view.findByText('LESSON SUMMARY')).toBeTruthy();
-    expect(view.getByText('Completed')).toBeTruthy();
-    expect(view.getByRole('button', { name: 'Practise this lesson again' })).toBeTruthy();
+    // Dismiss the celebration; the updated Home remains visible.
+    fireEvent.press(view.getByRole('button', { name: 'Continue' }));
+    expect(await view.findByRole('button', { name: 'Your journey so far' })).toBeTruthy();
 
-    fireEvent.press(view.getByRole('button', { name: 'Back' }));
+    // The library reflects the completion.
+    fireEvent.press(view.getByText('Academy'));
     expect(await view.findByText('Lesson Library')).toBeTruthy();
     expect(view.getByRole('button', {
       name: 'Name Response. Recall. Level 1. 6 minutes. Completed.',
-    })).toBeTruthy();
-    expect(view.getByRole('button', {
-      name: 'Short-Distance Recall. Recall. Level 2. 9 minutes. Available.',
     })).toBeTruthy();
   });
 
   it('leaves an active session without creating persistent records', async () => {
     const view = render(<App />);
-    expect(await view.findByText(/focused lesson(?:s)? today\./)).toBeTruthy();
+    expect(await view.findByRole('button', { name: 'Your journey so far' })).toBeTruthy();
     fireEvent.press(view.getByText('Academy'));
     expect(await view.findByText('Lesson Library')).toBeTruthy();
     fireEvent.press(view.getByRole('button', {
       name: 'Name Response. Recall. Level 1. 6 minutes. Available.',
     }));
-    expect(await view.findByText('LESSON SUMMARY')).toBeTruthy();
-    fireEvent.press(view.getByRole('button', { name: 'Start guided session' }));
-    expect(await view.findByText('GUIDED SESSION')).toBeTruthy();
-    fireEvent.press(view.getByRole('button', { name: 'Begin 6-minute session' }));
-    fireEvent.press(view.getByRole('button', { name: 'Leave without saving' }));
+    expect(await view.findByText('GET READY')).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: 'Next' }));
+    expect(await view.findByRole('header', { name: 'Before You Begin' })).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: 'Start Lesson' }));
+    expect(await view.findByText('SESSION RUNNING')).toBeTruthy();
+    // The bottom Back control leaves the active session without saving.
+    fireEvent.press(view.getByRole('button', { name: 'Back' }));
 
-    expect(await view.findByText('LESSON SUMMARY')).toBeTruthy();
+    expect(await view.findByText('GET READY')).toBeTruthy();
     const repositories = createDomainRepositories(appStorage);
     await expect(repositories.trainingSessions.findAll()).resolves.toEqual([]);
     await expect(repositories.lessonProgress.findAll()).resolves.toEqual(
@@ -98,27 +99,24 @@ describe('guided Lesson Session navigation', () => {
     );
   });
 
-  it('propagates dailyPlanId from Today through Lesson Summary to Guided Session', async () => {
+  it('propagates dailyPlanId from the Home next-lesson action to the saved session', async () => {
     const view = render(<App />);
-    expect(await view.findByText(/focused lesson(?:s)? today\./)).toBeTruthy();
+    await waitFor(() => expect(
+      view.getByRole('button', { name: 'Start next lesson' }).props.accessibilityState,
+    ).toEqual({ disabled: false }));
 
-    const planLessonButtons = await view.findAllByRole('button', {
-      name: /^View /,
-    });
-    fireEvent.press(planLessonButtons[0]);
-    expect(await view.findByText('LESSON SUMMARY')).toBeTruthy();
-    fireEvent.press(view.getByRole('button', { name: 'Start guided session' }));
+    fireEvent.press(view.getByRole('button', { name: 'Start next lesson' }));
+    expect(await view.findByText('GET READY')).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: 'Next' }));
 
-    expect(await view.findByText('GUIDED SESSION')).toBeTruthy();
-    fireEvent.press(view.getByRole('button', {
-      name: /^Begin \d+-minute session$/,
-    }));
-    fireEvent.press(view.getByRole('button', {
-      name: 'Finish and rate session',
-    }));
+    expect(await view.findByRole('header', { name: 'Before You Begin' })).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: 'Start Lesson' }));
+
+    expect(await view.findByText('SESSION RUNNING')).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: 'Complete Lesson' }));
     fireEvent.press(view.getByRole('button', { name: /^5 out of 5/ }));
     fireEvent.press(view.getByRole('button', { name: 'Save session' }));
-    expect(await view.findByText('SESSION SAVED')).toBeTruthy();
+    expect(await view.findByText('Lesson complete!')).toBeTruthy();
 
     const repositories = createDomainRepositories(appStorage);
     const [plans, sessions] = await Promise.all([

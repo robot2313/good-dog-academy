@@ -38,7 +38,7 @@ describe('behaviour assessment navigation', () => {
     fireEvent.press(view.getByText('Continue'));
     expect(await view.findByText('Your starting profile')).toBeTruthy();
     fireEvent.press(view.getByText('Complete Assessment'));
-    expect(await view.findByText(/focused lesson(?:s)? today\./)).toBeTruthy();
+    expect(await view.findByRole('button', { name: 'Your journey so far' })).toBeTruthy();
     const repositories = createDomainRepositories(appStorage);
     await expect(repositories.behaviourAssessments.findAll()).resolves.toHaveLength(1);
   });

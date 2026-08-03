@@ -1,20 +1,18 @@
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Pressable, Text, useWindowDimensions, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 
-import { AppScreen } from '../components/AppScreen';
-import { DogIdentityHero } from '../components/DogIdentityHero';
-import { EmptyState } from '../components/EmptyState';
-import { ErrorState } from '../components/ErrorState';
-import { LoadingState } from '../components/LoadingState';
-import { Metric } from '../components/Metric';
-import { PremiumCard } from '../components/PremiumCard';
-import { PrimaryButton } from '../components/PrimaryButton';
-import { SectionHeader } from '../components/SectionHeader';
-import { TodayPlanLessonCard } from '../features/daily-plan/TodayPlanLessonCard';
+import { DogAvatar } from '../components/DogAvatar';
+import { HomeDogName } from '../components/HomeDogName';
+import { HomeGradientBackground } from '../components/HomeGradientBackground';
+import { LessonCompletionCelebration } from '../components/LessonCompletionCelebration';
 import { useTodayPlan } from '../features/daily-plan/useTodayPlan';
-import type { TodayPlanError } from '../features/daily-plan/TodayPlanError';
+import { homeWelcomeMessage } from '../features/home/homeWelcomeMessage';
+import { useLessonLibraryData } from '../features/lessons/library/LessonLibraryContext';
 import { useOnboarding } from '../features/onboarding/OnboardingContext';
 import { styles } from '../theme/styles';
 import type { MainTabParamList, RootStackParamList } from '../types/navigation';
@@ -24,151 +22,139 @@ export type TodayScreenProps = CompositeScreenProps<
   NativeStackScreenProps<RootStackParamList, 'Main'>
 >;
 
-export function TodayScreen({ navigation }: TodayScreenProps): React.JSX.Element {
-  const { plan, selectedDogName, loading, error, retry } = useTodayPlan();
+export function TodayScreen({ navigation, route }: TodayScreenProps): React.JSX.Element {
+  const { plan, selectedDogName, loading } = useTodayPlan();
+  const library = getLibraryData();
   const onboardingDog = getOnboardingDog();
-  const dogName = selectedDogName ?? onboardingDog?.name ?? 'My Dog';
-  const photoUri = onboardingDog?.photoUri ?? null;
+  const dog = library?.selectedDog ?? onboardingDog ?? null;
+  const dogName = (dog?.name ?? selectedDogName ?? '').trim() || null;
+  const photoUri = dog?.photoUri ?? null;
+  const { width } = useWindowDimensions();
 
-  if (loading) {
-    return (
-      <AppScreen scroll={false}>
-        <LoadingState message="Preparing today's training plan…" />
-      </AppScreen>
-    );
-  }
+  const avatarSize = Math.round(Math.max(196, Math.min(248, width * 0.6)));
+  const nameWidth = Math.round(Math.min(width - 40, 360));
 
-  if (error?.code === 'NO_ELIGIBLE_LESSONS') {
-    return (
-      <AppScreen>
-        <Text style={styles.eyebrowDark}>TODAY'S PRIVATE PLAN</Text>
-        <Text accessibilityRole="header" style={styles.pageTitle}>
-          No Daily Plan lessons today
-        </Text>
-        <EmptyState
-          title="Keep training at your dog's pace"
-          message="There are no suitable Daily Plan lessons available right now. Browse the Academy to review guidance or choose another available lesson."
-          actionTitle="Browse all 30 lessons"
-          onAction={() => navigation.navigate('Academy')}
-        />
-      </AppScreen>
-    );
-  }
+  const progress = library?.progressRecords ?? [];
+  const sessionCount = progress.reduce((total, record) => total + Math.max(0, record.attempts), 0);
+  const successfulTotal = progress.reduce((total, record) => total + Math.max(0, record.successfulCompletions), 0);
+  const completedLessons = progress.filter((record) => record.status === 'completed').length;
+  const successRate = sessionCount > 0 ? successfulTotal / sessionCount : null;
+  const message = homeWelcomeMessage({ dogName, completedLessons, sessionCount, successRate });
 
-  if (error || !plan) {
-    return (
-      <AppScreen>
-        <Text style={styles.eyebrowDark}>TODAY'S PRIVATE PLAN</Text>
-        <Text accessibilityRole="header" style={styles.pageTitle}>
-          Today's training plan
-        </Text>
-        <ErrorState
-          message={todayPlanErrorMessage(error)}
-          onRetry={retry}
-        />
-        <PrimaryButton
-          title="Browse all 30 lessons"
-          onPress={() => navigation.navigate('Academy')}
-        />
-      </AppScreen>
-    );
-  }
+  const nextItem = plan?.items.find((item) => !item.completed && item.lessonAvailable) ?? null;
+  const allComplete = plan
+    ? plan.status === 'completed'
+      || (plan.items.length > 0 && plan.completedItemCount === plan.items.length)
+    : false;
 
-  const planComplete =
-    plan.status === 'completed'
-    || (
-      plan.items.length > 0
-      && plan.completedItemCount === plan.items.length
-    );
-  const planHeading = plan.items.length === 1
-    ? 'One focused lesson today.'
-    : `${plan.items.length} focused lessons today.`;
+  // One-time celebration over Home after a lesson is completed and saved.
+  const [celebration, setCelebration] = useState<{ visible: boolean; title?: string }>({ visible: false });
+  const celebrateTitle = route.params?.celebrateLessonTitle;
+  useEffect(() => {
+    if (!celebrateTitle) return;
+    setCelebration({ visible: true, title: celebrateTitle });
+    navigation.setParams({ celebrateLessonId: undefined, celebrateLessonTitle: undefined });
+  }, [celebrateTitle, navigation]);
+
+  const openNextLesson = () => {
+    if (nextItem && plan) {
+      navigation.navigate('LessonSummary', { lessonId: nextItem.lessonId, dailyPlanId: plan.id });
+      return;
+    }
+    navigation.navigate('Academy');
+  };
+
+  const primaryLabel = allComplete ? 'All Lessons Complete' : 'Start Next Lesson';
+  const primaryDisabled = loading && !nextItem && !allComplete;
 
   return (
-    <AppScreen>
-      <DogIdentityHero
-        dogName={dogName}
-        photoUri={photoUri}
-        eyebrow="TODAY'S PRIVATE PLAN"
-        title={planComplete ? "Today's plan is complete." : planHeading}
-        supportingText="Build reliability through short, successful sessions selected for your dog."
-        size="standard"
-        status={(
-          <View style={styles.ownerBadge}>
-            <Text style={styles.ownerBadgeText}>
-              {planComplete ? 'COMPLETE' : 'READY'}
-            </Text>
+    <View style={styles.homeRoot}>
+      <StatusBar style="light" />
+      <HomeGradientBackground />
+      <SafeAreaView edges={['top', 'bottom']} style={styles.homeSafe}>
+        <View style={styles.homeBody}>
+          <View style={{ flex: 0.6 }} />
+          <View style={styles.homeHeroBlock}>
+            <View style={styles.homePhotoRing}>
+              <DogAvatar decorative dogName={dogName ?? 'Dog'} photoUri={photoUri} size={avatarSize} />
+            </View>
+            <HomeDogName dogName={dogName ?? ''} width={nameWidth} />
           </View>
-        )}
-      />
-      <PremiumCard tone="forest">
-        <View style={styles.metricRow}>
-          <Metric value={`${plan.completedItemCount}/${plan.items.length}`} label="completed" />
-          <Metric value={`${plan.estimatedMinutes} min`} label="planned" />
-          <Metric value={plan.items.length} label={plan.items.length === 1 ? 'lesson' : 'lessons'} />
-        </View>
-      </PremiumCard>
-      <View style={styles.todayPlanSectionHeader}>
-        <SectionHeader
-          title="Today's lessons"
-          supportingText="Complete these guided sessions in any comfortable order."
-        />
-      </View>
-      {plan.stale ? (
-        <View accessible accessibilityRole="alert" style={styles.todayPlanStaleCard}>
-          <Text style={styles.todayPlanStaleTitle}>Part of this plan is out of date</Text>
-          <Text style={styles.todayPlanStaleText}>
-            An older saved lesson is no longer in the Academy. It has been left visible but cannot be opened.
-          </Text>
-        </View>
-      ) : null}
-      {plan.items.map((item) => (
-        <TodayPlanLessonCard
-          key={item.lessonId}
-          item={item}
-          planOpen={plan.status === 'planned'}
-          onOpen={() => navigation.navigate('LessonSummary', {
-            lessonId: item.lessonId,
-            dailyPlanId: plan.id,
-          })}
-        />
-      ))}
-      <PremiumCard tone="elevated">
-        <Text accessibilityRole="header" style={styles.sectionTitle}>Explore the Academy</Text>
-        <Text style={styles.body}>
-          Search all 30 lessons, review coaching guidance, or practise another available skill.
-        </Text>
-        <PrimaryButton
-          title="Browse all 30 lessons"
-          onPress={() => navigation.navigate('Academy')}
-        />
-      </PremiumCard>
-    </AppScreen>
-  );
-}
 
-function todayPlanErrorMessage(error: TodayPlanError | null): string {
-  if (error?.code === 'INVALID_TIMEZONE') {
-    return 'Your device timezone could not be validated. Check the device date and timezone settings, then try again.';
-  }
-  if (error?.code === 'CORRUPT_STORED_DATA') {
-    return 'Today’s plan could not be read safely. Your saved training data was not changed.';
-  }
-  if (
-    error?.code === 'OWNER_NOT_FOUND'
-    || error?.code === 'DOG_NOT_FOUND'
-    || error?.code === 'DOG_OWNERSHIP_MISMATCH'
-    || error?.code === 'PLAN_OWNERSHIP_MISMATCH'
-  ) {
-    return 'Today’s plan is not available for the selected dog.';
-  }
-  return 'Today’s training plan could not be loaded. Please try again.';
+          <View style={{ height: 14 }} />
+
+          <View style={styles.homeWelcome} accessible accessibilityRole="summary">
+            <Text style={styles.homeWelcomeTitle}>{message.title}</Text>
+            {message.lines.map((line, index) => (
+              <Text
+                key={`home-welcome-${index}`}
+                style={line.startsWith('For the complete report') ? styles.homeWelcomeReport : styles.homeWelcomeLine}
+              >
+                {line}
+              </Text>
+            ))}
+          </View>
+
+          <View style={{ flex: 1 }} />
+
+          <View style={styles.homeButtons}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={allComplete ? 'All lessons complete. Review your journey' : 'Start next lesson'}
+              accessibilityState={{ disabled: primaryDisabled }}
+              disabled={primaryDisabled}
+              onPress={allComplete ? () => navigation.navigate('Journey') : openNextLesson}
+              style={({ pressed }) => [
+                styles.homeButton,
+                styles.homeButtonPrimaryGlow,
+                primaryDisabled && styles.disabled,
+                pressed && !primaryDisabled && styles.homeButtonPressed,
+              ]}
+            >
+              <Text style={styles.homeButtonText}>{primaryLabel}</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Your journey so far"
+              onPress={() => navigation.navigate('Journey')}
+              style={({ pressed }) => [
+                styles.homeButton,
+                pressed && styles.homeButtonPressed,
+              ]}
+            >
+              <Text style={styles.homeButtonText}>Your Journey So Far</Text>
+            </Pressable>
+          </View>
+
+          <View style={{ height: 10 }} />
+        </View>
+      </SafeAreaView>
+
+      <LessonCompletionCelebration
+        visible={celebration.visible}
+        dogName={dogName ?? 'your dog'}
+        photoUri={photoUri}
+        lessonTitle={celebration.title}
+        onContinue={() => setCelebration((current) => ({ ...current, visible: false }))}
+        testID="lesson-completion-celebration"
+      />
+    </View>
+  );
 }
 
 function getOnboardingDog() {
   try {
     const { status } = useOnboarding();
     return status?.state === 'complete' ? status.dog : null;
+  } catch {
+    return null;
+  }
+}
+
+function getLibraryData() {
+  try {
+    const { selectedDog, progressRecords } = useLessonLibraryData();
+    return { selectedDog, progressRecords };
   } catch {
     return null;
   }

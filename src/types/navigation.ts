@@ -1,3 +1,5 @@
+import type { NavigatorScreenParams } from '@react-navigation/native';
+
 export type RootStackParamList = {
   Welcome: undefined;
   OwnerSetup: undefined;
@@ -7,7 +9,8 @@ export type RootStackParamList = {
   AssessmentHome: undefined;
   AssessmentControl: undefined;
   AssessmentResults: undefined;
-  Main: undefined;
+  Main: NavigatorScreenParams<MainTabParamList> | undefined;
+  Journey: undefined;
   LessonSummary: { lessonId: string; dailyPlanId?: string };
   LessonSession: { lessonId: string; dailyPlanId?: string };
   SessionHistory: undefined;
@@ -15,7 +18,7 @@ export type RootStackParamList = {
 };
 
 export type MainTabParamList = {
-  Today: undefined;
+  Today: { celebrateLessonId?: string; celebrateLessonTitle?: string } | undefined;
   Academy: undefined;
   Progress: undefined;
   Dog: undefined;

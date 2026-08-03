@@ -31,7 +31,7 @@ describe('Progress session-history navigation', () => {
 
   it('opens Session History without rendering legacy four-lesson progress', async () => {
     const view = render(<App />);
-    expect(await view.findByText(/focused lesson(?:s)? today\./)).toBeTruthy();
+    expect(await view.findByRole('button', { name: 'Your journey so far' })).toBeTruthy();
 
     fireEvent.press(view.getByText('Progress'));
     expect(await view.findByRole('header', { name: 'Progress' })).toBeTruthy();
@@ -60,7 +60,7 @@ describe('Progress session-history navigation', () => {
     await repositories.trainingSessions.save(otherSession);
 
     const view = render(<App />);
-    expect(await view.findByText(/focused lesson(?:s)? today\./)).toBeTruthy();
+    expect(await view.findByRole('button', { name: 'Your journey so far' })).toBeTruthy();
     fireEvent.press(view.getByText('Progress'));
     fireEvent.press(await view.findByRole('button', { name: 'View session history' }));
 

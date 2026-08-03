@@ -1,19 +1,19 @@
 import { Pressable, Text, View } from 'react-native';
 
 import { AppScreen } from '../../../components/AppScreen';
+import { LessonActionBar } from '../../../components/LessonActionBar';
+import { LessonScaffold } from '../../../components/LessonScaffold';
 import { PrimaryButton } from '../../../components/PrimaryButton';
-import { ProgressIndicator } from '../../../components/ProgressIndicator';
 import { SecondaryTextButton } from '../../../components/SecondaryTextButton';
 import type { LessonDefinition, LessonPerformanceRating } from '../../../domain/models';
 import { styles } from '../../../theme/styles';
-import { LessonIllustration } from '../coaching/LessonIllustration';
 import { lessonEncouragement } from '../coaching/lessonCoaching';
 import {
   formatSessionTime,
-  sessionCheckInMessage,
   suggestedSessionRating,
   type GuidedSessionState,
 } from './guidedSession';
+import { lessonSupportContent } from './lessonSupportContent';
 
 interface LessonSessionScreenViewProps {
   readonly lesson: LessonDefinition;
@@ -23,10 +23,9 @@ interface LessonSessionScreenViewProps {
   readonly onBegin: () => void;
   readonly onPause: () => void;
   readonly onResume: () => void;
-  readonly onPrevious: () => void;
-  readonly onNext: () => void;
   readonly onRecordSuccess: () => void;
   readonly onRecordChallenge: () => void;
+  readonly onUndo: () => void;
   readonly onAcceptReset: () => void;
   readonly onFinish: () => void;
   readonly onReturnToTraining: () => void;
@@ -48,6 +47,10 @@ const ratingOptions = Object.freeze([
   readonly description: string;
 }[]);
 
+function stripStepNumber(value: string): string {
+  return value.replace(/^\s*\d+\.\s*/, '').trim();
+}
+
 export function LessonSessionScreenView({
   lesson,
   dogName,
@@ -56,10 +59,9 @@ export function LessonSessionScreenView({
   onBegin,
   onPause,
   onResume,
-  onPrevious,
-  onNext,
   onRecordSuccess,
   onRecordChallenge,
+  onUndo,
   onAcceptReset,
   onFinish,
   onReturnToTraining,
@@ -69,12 +71,6 @@ export function LessonSessionScreenView({
   onDone,
 }: LessonSessionScreenViewProps): React.JSX.Element {
   const steps = lesson.steps.length > 0 ? lesson.steps : [lesson.goal];
-  const currentStep = steps[state.currentStep] ?? steps[0];
-  const tip = lesson.tips[state.currentStep % Math.max(1, lesson.tips.length)]
-    ?? 'Reward the smallest good choice and pause between repetitions.';
-  const troubleshooting = lesson.troubleshooting[
-    state.currentStep % Math.max(1, lesson.troubleshooting.length)
-  ];
 
   if (state.phase === 'complete') {
     return <AppScreen>
@@ -83,23 +79,6 @@ export function LessonSessionScreenView({
         <Text style={styles.guidedCompleteKicker}>SESSION SAVED</Text>
         <Text accessibilityRole="header" style={styles.guidedCompleteTitle}>That practice counts.</Text>
         <Text style={styles.guidedCompleteBody}>{lessonEncouragement(lesson)}</Text>
-      </View>
-      <View style={styles.sessionSnapshotCard}>
-        <Text accessibilityRole="header" style={styles.sessionSnapshotTitle}>Session snapshot</Text>
-        <View style={styles.sessionSnapshotRow}>
-          <View style={styles.sessionSnapshotMetric}>
-            <Text style={styles.sessionSnapshotValue}>{state.successfulRepetitions}</Text>
-            <Text style={styles.sessionSnapshotLabel}>wins noticed</Text>
-          </View>
-          <View style={styles.sessionSnapshotMetric}>
-            <Text style={styles.sessionSnapshotValue}>{state.needsHelpRepetitions}</Text>
-            <Text style={styles.sessionSnapshotLabel}>needed help</Text>
-          </View>
-          <View style={styles.sessionSnapshotMetric}>
-            <Text style={styles.sessionSnapshotValue}>{state.furthestStep + 1}/{steps.length}</Text>
-            <Text style={styles.sessionSnapshotLabel}>steps reached</Text>
-          </View>
-        </View>
       </View>
       <PrimaryButton title="Back to lesson" onPress={onDone} />
     </AppScreen>;
@@ -114,7 +93,7 @@ export function LessonSessionScreenView({
       <Text style={styles.body}>Choose the closest match. Honest feedback helps the next practice stay achievable.</Text>
       <View style={styles.sessionSnapshotCard}>
         <Text style={styles.sessionSnapshotTitle}>Today with {dogName}</Text>
-        <Text style={styles.body}>{state.successfulRepetitions} successful · {state.needsHelpRepetitions} needed help · reached step {state.furthestStep + 1} of {steps.length}</Text>
+        <Text style={styles.body}>{state.successfulRepetitions} success · {state.needsHelpRepetitions} try again · {steps.length} steps</Text>
       </View>
       <View style={styles.sessionRatingStack}>
         {ratingOptions.map((option) => {
@@ -162,126 +141,173 @@ export function LessonSessionScreenView({
   }
 
   if (state.phase === 'training') {
-    const onLastStep = state.currentStep === steps.length - 1;
     const timerExpired = state.remainingSeconds === 0;
-    return <AppScreen>
-      <View style={styles.sessionTimerCard} accessibilityLiveRegion="polite">
-        <View>
-          <Text style={styles.sessionTimerLabel}>
-            {state.running ? 'SESSION RUNNING' : timerExpired ? 'TIME BOX COMPLETE' : 'SESSION PAUSED'}
-          </Text>
-          <Text style={styles.sessionTimer}>{formatSessionTime(state.remainingSeconds)}</Text>
+    const canUndo = state.undoSnapshot !== null;
+    return <LessonScaffold
+      scroll={false}
+      footer={<LessonActionBar
+        back={{ label: 'Back', onPress: onCancel }}
+        forward={{ label: 'Complete Lesson', onPress: onFinish }}
+      />}
+    >
+      <View style={styles.activeColumn}>
+        <View style={styles.activeTimerHeader} accessibilityLiveRegion="polite">
+          <View>
+            <Text style={styles.activeTimerLabel}>
+              {state.running ? 'SESSION RUNNING' : timerExpired ? 'TIME BOX COMPLETE' : 'SESSION PAUSED'}
+            </Text>
+            <Text style={styles.activeTimerValue}>{formatSessionTime(state.remainingSeconds)}</Text>
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={state.running ? 'Pause session timer' : 'Resume session timer'}
+            accessibilityState={{ disabled: state.resetSuggested || timerExpired }}
+            disabled={state.resetSuggested || timerExpired}
+            onPress={state.running ? onPause : onResume}
+            style={({ pressed }) => [styles.activeTimerButton, (state.resetSuggested || timerExpired) && styles.disabled, pressed && styles.pressed]}
+          >
+            <Text style={styles.activeTimerButtonText}>{state.running ? 'Pause' : 'Resume'}</Text>
+          </Pressable>
         </View>
+
+        <View
+          accessible
+          accessibilityRole="summary"
+          accessibilityLabel={`All ${steps.length} training steps for ${lesson.title}`}
+          style={styles.activeSteps}
+        >
+          {steps.map((step, index) => (
+            <View
+              key={`${lesson.id}-active-step-${index}`}
+              style={[styles.activeStepRow, index === steps.length - 1 && styles.activeStepRowLast]}
+            >
+              <View style={styles.activeStepNumber}>
+                <Text accessible={false} style={styles.activeStepNumberText}>{index + 1}</Text>
+              </View>
+              <View style={styles.activeStepBody}>
+                <Text style={styles.activeStepText}>{stripStepNumber(step)}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {state.resetSuggested ? (
+          <View style={styles.activeResetHint} accessibilityLiveRegion="polite">
+            <Text style={styles.activeResetHintText}>Two tricky attempts in a row. Make the setup easier, then continue.</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="I made it easier, continue"
+              onPress={onAcceptReset}
+              style={({ pressed }) => [styles.activeResetHintButton, pressed && styles.pressed]}
+            ><Text style={styles.activeResetHintButtonText}>Continue</Text></Pressable>
+          </View>
+        ) : null}
+
+        <View style={styles.activeCounterRow}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Success. ${state.successfulRepetitions} recorded. Mark a successful repetition`}
+            accessibilityState={{ disabled: state.resetSuggested }}
+            disabled={state.resetSuggested}
+            onPress={onRecordSuccess}
+            style={({ pressed }) => [styles.activeCounterSuccess, state.resetSuggested && styles.disabled, pressed && styles.pressed]}
+          >
+            <Text style={styles.activeCounterLabelOnDark}>SUCCESS</Text>
+            <Text style={styles.activeCounterValueOnDark}>{state.successfulRepetitions}</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Try again. ${state.needsHelpRepetitions} recorded. Mark a repetition that needs help`}
+            accessibilityState={{ disabled: state.resetSuggested }}
+            disabled={state.resetSuggested}
+            onPress={onRecordChallenge}
+            style={({ pressed }) => [styles.activeCounterTryAgain, state.resetSuggested && styles.disabled, pressed && styles.pressed]}
+          >
+            <Text style={styles.activeCounterLabelLight}>TRY AGAIN</Text>
+            <Text style={styles.activeCounterValueLight}>{state.needsHelpRepetitions}</Text>
+          </Pressable>
+        </View>
+
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={state.running ? 'Pause session timer' : 'Resume session timer'}
-          accessibilityState={{ disabled: state.resetSuggested || timerExpired }}
-          disabled={state.resetSuggested || timerExpired}
-          onPress={state.running ? onPause : onResume}
-          style={({ pressed }) => [styles.timerButton, (state.resetSuggested || timerExpired) && styles.disabled, pressed && styles.pressed]}
+          accessibilityLabel="Undo last check-in"
+          accessibilityState={{ disabled: !canUndo }}
+          disabled={!canUndo}
+          onPress={onUndo}
+          style={styles.activeUndo}
         >
-          <Text style={styles.timerButtonText}>{state.running ? 'Pause' : 'Resume'}</Text>
+          <Text style={[styles.activeUndoText, !canUndo && styles.activeUndoTextDisabled]}>Undo last</Text>
         </Pressable>
       </View>
-      <View
-        accessible
-        accessibilityRole="progressbar"
-        accessibilityValue={{ min: 0, max: steps.length, now: state.currentStep + 1 }}
-      >
-        <ProgressIndicator current={state.currentStep + 1} total={steps.length} />
-      </View>
-      <View style={styles.sessionStepCard}>
-        <Text style={styles.sessionStepKicker}>STEP {state.currentStep + 1}</Text>
-        <Text accessibilityRole="header" style={styles.sessionStepText}>{currentStep.replace(/^\d+\.\s*/, '')}</Text>
-      </View>
-      <View style={styles.sessionCoachCard}>
-        <Text style={styles.sessionCoachLabel}>COACHING TIP</Text>
-        <Text style={styles.sessionCoachBody}>{tip}</Text>
-      </View>
-      <View style={styles.sessionCheckInCard} accessibilityLiveRegion="polite">
-        <Text style={styles.sessionCheckInLabel}>QUICK CHECK</Text>
-        <Text accessibilityRole="header" style={styles.sessionCheckInHeading}>How did that repetition go?</Text>
-        <Text style={styles.sessionCoachBody}>{sessionCheckInMessage(state)}</Text>
-        <View style={styles.sessionCountRow}>
-          <Text style={styles.sessionCountText}>{state.successfulRepetitions} wins</Text>
-          <Text style={styles.sessionCountText}>{state.needsHelpRepetitions} needed help</Text>
-        </View>
-        {state.resetSuggested ? <View style={styles.sessionResetCard}>
-          <Text style={styles.sessionResetTitle}>Take a reset</Text>
-          <Text style={styles.sessionResetText}>Pause for 30–60 seconds. Add distance, reduce the distraction or ask for an easier version.</Text>
-          <PrimaryButton title="I made it easier — continue" onPress={onAcceptReset} />
-        </View> : <View style={styles.sessionActionRow}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Mark a successful repetition"
-            onPress={onRecordSuccess}
-            style={({ pressed }) => [styles.sessionWinButton, pressed && styles.pressed]}
-          ><Text style={styles.sessionWinButtonText}>✓ That worked</Text></Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Mark a repetition that needs help"
-            onPress={onRecordChallenge}
-            style={({ pressed }) => [styles.sessionHelpButton, pressed && styles.pressed]}
-          ><Text style={styles.sessionHelpButtonText}>Needs help</Text></Pressable>
-        </View>}
-      </View>
-      <View style={styles.sessionTroubleCard}>
-        <Text style={styles.sessionTroubleLabel}>IF THIS ISN&apos;T WORKING</Text>
-        <Text style={styles.troubleshootingProblem}>{troubleshooting?.problem ?? 'Your dog is distracted, hesitant or losing interest.'}</Text>
-        <Text style={styles.troubleshootingSolution}>{troubleshooting?.solution ?? 'Pause, add distance, lower the difficulty and reward one easier success.'}</Text>
-      </View>
-      <View style={styles.sessionActionRow}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Previous training step"
-          accessibilityState={{ disabled: state.currentStep === 0 || state.resetSuggested }}
-          disabled={state.currentStep === 0 || state.resetSuggested}
-          onPress={onPrevious}
-          style={({ pressed }) => [styles.sessionOutlineButton, (state.currentStep === 0 || state.resetSuggested) && styles.disabled, pressed && styles.pressed]}
-        ><Text style={styles.sessionOutlineButtonText}>Previous</Text></Pressable>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Next training step"
-          accessibilityState={{ disabled: onLastStep || state.resetSuggested }}
-          disabled={onLastStep || state.resetSuggested}
-          onPress={onNext}
-          style={({ pressed }) => [styles.sessionOutlineButton, (onLastStep || state.resetSuggested) && styles.disabled, pressed && styles.pressed]}
-        ><Text style={styles.sessionOutlineButtonText}>Next step</Text></Pressable>
-      </View>
-      <PrimaryButton title="Finish and rate session" onPress={onFinish} />
-      <SecondaryTextButton title="Leave without saving" onPress={onCancel} />
-      <Text style={styles.sessionExitNote}>Finish early if your dog is tired, worried or losing focus. That is good coaching.</Text>
-    </AppScreen>;
+    </LessonScaffold>;
   }
 
-  return <AppScreen>
-    <SecondaryTextButton title="Back to lesson" onPress={onCancel} />
-    <Text style={styles.eyebrowDark}>GUIDED SESSION</Text>
-    <Text accessibilityRole="header" style={styles.pageTitle}>{lesson.title}</Text>
+  const support = lessonSupportContent(lesson);
+  return <LessonScaffold
+    footer={<LessonActionBar
+      back={{ label: 'Back', onPress: onCancel }}
+      forward={{ label: 'Start Lesson', onPress: onBegin }}
+    />}
+  >
+    <Text style={styles.eyebrowDark}>BEFORE YOU BEGIN</Text>
+    <Text accessibilityRole="header" style={styles.pageTitle}>Before You Begin</Text>
+
     <View style={styles.coachingGoalCard}>
-      <Text style={styles.coachingKicker}>TODAY&apos;S GOAL</Text>
-      <Text style={styles.lessonGoal}>{lesson.goal}</Text>
+      <Text style={styles.coachingKicker}>LESSON OVERVIEW</Text>
+      <Text style={styles.lessonGoal}>{support.overview}</Text>
+      {support.aim ? <Text style={styles.coachingMeta}>Aiming for: {support.aim}</Text> : null}
       <Text style={styles.coachingMeta}>About {lesson.estimatedMinutes} minutes · pause or finish early at any time.</Text>
     </View>
-    <LessonIllustration skill={lesson.skill} lessonId={lesson.id} commonMistake={lesson.commonMistakes[0]} />
-    <View style={styles.card}>
-      <Text accessibilityRole="header" style={styles.sectionTitle}>Get ready</Text>
-      <Text style={styles.body}>Have everything within reach before you begin:</Text>
-      <View style={styles.coachingListCard}>
-        {(lesson.equipment.length > 0 ? lesson.equipment : ['Small rewards your dog enjoys']).map((item, index) => <View key={`${lesson.id}-equipment-${index}`} style={styles.coachingListRow}>
-          <Text accessible={false} style={styles.coachingBullet}>✓</Text>
-          <Text style={styles.coachingListText}>{item}</Text>
-        </View>)}
+
+    {support.coachingTips.length > 0 ? (
+      <View style={styles.bybSection}>
+        <Text accessibilityRole="header" style={styles.coachingSectionTitle}>Coaching tips</Text>
+        <View style={styles.coachingListCard}>
+          {support.coachingTips.map((tip, index) => (
+            <View key={`${lesson.id}-tip-${index}`} style={styles.coachingListRow}>
+              <Text accessible={false} style={styles.coachingTipIcon}>★</Text>
+              <Text style={styles.coachingListText}>{tip}</Text>
+            </View>
+          ))}
+        </View>
       </View>
-    </View>
-    <View style={styles.safetyCard}>
-      <Text accessibilityRole="header" style={styles.safetyTitle}>Safety comes first</Text>
-      <Text style={styles.safetyText}>{lesson.safetyNotes[0] ?? 'Use a quiet, comfortable space and stop if your dog appears worried or overwhelmed.'}</Text>
-    </View>
-    <View style={styles.sessionPromiseCard}>
-      <Text accessibilityRole="header" style={styles.sessionPromiseTitle}>Your coaching promise</Text>
-      <Text style={styles.sessionPromiseText}>Two difficult attempts in a row means pause and make the setup easier—not push through.</Text>
-    </View>
-    <PrimaryButton title={`Begin ${lesson.estimatedMinutes}-minute session`} onPress={onBegin} />
-  </AppScreen>;
+    ) : null}
+
+    {support.thingsThatMightGoWrong.length > 0 ? (
+      <View style={styles.bybSection}>
+        <Text accessibilityRole="header" style={styles.coachingSectionTitle}>Things that might go wrong</Text>
+        <View style={styles.coachingPreventionCard}>
+          {support.thingsThatMightGoWrong.map((problem, index) => (
+            <View key={`${lesson.id}-problem-${index}`} style={styles.coachingListRow}>
+              <Text accessible={false} style={styles.coachingWarningIcon}>!</Text>
+              <Text style={styles.coachingListText}>{problem}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    ) : null}
+
+    {support.waysToMakeEasier.length > 0 ? (
+      <View style={styles.bybSection}>
+        <Text accessibilityRole="header" style={styles.coachingSectionTitle}>Make it easier</Text>
+        <View style={styles.bybEasierCard}>
+          {support.waysToMakeEasier.map((way, index) => (
+            <View key={`${lesson.id}-easier-${index}`} style={styles.coachingListRow}>
+              <Text accessible={false} style={styles.bybEasierIcon}>↓</Text>
+              <Text style={styles.coachingListText}>{way}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    ) : null}
+
+    {support.safetyNotes.length > 0 ? (
+      <View style={styles.safetyCard}>
+        <Text accessibilityRole="header" style={styles.safetyTitle}>Safety first</Text>
+        {support.safetyNotes.map((note, index) => (
+          <Text key={`${lesson.id}-safety-${index}`} style={styles.safetyText}>• {note}</Text>
+        ))}
+      </View>
+    ) : null}
+  </LessonScaffold>;
 }

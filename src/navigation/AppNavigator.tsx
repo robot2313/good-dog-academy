@@ -22,6 +22,7 @@ import { AssessmentResultsScreen } from '../features/assessment/screens/Assessme
 import { AssessmentSectionScreen } from '../features/assessment/screens/AssessmentSectionScreen';
 import { LessonSummaryScreen } from '../features/lessons/library/LessonSummaryScreen';
 import { LessonSessionScreen } from '../features/lessons/session/LessonSessionScreen';
+import { JourneyScreen } from '../features/lessons/journey/JourneyScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -49,6 +50,7 @@ export function AppNavigator(): React.JSX.Element {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {status.state === 'complete' ? <>
             <Stack.Screen name="Main" component={MainTabs} />
+            <Stack.Screen name="Journey" component={JourneyScreen} />
             <Stack.Screen name="LessonSummary" component={LessonSummaryScreen} />
             <Stack.Screen name="LessonSession" component={LessonSessionScreen} />
             <Stack.Screen name="SessionHistory" component={SessionHistoryScreen} />

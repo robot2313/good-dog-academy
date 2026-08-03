@@ -40,18 +40,15 @@ export function AppButton({
       {loading ? (
         <ActivityIndicator
           accessibilityElementsHidden
-          color={variant === 'primary' || variant === 'destructive'
-            ? colorTokens.text.inverse
-            : colorTokens.brand.primary}
+          color={variant === 'destructive'
+            ? colorTokens.status.errorText
+            : colorTokens.brand.gold}
           size="small"
         />
       ) : null}
       <Text style={[
         componentStyles.label,
-        variant === 'primary' && componentStyles.inverseLabel,
-        variant === 'destructive' && componentStyles.inverseLabel,
-        variant === 'secondary' && componentStyles.primaryLabel,
-        variant === 'ghost' && componentStyles.primaryLabel,
+        variant === 'destructive' ? componentStyles.destructiveLabel : componentStyles.goldLabel,
       ]}>
         {title}
       </Text>
@@ -59,6 +56,9 @@ export function AppButton({
   );
 }
 
+// One dark + gold button family for the whole app. The primary action is set
+// apart only by a subtle gold glow, never a different colour.
+const GOLD = '#D4AF37';
 const componentStyles = StyleSheet.create({
   button: {
     minHeight: 52,
@@ -69,22 +69,27 @@ const componentStyles = StyleSheet.create({
     justifyContent: 'center',
     flexDirection: 'row',
     gap: spacingTokens.xs,
-    borderWidth: 1,
+    borderWidth: 1.5,
   },
   primary: {
-    backgroundColor: colorTokens.brand.primary,
-    borderColor: colorTokens.brand.primary,
+    backgroundColor: '#202020',
+    borderColor: GOLD,
+    shadowColor: GOLD,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 5,
   },
   secondary: {
-    backgroundColor: colorTokens.surface.primary,
-    borderColor: colorTokens.brand.primary,
+    backgroundColor: '#181818',
+    borderColor: GOLD,
   },
   ghost: {
     backgroundColor: 'transparent',
     borderColor: 'transparent',
   },
   destructive: {
-    backgroundColor: colorTokens.status.errorText,
+    backgroundColor: '#181818',
     borderColor: colorTokens.status.errorText,
   },
   label: {
@@ -92,11 +97,11 @@ const componentStyles = StyleSheet.create({
     fontWeight: '800',
     textAlign: 'center',
   },
-  inverseLabel: {
-    color: colorTokens.text.inverse,
+  goldLabel: {
+    color: GOLD,
   },
-  primaryLabel: {
-    color: colorTokens.brand.primary,
+  destructiveLabel: {
+    color: colorTokens.status.errorText,
   },
   pressed: {
     opacity: 0.86,

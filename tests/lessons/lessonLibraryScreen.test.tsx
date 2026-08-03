@@ -173,31 +173,28 @@ describe('Lesson Library UI', () => {
   });
 });
 
-describe('Lesson Summary coaching guide', () => {
-  it('starts guided practice only from an available lesson while preserving coaching', () => {
+describe('Get Ready (lesson summary)', () => {
+  it('shows the goal and required equipment, then advances with Next', () => {
     const onStart = jest.fn();
     const view = render(<LessonSummaryScreenView lessonId={foundationLesson.id} lessonDefinition={foundationLesson} dogName="Scout" service={availableService} loading={false} error={null} onRetry={jest.fn()} onBack={jest.fn()} onStart={onStart} />);
-    expect(view.getByRole('header', { name: 'Picture the task' })).toBeTruthy();
-    expect(view.getByText('Guided practice available')).toBeTruthy();
-    fireEvent.press(view.getByRole('button', { name: 'Start guided session' }));
+    expect(view.getByText('GET READY')).toBeTruthy();
+    expect(view.getByRole('header', { name: foundationLesson.title })).toBeTruthy();
+    expect(view.getByText(foundationLesson.goal)).toBeTruthy();
+    expect(view.getByRole('header', { name: 'Before we start' })).toBeTruthy();
+    // Foundation fixture has no equipment, so the neutral reward fallback shows.
+    expect(view.getByText('Small rewards your dog enjoys')).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: 'Next' }));
     expect(onStart).toHaveBeenCalledTimes(1);
   });
 
-  it('shows locked guidance and accessible illustrations without playback controls', () => {
+  it('shows why a locked lesson is locked and offers no Next action', () => {
     const view = render(<LessonSummaryScreenView lessonId={recallLesson.id} lessonDefinition={recallLesson} dogName="Scout" service={availableService} loading={false} error={null} onRetry={jest.fn()} onBack={jest.fn()} onStart={jest.fn()} />);
-    expect(view.getByText('LESSON SUMMARY')).toBeTruthy();
-    expect(view.getByText(recallLesson.title)).toBeTruthy();
+    expect(view.getByText('GET READY')).toBeTruthy();
+    expect(view.getByRole('header', { name: recallLesson.title })).toBeTruthy();
     expect(view.getByText('Locked')).toBeTruthy();
     expect(view.getByText(`Complete ${foundationLesson.title} first.`)).toBeTruthy();
     expect(view.getByText(`Required first: ${foundationLesson.title}`)).toBeTruthy();
-    expect(view.getByRole('header', { name: 'Picture the task' })).toBeTruthy();
-    expect(view.getByRole('image', { name: /Recall training illustration/ })).toBeTruthy();
-    expect(view.getByRole('header', { name: 'Visual roadmap' })).toBeTruthy();
-    expect(view.getByRole('image', { name: /^Set up:/ })).toBeTruthy();
-    expect(view.getByRole('header', { name: 'Before you begin' })).toBeTruthy();
-    expect(view.getByRole('header', { name: 'Step by step' })).toBeTruthy();
-    expect(view.getByRole('header', { name: 'Ready to finish when' })).toBeTruthy();
-    expect(view.queryByText(/start|complete lesson|timer/i)).toBeNull();
+    expect(view.queryByRole('button', { name: 'Next' })).toBeNull();
   });
 
   it('handles invalid lesson IDs safely and returns to the library', () => {
