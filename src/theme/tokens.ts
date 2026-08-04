@@ -1,45 +1,44 @@
-// Dark, cinematic palette — the Home screen is the source of truth: black to
-// dark grey surfaces, charcoal cards, warm metallic gold accents, near-white
-// and soft-grey text. `text.inverse` stays white for the few gold-filled marks.
+// Warm editorial palette: soft bone canvas, paper-like cards, deep forest
+// actions, sage selections and a restrained clay accent.
 export const colorTokens = {
   background: {
-    canvas: '#0E0E0E',
-    subtle: '#151515',
+    canvas: '#F5F0E6',
+    subtle: '#ECE5D8',
   },
   surface: {
-    primary: '#1B1B1B',
-    elevated: '#202020',
-    selected: '#242424',
+    primary: '#FFFCF6',
+    elevated: '#FFFFFF',
+    selected: '#E3EBDD',
   },
   brand: {
-    forest: '#161616',
-    primary: '#D4AF37',
-    pressed: '#B8912A',
-    gold: '#D4AF37',
+    forest: '#18372B',
+    primary: '#2F604A',
+    pressed: '#244A3A',
+    gold: '#C56F4A',
   },
   text: {
-    primary: '#F5F3EC',
-    secondary: '#B4B4B4',
+    primary: '#1C2B24',
+    secondary: '#667069',
     inverse: '#FFFFFF',
-    disabled: '#7A7A7A',
-    accent: '#D4AF37',
-    success: '#7FD79B',
+    disabled: '#969B96',
+    accent: '#B85F3E',
+    success: '#2F6B4E',
   },
   border: {
-    subtle: '#2A2A2A',
-    strong: '#3A3A3A',
+    subtle: '#DDD6C9',
+    strong: '#C8C0B2',
   },
   status: {
-    successSurface: '#16241C',
-    successText: '#7FD79B',
-    warningSurface: '#241E10',
-    warningText: '#E4C27A',
-    errorSurface: '#241514',
-    errorText: '#E39B95',
-    infoSurface: '#141C24',
-    infoText: '#8FC0E0',
-    neutralSurface: '#1E1E1E',
-    neutralText: '#B4B4B4',
+    successSurface: '#E0EBDD',
+    successText: '#2F6B4E',
+    warningSurface: '#F6E8D5',
+    warningText: '#8A5A24',
+    errorSurface: '#F6E2DE',
+    errorText: '#9A4D43',
+    infoSurface: '#E0EBEF',
+    infoText: '#3F6878',
+    neutralSurface: '#EEEAE2',
+    neutralText: '#667069',
   },
 } as const;
 
@@ -82,18 +81,18 @@ export const borderTokens = {
 
 export const shadowTokens = {
   low: {
-    shadowColor: '#10271E',
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
-  medium: {
-    shadowColor: '#10271E',
-    shadowOpacity: 0.14,
-    shadowRadius: 20,
+    shadowColor: '#4B4136',
+    shadowOpacity: 0.10,
+    shadowRadius: 14,
     shadowOffset: { width: 0, height: 8 },
     elevation: 4,
+  },
+  medium: {
+    shadowColor: '#4B4136',
+    shadowOpacity: 0.16,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 7,
   },
 } as const;
 

@@ -19,10 +19,10 @@ describe('lesson illustration layout', () => {
     expect('height' in frame).toBe(false);
   });
 
-  it('fills the frame with the image and centres it inside a neutral background', () => {
+  it('fills the frame with the image and centres it inside a dark fallback background', () => {
     expect(image.width).toBe('100%');
     expect(image.height).toBe('100%');
-    expect(frame.backgroundColor).toBe('#F7F4EE');
+    expect(frame.backgroundColor).toBe('#E3EBDD');
     expect(frame.alignItems).toBe('center');
     expect(frame.justifyContent).toBe('center');
   });
@@ -44,7 +44,7 @@ describe('lesson illustration layout', () => {
     }
   });
 
-  it('renders the lesson-specific image resolved by lesson id, shown in full with contain', () => {
+  it('renders the lesson-specific image resolved by lesson id as an editorial full-bleed crop', () => {
     const lessonId = 'recall-name-response';
     const skill = 'recall' as const;
     const label = lessonIllustrationForSkill(skill).accessibilityLabel;
@@ -55,7 +55,7 @@ describe('lesson illustration layout', () => {
     const rendered = view.getByLabelText(label);
 
     expect(rendered.props.source).toBe(getLessonImageSource(lessonId, skill));
-    expect(rendered.props.resizeMode).toBe('contain');
+    expect(rendered.props.resizeMode).toBe('cover');
   });
 
   it('preserves the accessibility label on the illustration image', () => {

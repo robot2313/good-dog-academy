@@ -62,8 +62,8 @@ export function PremiumCard({
 
 const componentStyles = StyleSheet.create({
   card: {
-    borderRadius: radiusTokens.xl,
-    padding: spacingTokens.lg,
+    borderRadius: radiusTokens.hero,
+    padding: spacingTokens.xl,
     gap: spacingTokens.sm,
     borderWidth: 1,
     borderColor: colorTokens.border.subtle,

@@ -7,8 +7,8 @@
     "icon": "./assets/branding/app-icon.png",
     "scheme": "gooddogacademy",
     "orientation": "portrait",
-    "userInterfaceStyle": "dark",
-    "backgroundColor": "#0E0E0E",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F5F0E6",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
@@ -23,7 +23,7 @@
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/branding/app-mark.png",
-        "backgroundColor": "#0E0E0E"
+        "backgroundColor": "#F5F0E6"
       }
     },
     "web": {
@@ -40,7 +40,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#0E0E0E",
+          "backgroundColor": "#F5F0E6",
           "image": "./assets/branding/app-mark.png",
           "imageWidth": 200,
           "resizeMode": "contain"

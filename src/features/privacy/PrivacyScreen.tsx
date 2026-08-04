@@ -8,7 +8,7 @@ import { LessonActionBar } from '../../components/LessonActionBar';
 import { LessonScaffold } from '../../components/LessonScaffold';
 import { useOnboarding } from '../onboarding/OnboardingContext';
 import { colors } from '../../theme/colors';
-import { spacingTokens } from '../../theme/tokens';
+import { colorTokens, spacingTokens } from '../../theme/tokens';
 import type { RootStackParamList } from '../../types/navigation';
 import { localDataDeletionService } from './localDataDeletionServiceInstance';
 
@@ -92,7 +92,7 @@ const screenStyles = StyleSheet.create({
   title: { color: colors.text, fontSize: 30, lineHeight: 36, fontWeight: '900' },
   intro: { color: colors.muted, fontSize: 16, lineHeight: 24 },
   card: { gap: spacingTokens.sm, padding: spacingTokens.lg, borderRadius: 20, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.card },
-  dangerCard: { gap: spacingTokens.md, padding: spacingTokens.lg, borderRadius: 20, borderWidth: 1, borderColor: '#5A3A38', backgroundColor: '#241514' },
+  dangerCard: { gap: spacingTokens.md, padding: spacingTokens.lg, borderRadius: 20, borderWidth: 1, borderColor: '#D9B0A9', backgroundColor: colorTokens.status.errorSurface },
   heading: { color: colors.text, fontSize: 20, lineHeight: 26, fontWeight: '900' },
   body: { color: colors.text, fontSize: 15, lineHeight: 23 },
   email: { color: colors.gold, fontSize: 16, lineHeight: 23, fontWeight: '800' },

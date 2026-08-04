@@ -2,6 +2,8 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Pressable, Text, View } from 'react-native';
 
 import { styles } from '../theme/styles';
+import type { MainTabParamList } from '../types/navigation';
+import { MainTabIcon } from './MainTabIcon';
 
 export function MainTabBar({ state, descriptors, navigation }: BottomTabBarProps): React.JSX.Element {
   return (
@@ -9,6 +11,7 @@ export function MainTabBar({ state, descriptors, navigation }: BottomTabBarProps
       {state.routes.map((route, index) => {
         const focused = state.index === index;
         const label = descriptors[route.key].options.title ?? route.name;
+        const iconRouteName = isMainTabName(route.name) ? route.name : null;
 
         const onPress = () => {
           const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
@@ -34,11 +37,17 @@ export function MainTabBar({ state, descriptors, navigation }: BottomTabBarProps
               pressed && styles.pressed,
             ]}
           >
-            <View style={[styles.tabDot, focused && styles.tabDotActive]} />
+            <View style={[styles.tabIconShell, focused && styles.tabIconShellActive]}>
+              {iconRouteName ? <MainTabIcon routeName={iconRouteName} focused={focused} /> : null}
+            </View>
             <Text style={[styles.tabText, focused && styles.tabTextActive]}>{label}</Text>
           </Pressable>
         );
       })}
     </View>
   );
+}
+
+function isMainTabName(routeName: string): routeName is keyof MainTabParamList {
+  return routeName === 'Today' || routeName === 'Academy' || routeName === 'Progress' || routeName === 'Dog';
 }

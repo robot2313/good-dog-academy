@@ -26,7 +26,7 @@ type LessonScaffoldProps = PropsWithChildren<{
 export function LessonScaffold({ children, footer, scroll = true }: LessonScaffoldProps): React.JSX.Element {
   return (
     <SafeAreaView edges={['top', 'bottom']} style={styles.lessonScaffoldSafe}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       {scroll ? (
         <ScrollView
           contentContainerStyle={styles.lessonScaffoldScroll}

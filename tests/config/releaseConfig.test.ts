@@ -24,11 +24,11 @@ describe('release configuration', () => {
   const config = JSON.parse(readFileSync(resolve(root, 'app.json'), 'utf8')) as ExpoConfig;
   const eas = JSON.parse(readFileSync(resolve(root, 'eas.json'), 'utf8')) as { build: Record<string, unknown> };
 
-  it('uses the approved permanent app identity and dark production branding', () => {
+  it('uses the approved permanent app identity and warm production branding', () => {
     expect(config.expo.slug).toBe('good-dog-academy');
     expect(config.expo.scheme).toBe('gooddogacademy');
-    expect(config.expo.userInterfaceStyle).toBe('dark');
-    expect(config.expo.backgroundColor).toBe('#0E0E0E');
+    expect(config.expo.userInterfaceStyle).toBe('light');
+    expect(config.expo.backgroundColor).toBe('#F5F0E6');
     expect(config.expo.ios).toMatchObject({
       supportsTablet: false,
       bundleIdentifier: 'com.robot2313.gooddogacademy',

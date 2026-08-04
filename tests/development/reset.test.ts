@@ -17,6 +17,7 @@ import { OwnershipService } from '../../src/services/OwnershipService';
 import { StorageTransactionManager } from '../../src/storage/StorageTransactionManager';
 import { InMemoryStorageAdapter } from '../support/InMemoryStorageAdapter';
 import { lessonProgress } from '../support/lessonFixtures';
+import { troubleshooterAttempt } from '../support/troubleshooterFixtures';
 
 async function populate() {
   const storage = new InMemoryStorageAdapter();
@@ -32,6 +33,7 @@ async function populate() {
   await repositories.dailyPlans.save(sampleDailyPlan);
   await repositories.achievements.save(sampleAchievement);
   await repositories.notificationSettings.save(sampleNotificationSettings);
+  await repositories.troubleshooterAttempts.save(troubleshooterAttempt({ ownerId: sampleOwner.id, dogId: sampleDog.id }));
   return { storage, repositories, dog };
 }
 
@@ -52,6 +54,7 @@ describe('DevelopmentResetService', () => {
     await expect(repositories.dailyPlans.findAll()).resolves.toEqual([]);
     await expect(repositories.achievements.findAll()).resolves.toEqual([]);
     await expect(repositories.notificationSettings.findAll()).resolves.toEqual([]);
+    await expect(repositories.troubleshooterAttempts.findAll()).resolves.toEqual([]);
     expect(photos.remove).toHaveBeenCalledWith(dog.photoUri);
   });
 

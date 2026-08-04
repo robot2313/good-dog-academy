@@ -45,6 +45,7 @@ export function TodayPlanLessonCard({
       <View style={styles.todayPlanLessonVisualRow}>
         <LessonThumbnail
           decorative
+          lessonId={item.lessonId}
           skill={item.skill}
           lessonTitle={item.title}
         />

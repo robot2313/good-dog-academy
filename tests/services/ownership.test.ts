@@ -14,6 +14,7 @@ import { OwnershipService } from '../../src/services/OwnershipService';
 import { StorageTransactionManager } from '../../src/storage/StorageTransactionManager';
 import { InMemoryStorageAdapter } from '../support/InMemoryStorageAdapter';
 import { lessonProgress } from '../support/lessonFixtures';
+import { troubleshooterAttempt } from '../support/troubleshooterFixtures';
 
 async function populate(storage: InMemoryStorageAdapter) {
   const repositories = createDomainRepositories(storage);
@@ -27,6 +28,7 @@ async function populate(storage: InMemoryStorageAdapter) {
   await repositories.dailyPlans.save(sampleDailyPlan);
   await repositories.achievements.save(sampleAchievement);
   await repositories.notificationSettings.save(sampleNotificationSettings);
+  await repositories.troubleshooterAttempts.save(troubleshooterAttempt({ ownerId: sampleOwner.id, dogId: sampleDog.id }));
   return repositories;
 }
 
@@ -44,6 +46,7 @@ describe('OwnershipService', () => {
     await expect(repositories.trainingSessions.findAll()).resolves.toEqual([]);
     await expect(repositories.dailyPlans.findAll()).resolves.toEqual([]);
     await expect(repositories.achievements.findAll()).resolves.toEqual([]);
+    await expect(repositories.troubleshooterAttempts.findAll()).resolves.toEqual([]);
     await expect(repositories.owners.findById(sampleOwner.id)).resolves.toEqual(sampleOwner);
   });
 
@@ -62,5 +65,6 @@ describe('OwnershipService', () => {
     await expect(repositories.trainingSessions.findAll()).resolves.toEqual([]);
     await expect(repositories.dailyPlans.findAll()).resolves.toEqual([]);
     await expect(repositories.achievements.findAll()).resolves.toEqual([]);
+    await expect(repositories.troubleshooterAttempts.findAll()).resolves.toEqual([]);
   });
 });

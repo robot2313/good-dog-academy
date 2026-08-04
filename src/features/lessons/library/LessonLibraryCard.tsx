@@ -22,6 +22,7 @@ export function LessonLibraryCard({ lesson, onPress }: LessonLibraryCardProps): 
     <View style={styles.libraryLessonVisualRow}>
       <LessonThumbnail
         decorative
+        lessonId={lesson.id}
         skill={lesson.skill}
         lessonTitle={lesson.title}
       />

@@ -47,7 +47,7 @@ export function LessonActionBar({ back, forward }: LessonActionBarProps): React.
             pressed && !forward.disabled && styles.lessonActionPressed,
           ]}
         >
-          <Text style={styles.lessonActionText}>{forward.label}</Text>
+          <Text style={[styles.lessonActionText, styles.lessonActionForwardText]}>{forward.label}</Text>
         </Pressable>
       ) : null}
     </View>

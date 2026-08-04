@@ -13,6 +13,7 @@ import type { Repository } from '../../src/domain/repositories';
 import { createDomainRepositories } from '../../src/services/createDomainRepositories';
 import { InMemoryStorageAdapter } from '../support/InMemoryStorageAdapter';
 import { lessonProgress } from '../support/lessonFixtures';
+import { troubleshooterAttempt } from '../support/troubleshooterFixtures';
 
 type Entity = { id: string };
 type RepositoryCase = {
@@ -33,6 +34,7 @@ const cases: RepositoryCase[] = [
   { name: 'Achievement', entity: sampleAchievement, update: (value) => ({ ...value, title: 'Updated Achievement' }), select: (r) => r.achievements },
   { name: 'Progress', entity: sampleProgress, update: (value) => ({ ...value, sessionsCompleted: 2 }), select: (r) => r.progress },
   { name: 'NotificationSettings', entity: sampleNotificationSettings, update: (value) => ({ ...value, enabled: false }), select: (r) => r.notificationSettings },
+  { name: 'TroubleshooterAttempt', entity: troubleshooterAttempt(), update: (value) => ({ ...value, outcome: 'slightly-better' }), select: (r) => r.troubleshooterAttempts },
 ];
 
 describe.each(cases)('$name repository', ({ entity, update, select }) => {

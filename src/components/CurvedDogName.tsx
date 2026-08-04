@@ -62,7 +62,7 @@ export function CurvedDogName({
             styles.straightText,
             {
               fontSize: compact ? 36 : profile ? 48 : 42,
-              lineHeight: compact ? 42 : profile ? 54 : 48,
+              lineHeight: compact ? 38 : profile ? 48 : 44,
             },
           ]}
         >
@@ -72,7 +72,7 @@ export function CurvedDogName({
     );
   }
 
-  const fontSize = compact ? 56 : profile ? 72 : 64;
+  const fontSize = compact ? 34 : profile ? 46 : 40;
   const inset = Math.max(16, size * 0.05);
   const radius = (size - inset * 2) / 2;
   const centerY = size / 2;
@@ -108,7 +108,7 @@ export function CurvedDogName({
         </Defs>
 
         <SvgText
-          fill={colorTokens.text.primary}
+          fill={colorTokens.brand.gold}
           fontSize={fontSize}
           fontWeight="800"
           letterSpacing={0.4}
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   straightText: {
     ...typographyTokens.cardTitle,
     fontWeight: '800',
-    color: colorTokens.text.primary,
+    color: colorTokens.brand.gold,
     textAlign: 'center',
   },
 });

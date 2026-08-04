@@ -12,7 +12,7 @@ type AppScreenProps = PropsWithChildren<{
 export function AppScreen({ children, scroll = true }: AppScreenProps): React.JSX.Element {
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       {scroll
         ? <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>{children}</ScrollView>
         : <View style={styles.app}>{children}</View>}

@@ -2,17 +2,17 @@ import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useState } from 'react';
-import { Pressable, Text, useWindowDimensions, View } from 'react-native';
+import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
 import { DogAvatar } from '../components/DogAvatar';
-import { HomeDogName } from '../components/HomeDogName';
 import { HomeGradientBackground } from '../components/HomeGradientBackground';
 import { LessonCompletionCelebration } from '../components/LessonCompletionCelebration';
 import { useTodayPlan } from '../features/daily-plan/useTodayPlan';
 import { homeWelcomeMessage } from '../features/home/homeWelcomeMessage';
 import { useLessonLibraryData } from '../features/lessons/library/LessonLibraryContext';
+import { getLessonImageSource } from '../features/lessons/coaching/lessonImageManifest';
 import { useOnboarding } from '../features/onboarding/OnboardingContext';
 import { styles } from '../theme/styles';
 import type { MainTabParamList, RootStackParamList } from '../types/navigation';
@@ -29,11 +29,6 @@ export function TodayScreen({ navigation, route }: TodayScreenProps): React.JSX.
   const dog = library?.selectedDog ?? onboardingDog ?? null;
   const dogName = (dog?.name ?? selectedDogName ?? '').trim() || null;
   const photoUri = dog?.photoUri ?? null;
-  const { width } = useWindowDimensions();
-
-  const avatarSize = Math.round(Math.max(196, Math.min(248, width * 0.6)));
-  const nameWidth = Math.round(Math.min(width - 40, 360));
-
   const progress = library?.progressRecords ?? [];
   const sessionCount = progress.reduce((total, record) => total + Math.max(0, record.attempts), 0);
   const successfulTotal = progress.reduce((total, record) => total + Math.max(0, record.successfulCompletions), 0);
@@ -66,24 +61,104 @@ export function TodayScreen({ navigation, route }: TodayScreenProps): React.JSX.
 
   const primaryLabel = allComplete ? 'All Lessons Complete' : 'Start Next Lesson';
   const primaryDisabled = loading && !nextItem && !allComplete;
+  const completedToday = plan?.completedItemCount ?? 0;
+  const planTotal = plan?.items.length ?? 0;
 
   return (
     <View style={styles.homeRoot}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <HomeGradientBackground />
       <SafeAreaView edges={['top', 'bottom']} style={styles.homeSafe}>
-        <View style={styles.homeBody}>
-          <View style={{ flex: 0.6 }} />
-          <View style={styles.homeHeroBlock}>
-            <View style={styles.homePhotoRing}>
-              <DogAvatar decorative dogName={dogName ?? 'Dog'} photoUri={photoUri} size={avatarSize} />
+        <ScrollView
+          contentContainerStyle={styles.homeBody}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.homeTopBar}>
+            <View style={styles.homeTopBarCopy}>
+              <Text style={styles.homeBrand}>GOOD DOG ACADEMY</Text>
+              <Text style={styles.homeTodayLabel}>Today with</Text>
+              <Text accessibilityLabel={dogName ?? 'Your dog'} style={styles.homeDogName}>
+                {dogName ?? 'Your dog'}
+              </Text>
             </View>
-            <HomeDogName dogName={dogName ?? ''} width={nameWidth} />
+            <View style={styles.homeHeaderAside}>
+              <View
+                accessible
+                accessibilityLabel={`${completedToday} of ${planTotal} planned lessons complete`}
+                style={styles.homePlanProgress}
+              >
+                <Text style={styles.homePlanProgressValue}>{completedToday}/{planTotal}</Text>
+                <Text style={styles.homePlanProgressLabel}>DONE</Text>
+              </View>
+              <View style={styles.homeSmallAvatar}>
+                <DogAvatar decorative dogName={dogName ?? 'Dog'} photoUri={photoUri} size={52} />
+              </View>
+            </View>
           </View>
 
-          <View style={{ height: 14 }} />
+          <View style={styles.homePlanCard}>
+            <View style={styles.homePlanCardTopRow}>
+              <Text style={styles.homePlanKicker}>{allComplete ? 'TODAY COMPLETE' : 'UP NEXT'}</Text>
+              {nextItem ? (
+                <Text style={styles.homePlanMinutes}>{nextItem.plannedMinutes} MIN</Text>
+              ) : null}
+            </View>
+
+            {nextItem ? (
+              <>
+                <View style={styles.homePlanImageFrame}>
+                  <Image
+                    accessible
+                    accessibilityLabel={`${nextItem.title} lesson preview`}
+                    resizeMode="cover"
+                    source={getLessonImageSource(nextItem.lessonId, nextItem.skill)}
+                    style={styles.homePlanImage}
+                  />
+                  <View pointerEvents="none" style={styles.homePlanImageTone} />
+                  <View style={styles.homePlanImageBadge}>
+                    <Text style={styles.homePlanImageBadgeText}>
+                      {nextItem.skill.replaceAll('-', ' ')}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.homePlanLessonCopy}>
+                  <Text style={styles.homePlanLessonTitle}>{nextItem.title}</Text>
+                  <Text numberOfLines={3} style={styles.homePlanLessonDescription}>
+                    {nextItem.description}
+                  </Text>
+                </View>
+              </>
+            ) : (
+              <View style={styles.homePlanCompleteCopy}>
+                <Text style={styles.homePlanLessonTitle}>
+                  {allComplete ? 'Beautiful work today' : 'Your plan is getting ready'}
+                </Text>
+                <Text style={styles.homePlanLessonDescription}>
+                  {allComplete
+                    ? `You and ${dogName ?? 'your dog'} have finished today’s planned training.`
+                    : 'Your next recommended lesson will appear here.'}
+                </Text>
+              </View>
+            )}
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={allComplete ? 'All lessons complete. Review your journey' : 'Start next lesson'}
+              accessibilityState={{ disabled: primaryDisabled }}
+              disabled={primaryDisabled}
+              onPress={allComplete ? () => navigation.navigate('Journey') : openNextLesson}
+              style={({ pressed }) => [
+                styles.homePrimaryButton,
+                primaryDisabled && styles.disabled,
+                pressed && !primaryDisabled && styles.homeButtonPressed,
+              ]}
+            >
+              <Text style={styles.homePrimaryButtonText}>{primaryLabel}</Text>
+            </Pressable>
+          </View>
 
           <View style={styles.homeWelcome} accessible accessibilityRole="summary">
+            <Text style={styles.homeWelcomeKicker}>COACH NOTE</Text>
             <Text style={styles.homeWelcomeTitle}>{message.title}</Text>
             {message.lines.map((line, index) => (
               <Text
@@ -95,24 +170,7 @@ export function TodayScreen({ navigation, route }: TodayScreenProps): React.JSX.
             ))}
           </View>
 
-          <View style={{ flex: 1 }} />
-
           <View style={styles.homeButtons}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={allComplete ? 'All lessons complete. Review your journey' : 'Start next lesson'}
-              accessibilityState={{ disabled: primaryDisabled }}
-              disabled={primaryDisabled}
-              onPress={allComplete ? () => navigation.navigate('Journey') : openNextLesson}
-              style={({ pressed }) => [
-                styles.homeButton,
-                styles.homeButtonPrimaryGlow,
-                primaryDisabled && styles.disabled,
-                pressed && !primaryDisabled && styles.homeButtonPressed,
-              ]}
-            >
-              <Text style={styles.homeButtonText}>{primaryLabel}</Text>
-            </Pressable>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Your journey so far"
@@ -125,9 +183,7 @@ export function TodayScreen({ navigation, route }: TodayScreenProps): React.JSX.
               <Text style={styles.homeButtonText}>Your Journey So Far</Text>
             </Pressable>
           </View>
-
-          <View style={{ height: 10 }} />
-        </View>
+        </ScrollView>
       </SafeAreaView>
 
       <LessonCompletionCelebration

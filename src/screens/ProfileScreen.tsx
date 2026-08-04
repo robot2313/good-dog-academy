@@ -7,6 +7,8 @@ import { AppScreen } from '../components/AppScreen';
 import { AppButton } from '../components/AppButton';
 import { DogIdentityHero } from '../components/DogIdentityHero';
 import { InlineValidationMessage } from '../components/InlineValidationMessage';
+import { PremiumCard } from '../components/PremiumCard';
+import { SectionHeader } from '../components/SectionHeader';
 import { SecondaryTextButton } from '../components/SecondaryTextButton';
 import { useOnboarding } from '../features/onboarding/OnboardingContext';
 import { dogPhotoUpdateService } from '../features/onboarding/photo/dogPhotoUpdateServiceInstance';
@@ -103,28 +105,37 @@ export function ProfileScreen(): React.JSX.Element {
       />
       {photoError ? <InlineValidationMessage message={photoError} /> : null}
       <View style={styles.membershipCard}>
-        <Text style={styles.membershipEyebrow}>FOUNDER ACCOUNT</Text>
+        <View style={styles.membershipTopRow}>
+          <Text style={styles.membershipEyebrow}>FOUNDER ACCOUNT</Text>
+          <View style={styles.membershipBadge}><Text style={styles.membershipBadgeText}>LIFETIME</Text></View>
+        </View>
         <Text style={styles.membershipTitle}>Lifetime All Access</Text>
-        <Text style={styles.membershipBody}>Your owner account stays unlocked as premium features are added.</Text>
+        <Text style={styles.membershipBody}>Your academy access stays unlocked as the training experience grows.</Text>
       </View>
-      <View style={styles.card}>
-        <Text style={styles.label}>Current dog</Text>
-        <Text style={styles.profileValue}>{dog?.name ?? 'Not selected'}</Text>
-        <Text style={styles.label}>Breed or mix</Text>
-        <Text style={styles.profileValue}>
-          {dog ? (dog.breedUnknown ? 'Unknown' : dog.breed) : 'Not specified'}
-        </Text>
-        <Text style={styles.label}>Owner</Text>
-        <Text style={styles.profileValue}>{owner?.displayName ?? 'Not specified'}</Text>
-        <Text style={styles.label}>Current build</Text>
-        <Text style={styles.profileValue}>Stable Foundation 1.0</Text>
-      </View>
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Privacy and your data</Text>
-        <Text style={styles.body}>See what is stored on this device or permanently delete all app data.</Text>
+      <PremiumCard tone="elevated">
+        <SectionHeader eyebrow="PROFILE" title="Your training partnership" />
+        <ProfileDetailRow label="Dog" value={dog?.name ?? 'Not selected'} />
+        <ProfileDetailRow label="Breed or mix" value={dog ? (dog.breedUnknown ? 'Unknown' : dog.breed) : 'Not specified'} />
+        <ProfileDetailRow label="Owner" value={owner?.displayName ?? 'Not specified'} last />
+      </PremiumCard>
+      <PremiumCard>
+        <SectionHeader
+          eyebrow="YOUR CONTROL"
+          title="Privacy and your data"
+          supportingText="See what is stored on this device or permanently delete all app data."
+        />
         <AppButton title="Privacy and Your Data" variant="secondary" onPress={() => navigation.navigate('Privacy')} />
-      </View>
+      </PremiumCard>
       {__DEV__ && DeveloperToolsSection ? <DeveloperToolsSection /> : null}
     </AppScreen>
+  );
+}
+
+function ProfileDetailRow({ label, value, last = false }: { label: string; value: string; last?: boolean }): React.JSX.Element {
+  return (
+    <View style={[styles.profileDetailRow, last && styles.profileDetailRowLast]}>
+      <Text style={styles.profileDetailLabel}>{label}</Text>
+      <Text style={styles.profileDetailValue}>{value}</Text>
+    </View>
   );
 }

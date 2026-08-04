@@ -116,10 +116,11 @@ export function LessonIllustration({
             accessible
             accessibilityLabel={illustration.accessibilityLabel}
             accessibilityRole="image"
-            resizeMode="contain"
+            resizeMode="cover"
             source={imageSource}
             style={styles.lessonIllustration}
           />
+          <View pointerEvents="none" style={styles.lessonIllustrationTone} />
         </View>
         <View style={styles.illustrationCopy}>
           <Text style={styles.illustrationLabel}>WHAT TO NOTICE</Text>

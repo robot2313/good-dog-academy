@@ -9,7 +9,6 @@ import {
   spacingTokens,
   typographyTokens,
 } from '../theme/tokens';
-import { CurvedDogName } from './CurvedDogName';
 import { DogAvatar } from './DogAvatar';
 
 type DogIdentityHeroSize =
@@ -29,15 +28,9 @@ type DogIdentityHeroProps = {
 };
 
 const avatarSizes: Record<DogIdentityHeroSize, number> = {
-  compact: 224,
-  standard: 272,
-  profile: 320,
-};
-
-const identitySizes: Record<DogIdentityHeroSize, number> = {
-  compact: 280,
-  standard: 336,
-  profile: 392,
+  compact: 64,
+  standard: 76,
+  profile: 92,
 };
 
 export function DogIdentityHero({
@@ -53,70 +46,38 @@ export function DogIdentityHero({
   const trimmedName = dogName.trim();
   const displayName = trimmedName || 'Dog';
   const avatarSize = avatarSizes[size];
-  const identitySize = identitySizes[size];
-  const avatarOffset = (identitySize - avatarSize) / 2;
-
   const titleIncludesName = title.toLowerCase().includes(displayName.toLowerCase());
 
   return (
     <View style={styles.container}>
-      <View
-        accessible
-        accessibilityLabel={`${displayName}'s profile`}
-        accessibilityRole="image"
-        style={[
-          styles.identity,
-          {
-            width: identitySize,
-            height: identitySize,
-          },
-        ]}
-      >
-        {!titleIncludesName ? <Text style={styles.srOnly}>{displayName}</Text> : null}
-        <View
-          style={[
-            styles.avatarPosition,
-            {
-              top: avatarOffset,
-              left: avatarOffset,
-            },
-          ]}
-        >
+      <View style={styles.headerRow}>
+        <View style={styles.avatarFrame}>
           <DogAvatar
-            decorative
+            accessibilityLabel={`${displayName}'s profile photo`}
             dogName={dogName}
             photoUri={photoUri}
             size={avatarSize}
           />
         </View>
-
-        <CurvedDogName
-          dogName={dogName}
-          size={identitySize}
-          compact={size === 'compact'}
-          standard={size === 'standard'}
-          profile={size === 'profile'}
-        />
+        <View style={styles.copy}>
+          <View style={styles.contextRow}>
+            {eyebrow.trim() ? (
+              <Text style={styles.eyebrow}>
+                {eyebrow.trim()}
+              </Text>
+            ) : null}
+            {!titleIncludesName ? <Text style={styles.dogName}>{displayName}</Text> : null}
+          </View>
+          <Text accessibilityRole="header" style={styles.title}>
+            {title}
+          </Text>
+          {supportingText?.trim() ? (
+            <Text style={styles.supportingText}>
+              {supportingText.trim()}
+            </Text>
+          ) : null}
+        </View>
       </View>
-
-      {eyebrow.trim() ? (
-        <Text style={styles.eyebrow}>
-          {eyebrow.trim()}
-        </Text>
-      ) : null}
-
-      <Text
-        accessibilityRole="header"
-        style={styles.title}
-      >
-        {title}
-      </Text>
-
-      {supportingText?.trim() ? (
-        <Text style={styles.supportingText}>
-          {supportingText.trim()}
-        </Text>
-      ) : null}
 
       {status ? (
         <View style={styles.status}>
@@ -136,53 +97,69 @@ export function DogIdentityHero({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    alignItems: 'center',
-    paddingHorizontal: spacingTokens.lg,
-    paddingVertical: spacingTokens.md,
+    padding: spacingTokens.lg,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: colorTokens.border.subtle,
+    backgroundColor: colorTokens.surface.primary,
   },
-  identity: {
-    position: 'relative',
+  headerRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacingTokens.sm,
+    gap: spacingTokens.md,
   },
-  avatarPosition: {
-    position: 'absolute',
+  avatarFrame: {
+    flexShrink: 0,
+    padding: 3,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colorTokens.brand.gold,
+    backgroundColor: colorTokens.background.subtle,
+  },
+  copy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 3,
+  },
+  contextRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: spacingTokens.xs,
   },
   eyebrow: {
     ...typographyTokens.label,
     color: colorTokens.text.accent,
-    textAlign: 'center',
     textTransform: 'uppercase',
     letterSpacing: 1.2,
-    marginBottom: spacingTokens.xs,
+  },
+  dogName: {
+    ...typographyTokens.caption,
+    color: colorTokens.text.secondary,
+    paddingHorizontal: spacingTokens.xs,
+    paddingVertical: 2,
+    borderRadius: 999,
+    backgroundColor: colorTokens.surface.selected,
   },
   title: {
     ...typographyTokens.sectionTitle,
     color: colorTokens.text.primary,
-    textAlign: 'center',
+    letterSpacing: -0.25,
   },
   supportingText: {
     ...typographyTokens.supporting,
     color: colorTokens.text.secondary,
-    textAlign: 'center',
-    maxWidth: 320,
-    marginTop: spacingTokens.xs,
   },
   status: {
-    alignItems: 'center',
-    marginTop: spacingTokens.sm,
+    alignItems: 'flex-start',
+    marginTop: spacingTokens.md,
   },
   footer: {
     width: '100%',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginTop: spacingTokens.md,
-  },
-  srOnly: {
-    position: 'absolute',
-    width: 1,
-    height: 1,
-    opacity: 0,
-    overflow: 'hidden',
+    paddingTop: spacingTokens.md,
+    borderTopWidth: 1,
+    borderTopColor: colorTokens.border.subtle,
   },
 });

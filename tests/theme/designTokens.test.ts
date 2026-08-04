@@ -9,18 +9,16 @@ import {
 } from '../../src/theme/tokens';
 
 describe('premium design tokens', () => {
-  it('defines the dark, gold-accented semantic color roles', () => {
-    // Dark cinematic palette (Home screen is the source of truth).
-    expect(colorTokens.background.canvas).toBe('#0E0E0E');
-    expect(colorTokens.surface.primary).toBe('#1B1B1B');
-    expect(colorTokens.brand.primary).toBe('#D4AF37');
-    expect(colorTokens.brand.gold).toBe('#D4AF37');
-    // Text is light on dark surfaces; inverse stays white for gold-filled marks.
-    expect(colorTokens.text.primary).toBe('#F5F3EC');
-    expect(colorTokens.text.secondary).toBe('#B4B4B4');
-    expect(colorTokens.text.accent).toBe('#D4AF37');
+  it('defines the warm editorial semantic color roles', () => {
+    expect(colorTokens.background.canvas).toBe('#F5F0E6');
+    expect(colorTokens.surface.primary).toBe('#FFFCF6');
+    expect(colorTokens.brand.primary).toBe('#2F604A');
+    expect(colorTokens.brand.gold).toBe('#C56F4A');
+    expect(colorTokens.text.primary).toBe('#1C2B24');
+    expect(colorTokens.text.secondary).toBe('#667069');
+    expect(colorTokens.text.accent).toBe('#B85F3E');
     expect(colorTokens.text.inverse).toBe('#FFFFFF');
-    expect(colorTokens.border.subtle).toBe('#2A2A2A');
+    expect(colorTokens.border.subtle).toBe('#DDD6C9');
     expect(colorTokens.status.successText).not.toBe(colorTokens.status.errorText);
   });
 

@@ -42,13 +42,19 @@ export function AppButton({
           accessibilityElementsHidden
           color={variant === 'destructive'
             ? colorTokens.status.errorText
-            : colorTokens.brand.gold}
+            : variant === 'primary'
+              ? colorTokens.text.inverse
+              : colorTokens.brand.primary}
           size="small"
         />
       ) : null}
       <Text style={[
         componentStyles.label,
-        variant === 'destructive' ? componentStyles.destructiveLabel : componentStyles.goldLabel,
+        variant === 'destructive'
+          ? componentStyles.destructiveLabel
+          : variant === 'primary'
+            ? componentStyles.primaryLabel
+            : componentStyles.secondaryLabel,
       ]}>
         {title}
       </Text>
@@ -56,13 +62,10 @@ export function AppButton({
   );
 }
 
-// One dark + gold button family for the whole app. The primary action is set
-// apart only by a subtle gold glow, never a different colour.
-const GOLD = '#D4AF37';
 const componentStyles = StyleSheet.create({
   button: {
-    minHeight: 52,
-    borderRadius: radiusTokens.lg,
+    minHeight: 54,
+    borderRadius: radiusTokens.pill,
     paddingHorizontal: spacingTokens.lg,
     paddingVertical: spacingTokens.sm,
     alignItems: 'center',
@@ -72,33 +75,37 @@ const componentStyles = StyleSheet.create({
     borderWidth: 1.5,
   },
   primary: {
-    backgroundColor: '#202020',
-    borderColor: GOLD,
-    shadowColor: GOLD,
-    shadowOpacity: 0.3,
+    backgroundColor: colorTokens.brand.primary,
+    borderColor: colorTokens.brand.primary,
+    shadowColor: colorTokens.brand.forest,
+    shadowOpacity: 0.16,
     shadowRadius: 10,
-    shadowOffset: { width: 0, height: 0 },
+    shadowOffset: { width: 0, height: 5 },
     elevation: 5,
   },
   secondary: {
-    backgroundColor: '#181818',
-    borderColor: GOLD,
+    backgroundColor: colorTokens.surface.primary,
+    borderColor: colorTokens.border.strong,
   },
   ghost: {
     backgroundColor: 'transparent',
     borderColor: 'transparent',
   },
   destructive: {
-    backgroundColor: '#181818',
+    backgroundColor: colorTokens.status.errorSurface,
     borderColor: colorTokens.status.errorText,
   },
   label: {
     ...typographyTokens.body,
     fontWeight: '800',
     textAlign: 'center',
+    letterSpacing: 0.25,
   },
-  goldLabel: {
-    color: GOLD,
+  primaryLabel: {
+    color: colorTokens.text.inverse,
+  },
+  secondaryLabel: {
+    color: colorTokens.brand.primary,
   },
   destructiveLabel: {
     color: colorTokens.status.errorText,

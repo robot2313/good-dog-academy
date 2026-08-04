@@ -9,6 +9,7 @@ import type {
   Owner,
   Progress,
   TrainingSession,
+  TroubleshooterAttempt,
 } from '../domain/models';
 import type { DomainRepositories } from '../domain/repositories';
 import {
@@ -22,6 +23,7 @@ import {
   validateOwner,
   validateProgress,
   validateTrainingSession,
+  validateTroubleshooterAttempt,
 } from '../domain/validation';
 import { AsyncStorageRepository } from '../storage/AsyncStorageRepository';
 import type { StorageAdapter } from '../storage/StorageAdapter';
@@ -39,5 +41,6 @@ export function createDomainRepositories(storage: StorageAdapter): DomainReposit
     achievements: new AsyncStorageRepository<Achievement>(storage, storageKeys.achievements, 'Achievement', validateAchievement),
     progress: new AsyncStorageRepository<Progress>(storage, storageKeys.progress, 'Progress', validateProgress),
     notificationSettings: new AsyncStorageRepository<NotificationSettings>(storage, storageKeys.notificationSettings, 'NotificationSettings', validateNotificationSettings),
+    troubleshooterAttempts: new AsyncStorageRepository<TroubleshooterAttempt>(storage, storageKeys.troubleshooterAttempts, 'TroubleshooterAttempt', validateTroubleshooterAttempt),
   };
 }

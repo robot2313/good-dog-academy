@@ -8,6 +8,7 @@ import { ErrorState } from '../../../components/ErrorState';
 import { LoadingState } from '../../../components/LoadingState';
 import { SecondaryTextButton } from '../../../components/SecondaryTextButton';
 import { styles } from '../../../theme/styles';
+import { colorTokens } from '../../../theme/tokens';
 import type { RootStackParamList } from '../../../types/navigation';
 import { useLessonLibraryData } from '../library/LessonLibraryContext';
 import { lessonLibraryErrorMessage, skillLabel } from '../library/lessonLibraryPresentation';
@@ -85,10 +86,10 @@ export function JourneyScreen({ navigation }: Props): React.JSX.Element {
                 ? 'Next up'
                 : 'Available';
           const stateColor = lesson.state === 'COMPLETED'
-            ? '#D4AF37'
+            ? colorTokens.brand.primary
             : marker === 'current'
-              ? '#F5F3EC'
-              : '#8A8A8A';
+              ? colorTokens.text.primary
+              : colorTokens.text.disabled;
           return (
             <View key={lesson.id} style={styles.journeyNode}>
               <View style={styles.journeyRail}>

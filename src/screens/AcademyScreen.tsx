@@ -27,6 +27,7 @@ export function AcademyScreen(): React.JSX.Element {
           />
           <AppButton
             title="Troubleshoot a Problem"
+            variant="secondary"
             accessibilityLabel={`Troubleshoot a training problem for ${dogName}`}
             onPress={() => navigation.navigate('Troubleshooter')}
           />
