@@ -29,14 +29,14 @@ describe('Progress session-history navigation', () => {
     jest.useRealTimers();
   });
 
-  it('opens Session History without rendering legacy four-lesson progress', async () => {
+  it('opens the Learning Passport and preserves Session History navigation', async () => {
     const view = render(<App />);
     expect(await view.findByRole('button', { name: 'Your journey so far' })).toBeTruthy();
 
     fireEvent.press(view.getByText('Progress'));
-    expect(await view.findByRole('header', { name: 'Progress' })).toBeTruthy();
+    expect(await view.findByRole('header', { name: 'Learning Passport' })).toBeTruthy();
     expect(await view.findByRole('button', { name: 'View session history' })).toBeTruthy();
-    expect(view.getByText(/completed guided sessions are saved per dog/)).toBeTruthy();
+    expect(view.getByText(/private evidence record/)).toBeTruthy();
     expect(view.queryByText('Foundation completed')).toBeNull();
     expect(view.queryByText('Completed lessons')).toBeNull();
     expect(view.queryByText('Build a Marker Word')).toBeNull();
