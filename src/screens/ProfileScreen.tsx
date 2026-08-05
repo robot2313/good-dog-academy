@@ -120,6 +120,14 @@ export function ProfileScreen(): React.JSX.Element {
       </PremiumCard>
       <PremiumCard>
         <SectionHeader
+          eyebrow="TEAM DOG"
+          title="Account and cloud backup"
+          supportingText="Protect your progress now, then invite family or a trainer in the next step."
+        />
+        <AppButton title="Open Team Dog" onPress={() => navigation.navigate('Account')} />
+      </PremiumCard>
+      <PremiumCard>
+        <SectionHeader
           eyebrow="YOUR CONTROL"
           title="Privacy and your data"
           supportingText="See what is stored on this device or permanently delete all app data."

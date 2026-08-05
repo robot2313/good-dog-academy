@@ -13,6 +13,7 @@ export type RootStackParamList = {
   Journey: undefined;
   Troubleshooter: { mode?: 'standard' | 'help-now' } | undefined;
   Privacy: undefined;
+  Account: undefined;
   LessonSummary: { lessonId: string; dailyPlanId?: string };
   LessonSession: { lessonId: string; dailyPlanId?: string };
   SessionHistory: undefined;

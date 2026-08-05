@@ -25,6 +25,7 @@ import { LessonSessionScreen } from '../features/lessons/session/LessonSessionSc
 import { JourneyScreen } from '../features/lessons/journey/JourneyScreen';
 import { DogTroubleshooterScreen } from '../features/troubleshooter/DogTroubleshooterScreen';
 import { PrivacyScreen } from '../features/privacy/PrivacyScreen';
+import { AccountScreen } from '../features/account/AccountScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -55,6 +56,7 @@ export function AppNavigator(): React.JSX.Element {
             <Stack.Screen name="Journey" component={JourneyScreen} />
             <Stack.Screen name="Troubleshooter" component={DogTroubleshooterScreen} />
             <Stack.Screen name="Privacy" component={PrivacyScreen} />
+            <Stack.Screen name="Account" component={AccountScreen} />
             <Stack.Screen name="LessonSummary" component={LessonSummaryScreen} />
             <Stack.Screen name="LessonSession" component={LessonSessionScreen} />
             <Stack.Screen name="SessionHistory" component={SessionHistoryScreen} />
@@ -66,11 +68,13 @@ export function AppNavigator(): React.JSX.Element {
               <Stack.Screen name="AssessmentHome">{(props) => <AssessmentSectionScreen {...props} section="home" />}</Stack.Screen>
               <Stack.Screen name="AssessmentControl">{(props) => <AssessmentSectionScreen {...props} section="control" />}</Stack.Screen>
               <Stack.Screen name="AssessmentResults" component={AssessmentResultsScreen} />
+              <Stack.Screen name="Account" component={AccountScreen} />
             </>
           : <>
               <Stack.Screen name="Welcome" component={WelcomeScreen} />
               <Stack.Screen name="OwnerSetup" component={OwnerSetupScreen} />
               <Stack.Screen name="DogSetup" component={DogSetupScreen} />
+              <Stack.Screen name="Account" component={AccountScreen} />
             </>}
       </Stack.Navigator>
     </NavigationContainer>

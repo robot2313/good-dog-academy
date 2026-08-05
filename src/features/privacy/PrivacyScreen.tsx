@@ -28,7 +28,7 @@ export function PrivacyScreen({ navigation }: Props): React.JSX.Element {
       const result = await localDataDeletionService.deleteAllLocalData();
       resetAfterLocalDataClear();
       Alert.alert(
-        'App data deleted',
+        'Local app data deleted',
         result.managedPhotosRemoved
           ? 'Your saved Good Dog Academy data and managed dog photo have been removed from this device.'
           : `Your saved training data was deleted, but a managed photo file could not be removed. Contact ${PRIVACY_CONTACT_EMAIL} if you need help.`,
@@ -42,11 +42,11 @@ export function PrivacyScreen({ navigation }: Props): React.JSX.Element {
 
   const confirmDeletion = (): void => {
     Alert.alert(
-      'Delete all app data?',
-      'This permanently deletes the owner and dog profile, optional dog photo, assessment answers, lesson progress, plans, training sessions, achievements, and settings saved on this device. The app will return to Welcome.',
+      'Delete all local app data?',
+      'This permanently deletes the owner and dog profile, optional dog photo, assessment answers, lesson progress, plans, training sessions, achievements, and settings saved on this device. Any Team Dog cloud backup is kept. The app will return to Welcome.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete All App Data', style: 'destructive', onPress: () => void deleteAllData() },
+        { text: 'Delete All Local Data', style: 'destructive', onPress: () => void deleteAllData() },
       ],
     );
   };
@@ -63,20 +63,27 @@ export function PrivacyScreen({ navigation }: Props): React.JSX.Element {
       <View style={screenStyles.card}>
         <Text style={screenStyles.heading}>Data stored on this device</Text>
         <Text style={screenStyles.body}>The app stores your owner name, dog profile and optional photo, behaviour assessment answers, lesson progress, plans, training sessions, achievements, and settings locally on this device.</Text>
-        <Text style={screenStyles.body}>This version has no online account or Good Dog Academy server, so that data is not uploaded to us. Your selected dog photo is copied into app-managed storage on this device.</Text>
+        <Text style={screenStyles.body}>Your selected dog photo is copied into app-managed storage on this device. Training data stays local unless you create a Team Dog account and explicitly choose to back it up; dog photos are not included in cloud backup.</Text>
+      </View>
+
+      <View style={screenStyles.card}>
+        <Text style={screenStyles.heading}>Optional Team Dog cloud data</Text>
+        <Text style={screenStyles.body}>If you enable Team Dog, your account name, training records, household roles, invitation email addresses and codes, and shared activity are stored securely in the Sydney region. Dog photo files and local photo paths are not uploaded.</Text>
+        <Text style={screenStyles.body}>Household owners and trainers can update shared training records. Viewers can only read them. Only the intended signed-in email can accept an unexpired invitation code.</Text>
       </View>
 
       <View style={screenStyles.card}>
         <Text style={screenStyles.heading}>Questions or privacy help</Text>
+        <Text style={screenStyles.body}>Contact us to request deletion of your Team Dog account or cloud data.</Text>
         <Text selectable style={screenStyles.email}>{PRIVACY_CONTACT_EMAIL}</Text>
       </View>
 
       <View style={screenStyles.dangerCard}>
-        <Text style={screenStyles.heading}>Delete all app data</Text>
-        <Text style={screenStyles.body}>This action is permanent and cannot be undone.</Text>
+        <Text style={screenStyles.heading}>Delete local app data</Text>
+        <Text style={screenStyles.body}>This permanently clears this phone. It does not delete a Team Dog cloud backup.</Text>
         <AppButton
-          title={deleting ? 'Deleting App Data…' : 'Delete All App Data'}
-          accessibilityLabel="Delete All App Data"
+          title={deleting ? 'Deleting Local Data…' : 'Delete All Local Data'}
+          accessibilityLabel="Delete All Local Data"
           variant="destructive"
           loading={deleting}
           onPress={confirmDeletion}

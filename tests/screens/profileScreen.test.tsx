@@ -59,6 +59,8 @@ describe('ProfileScreen', () => {
     expect(view.getByText('Border Collie mix')).toBeTruthy();
     expect(view.getByText('Taylor Morgan')).toBeTruthy();
     expect(view.getByRole('button', { name: 'Add photo' })).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: 'Open Team Dog' }));
+    expect(mockNavigate).toHaveBeenCalledWith('Account');
     fireEvent.press(view.getByRole('button', { name: 'Privacy and Your Data' }));
     expect(mockNavigate).toHaveBeenCalledWith('Privacy');
   });

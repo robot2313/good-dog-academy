@@ -36,7 +36,7 @@ describe('PrivacyScreen', () => {
     const { view } = renderScreen();
 
     expect(view.getByRole('header', { name: 'Privacy and Your Data' })).toBeTruthy();
-    expect(view.getByText(/no online account or Good Dog Academy server/i)).toBeTruthy();
+    expect(view.getByText(/stays local unless you create a Team Dog account/i)).toBeTruthy();
     expect(view.getByText(PRIVACY_CONTACT_EMAIL)).toBeTruthy();
   });
 
@@ -45,7 +45,7 @@ describe('PrivacyScreen', () => {
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
     const { view } = renderScreen();
 
-    fireEvent.press(view.getByRole('button', { name: 'Delete All App Data' }));
+    fireEvent.press(view.getByRole('button', { name: 'Delete All Local Data' }));
     expect(mockDeleteAllLocalData).not.toHaveBeenCalled();
     await act(async () => {
       alert.mock.calls[0]?.[2]?.[1]?.onPress?.();
@@ -54,7 +54,7 @@ describe('PrivacyScreen', () => {
 
     await waitFor(() => expect(mockDeleteAllLocalData).toHaveBeenCalledTimes(1));
     expect(resetAfterLocalDataClear).toHaveBeenCalledTimes(1);
-    expect(alert).toHaveBeenCalledWith('App data deleted', expect.stringMatching(/removed from this device/i));
+    expect(alert).toHaveBeenCalledWith('Local app data deleted', expect.stringMatching(/removed from this device/i));
     alert.mockRestore();
   });
 
@@ -63,7 +63,7 @@ describe('PrivacyScreen', () => {
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
     const { view } = renderScreen();
 
-    fireEvent.press(view.getByRole('button', { name: 'Delete All App Data' }));
+    fireEvent.press(view.getByRole('button', { name: 'Delete All Local Data' }));
     await act(async () => {
       alert.mock.calls[0]?.[2]?.[1]?.onPress?.();
       await Promise.resolve();

@@ -42,6 +42,7 @@ export function WelcomeScreen({ navigation }: Props): React.JSX.Element {
           <InlineValidationMessage message={recoveryError} />
         </View>
       ) : <PrimaryButton title="Get Started" onPress={() => navigation.navigate('OwnerSetup')} />}
+      <SecondaryTextButton title="Sign In or Join Team Dog" onPress={() => navigation.navigate('Account')} />
     </AppScreen>
   );
 }

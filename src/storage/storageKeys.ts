@@ -12,5 +12,6 @@ export const storageKeys = {
   progress: '@good-dog-academy/domain/progress',
   notificationSettings: '@good-dog-academy/domain/notification-settings',
   troubleshooterAttempts: '@good-dog-academy/domain/troubleshooter-attempts',
+  teamDogSync: '@good-dog-academy/team-dog-sync',
   developmentSeedVersion: '@good-dog-academy/development/seed-version',
 } as const;
