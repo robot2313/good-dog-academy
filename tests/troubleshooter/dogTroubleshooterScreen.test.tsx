@@ -117,6 +117,56 @@ describe('DogTroubleshooterScreen', () => {
     expect(view.getByRole('header', { name: `What is ${sampleDog.name} struggling with?` })).toBeTruthy();
     expect(mockUseLessonLibraryData().progressRecords).toHaveLength(0);
   });
+
+  it('offers fast, one-step-at-a-time coaching in Help Me Now mode', async () => {
+    const { view } = renderScreen({ mode: 'help-now' });
+    await waitFor(() => expect(mockHistory.listForDog).toHaveBeenCalledWith(sampleDog.id));
+
+    expect(view.getByRole('header', { name: 'What is happening right now?' })).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: /Another dog is too close/ }));
+    fireEvent.press(view.getByRole('button', { name: 'Mostly relaxed and able to participate' }));
+    fireEvent.press(view.getByRole('button', { name: 'Cannot focus because the trigger is too strong' }));
+    fireEvent.changeText(view.getByLabelText('Where are you practising?'), 'footpath near home');
+    fireEvent.press(view.getByRole('button', { name: 'Show my plan' }));
+
+    expect(view.getByRole('header', { name: `One step at a time with ${sampleDog.name}` })).toBeTruthy();
+    expect(view.getByText('DO THIS NOW')).toBeTruthy();
+    expect(view.getByRole('button', { name: 'Done, show next safe step' })).toBeTruthy();
+    expect(view.queryByRole('header', { name: 'Try this now' })).toBeNull();
+
+    fireEvent.press(view.getByRole('button', { name: 'Done, show next safe step' }));
+    expect(view.getByText('NEXT SAFE STEP')).toBeTruthy();
+    expect(view.getByRole('button', { name: 'Previous safe step' })).toBeTruthy();
+
+    while (view.queryByRole('button', { name: 'Done, show next safe step' })) {
+      fireEvent.press(view.getByRole('button', { name: 'Done, show next safe step' }));
+    }
+    fireEvent.press(view.getByRole('button', { name: 'Report result: A little better' }));
+    await waitFor(() => expect(mockHistory.recordOutcome).toHaveBeenCalledWith(expect.objectContaining({
+      ownerId: sampleOwner.id,
+      dogId: sampleDog.id,
+      outcome: 'slightly-better',
+      answers: expect.objectContaining({
+        topicId: 'reactivity',
+        scenarioId: 'react-dogs',
+        environment: 'footpath near home',
+      }),
+    })));
+    expect(view.getByRole('header', { name: 'Result saved' })).toBeTruthy();
+    expect(view.getByText(/A little better is useful progress/)).toBeTruthy();
+    expect(view.getByRole('button', { name: 'Start another Help Me Now check' })).toBeTruthy();
+  });
+
+  it('sends a sudden behaviour change directly to health guidance', async () => {
+    const { view } = renderScreen({ mode: 'help-now' });
+    await waitFor(() => expect(mockHistory.listForDog).toHaveBeenCalledWith(sampleDog.id));
+
+    fireEvent.press(view.getByRole('button', { name: /Behaviour changed suddenly/ }));
+
+    expect(view.getByText('TRAINING STOPS HERE')).toBeTruthy();
+    expect(view.getByRole('header', { name: 'Check health before training' })).toBeTruthy();
+    expect(view.queryByText('DO THIS NOW')).toBeNull();
+  });
 });
 
 async function reachRecallResult(view: ReturnType<typeof render>) {
@@ -129,14 +179,15 @@ async function reachRecallResult(view: ReturnType<typeof render>) {
   fireEvent.press(view.getByRole('button', { name: 'Show my plan' }));
 }
 
-function renderScreen() {
+function renderScreen(params?: RootStackParamList['Troubleshooter']) {
   const navigate = jest.fn();
   const goBack = jest.fn();
+  const setParams = jest.fn();
   const props = {
-    navigation: { navigate, goBack },
-    route: { key: 'troubleshooter', name: 'Troubleshooter', params: undefined },
+    navigation: { navigate, goBack, setParams },
+    route: { key: 'troubleshooter', name: 'Troubleshooter', params },
   } as unknown as NativeStackScreenProps<RootStackParamList, 'Troubleshooter'>;
-  return { navigate, goBack, view: render(<DogTroubleshooterScreen {...props} />) };
+  return { navigate, goBack, setParams, view: render(<DogTroubleshooterScreen {...props} />) };
 }
 
 function savedAttempt(): TroubleshooterAttempt {

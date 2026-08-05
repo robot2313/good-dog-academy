@@ -157,6 +157,27 @@ export function TodayScreen({ navigation, route }: TodayScreenProps): React.JSX.
             </Pressable>
           </View>
 
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Help me now with a training problem"
+            accessibilityHint="Opens quick, safety-first guidance for what is happening right now"
+            onPress={() => navigation.navigate('Troubleshooter', { mode: 'help-now' })}
+            style={({ pressed }) => [
+              styles.homeHelpNowCard,
+              pressed && styles.homeButtonPressed,
+            ]}
+          >
+            <View style={styles.homeHelpNowCopy}>
+              <Text style={styles.homeHelpNowKicker}>HELP ME NOW</Text>
+              <Text style={styles.homeHelpNowTitle}>Something happening right now?</Text>
+              <Text style={styles.homeHelpNowBody}>Get one safe next step, then tell us whether it helped.</Text>
+            </View>
+            <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.homeHelpNowAction}>
+              <Text style={styles.homeHelpNowActionText}>OPEN</Text>
+              <Text style={styles.homeHelpNowArrow}>{'>'}</Text>
+            </View>
+          </Pressable>
+
           <View style={styles.homeWelcome} accessible accessibilityRole="summary">
             <Text style={styles.homeWelcomeKicker}>COACH NOTE</Text>
             <Text style={styles.homeWelcomeTitle}>{message.title}</Text>

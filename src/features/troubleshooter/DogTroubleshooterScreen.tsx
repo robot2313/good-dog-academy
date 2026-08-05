@@ -14,6 +14,8 @@ import type { RootStackParamList } from '../../types/navigation';
 import { useLessonLibraryData } from '../lessons/library/LessonLibraryContext';
 import { LessonLibraryService } from '../lessons/library/LessonLibraryService';
 import { DogTroubleshooterService } from './DogTroubleshooterService';
+import { HelpNowResultView } from './HelpNowResultView';
+import { helpNowResponseOptions, helpNowSituations } from './helpNowSituations';
 import { troubleshooterConcerns } from './troubleshooterCatalogue';
 import { troubleshooterHistoryService } from './troubleshooterHistoryServiceInstance';
 import { TroubleshooterResultView } from './TroubleshooterResultView';
@@ -29,7 +31,7 @@ import {
 export type DogTroubleshooterScreenProps = NativeStackScreenProps<RootStackParamList, 'Troubleshooter'>;
 type FlowStep = 'concern' | 'guide' | 'scenario' | 'body' | 'response' | 'environment' | 'result';
 
-export function DogTroubleshooterScreen({ navigation }: DogTroubleshooterScreenProps): React.JSX.Element {
+export function DogTroubleshooterScreen({ navigation, route }: DogTroubleshooterScreenProps): React.JSX.Element {
   const { catalogue, selectedDog, selectedOwnerId, progressRecords, loading, error, retry } = useLessonLibraryData();
   const [step, setStep] = useState<FlowStep>('concern');
   const [topicId, setTopicId] = useState<TroubleshooterTopicId | null>(null);
@@ -43,6 +45,8 @@ export function DogTroubleshooterScreen({ navigation }: DogTroubleshooterScreenP
   const [historyRetryVersion, setHistoryRetryVersion] = useState(0);
   const [savingOutcome, setSavingOutcome] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [reportedOutcome, setReportedOutcome] = useState<TroubleshooterOutcome | null>(null);
+  const isHelpNow = route.params?.mode === 'help-now';
   const selectedDogId = selectedDog?.id ?? null;
   const dogName = selectedDog?.name.trim() || 'your dog';
   const concern = topicId ? troubleshooterConcerns.find((item) => item.id === topicId) ?? null : null;
@@ -91,6 +95,7 @@ export function DogTroubleshooterScreen({ navigation }: DogTroubleshooterScreenP
     setResponseState(null);
     setEnvironment('');
     setSaveError(null);
+    setReportedOutcome(null);
   };
 
   const back = () => {
@@ -98,10 +103,20 @@ export function DogTroubleshooterScreen({ navigation }: DogTroubleshooterScreenP
       case 'concern': navigation.goBack(); break;
       case 'guide': setStep('concern'); break;
       case 'scenario': resetFlow(); break;
-      case 'body': setScenarioId(null); setStep('scenario'); break;
+      case 'body':
+        setBodyState(null);
+        if (isHelpNow) {
+          setTopicId(null);
+          setScenarioId(null);
+          setStep('concern');
+        } else {
+          setScenarioId(null);
+          setStep('scenario');
+        }
+        break;
       case 'response': setBodyState(null); setStep('body'); break;
       case 'environment': setResponseState(null); setStep('response'); break;
-      case 'result': setStep('environment'); break;
+      case 'result': setStep(bodyState && isSafetyBodyState(bodyState) ? 'body' : 'environment'); break;
     }
   };
 
@@ -112,6 +127,7 @@ export function DogTroubleshooterScreen({ navigation }: DogTroubleshooterScreenP
     try {
       const attempt = await troubleshooterHistoryService.recordOutcome({ ownerId: selectedOwnerId, dogId: selectedDogId, answers, result, outcome });
       setAttempts((current) => Object.freeze([...current, attempt]));
+      setReportedOutcome(outcome);
     } catch {
       setSaveError('That result could not be saved. Please try again.');
     } finally {
@@ -120,9 +136,9 @@ export function DogTroubleshooterScreen({ navigation }: DogTroubleshooterScreenP
   };
 
   const footer = <LessonActionBar
-    back={{ label: step === 'concern' ? 'Back' : step === 'result' ? 'Review answers' : 'Previous', onPress: back }}
+    back={{ label: step === 'concern' ? (isHelpNow ? 'Back home' : 'Back') : step === 'result' ? 'Review answers' : 'Previous', onPress: back }}
     forward={step === 'environment'
-      ? { label: 'Show my plan', onPress: () => setStep('result'), disabled: !environment.trim() || historyLoading || Boolean(historyError) }
+      ? { label: 'Show my plan', onPress: () => { setReportedOutcome(null); setStep('result'); }, disabled: !environment.trim() || historyLoading || Boolean(historyError) }
       : undefined}
   />;
 
@@ -131,20 +147,48 @@ export function DogTroubleshooterScreen({ navigation }: DogTroubleshooterScreenP
 
   return (
     <LessonScaffold footer={footer}>
-      <Text style={styles.eyebrow}>TRAINING TROUBLESHOOTER</Text>
-      <Text accessibilityRole="header" style={styles.title}>{screenTitle(step, dogName, concern?.title)}</Text>
-      <Text style={styles.intro}>{screenIntro(step)}</Text>
+      <Text style={styles.eyebrow}>{isHelpNow ? 'HELP ME NOW' : 'TRAINING TROUBLESHOOTER'}</Text>
+      <Text accessibilityRole="header" style={styles.title}>{screenTitle(step, dogName, concern?.title, isHelpNow)}</Text>
+      <Text style={styles.intro}>{screenIntro(step, isHelpNow)}</Text>
 
       {step === 'concern' ? (
         <View accessibilityRole="list" style={styles.list}>
-          <ChoiceCard
-            title="Training safety and practical guide"
-            description="Equipment, rewards, stress signals, and choosing qualified help."
-            onPress={() => setStep('guide')}
-          />
-          {troubleshooterConcerns.map((item) => (
-            <ChoiceCard key={item.id} title={item.title} description={item.description} onPress={() => { setTopicId(item.id); setStep('scenario'); }} />
-          ))}
+          {isHelpNow ? <>
+              {helpNowSituations.map((situation) => (
+                <ChoiceCard
+                  key={situation.id}
+                  title={situation.title}
+                  description={situation.description}
+                  onPress={() => {
+                    setReportedOutcome(null);
+                    setTopicId(situation.topicId);
+                    setScenarioId(situation.scenarioId);
+                    if (situation.id === 'sudden-change') {
+                      setBodyState('possible-pain-or-sudden-change');
+                      setResponseState('can-eat-and-respond');
+                      setEnvironment('the current situation');
+                      setStep('result');
+                    } else {
+                      setStep('body');
+                    }
+                  }}
+                />
+              ))}
+              <ChoiceCard
+                title="Browse every training problem"
+                description="Open the full Training Troubleshooter for less urgent questions."
+                onPress={() => navigation.setParams({ mode: 'standard' })}
+              />
+            </> : <>
+              <ChoiceCard
+                title="Training safety and practical guide"
+                description="Equipment, rewards, stress signals, and choosing qualified help."
+                onPress={() => setStep('guide')}
+              />
+              {troubleshooterConcerns.map((item) => (
+                <ChoiceCard key={item.id} title={item.title} description={item.description} onPress={() => { setTopicId(item.id); setStep('scenario'); }} />
+              ))}
+            </>}
         </View>
       ) : null}
 
@@ -175,7 +219,7 @@ export function DogTroubleshooterScreen({ navigation }: DogTroubleshooterScreenP
 
       {step === 'response' ? (
         <View accessibilityRole="list" style={styles.list}>
-          {responseStateOptions.map((option) => <ChoiceCard key={option.id} title={option.label} onPress={() => { setResponseState(option.id); setStep('environment'); }} />)}
+          {(isHelpNow ? helpNowResponseOptions : responseStateOptions).map((option) => <ChoiceCard key={option.id} title={option.label} onPress={() => { setResponseState(option.id); setStep('environment'); }} />)}
         </View>
       ) : null}
 
@@ -196,14 +240,28 @@ export function DogTroubleshooterScreen({ navigation }: DogTroubleshooterScreenP
       ) : null}
 
       {step === 'result' && result ? (
-        <TroubleshooterResultView
-          dogName={dogName}
-          result={result}
-          savingOutcome={savingOutcome}
-          saveError={saveError}
-          onReportOutcome={(outcome) => { void reportOutcome(outcome); }}
-          onOpenLesson={(lessonId) => navigation.navigate('LessonSummary', { lessonId })}
-        />
+        isHelpNow ? (
+          <HelpNowResultView
+            key={`${result.protocol.id}-${result.fallbackLevel}`}
+            dogName={dogName}
+            result={result}
+            savingOutcome={savingOutcome}
+            saveError={saveError}
+            reportedOutcome={reportedOutcome}
+            onReportOutcome={(outcome) => { void reportOutcome(outcome); }}
+            onOpenFullPlan={() => navigation.setParams({ mode: 'standard' })}
+            onStartOver={resetFlow}
+          />
+        ) : (
+          <TroubleshooterResultView
+            dogName={dogName}
+            result={result}
+            savingOutcome={savingOutcome}
+            saveError={saveError}
+            onReportOutcome={(outcome) => { void reportOutcome(outcome); }}
+            onOpenLesson={(lessonId) => navigation.navigate('LessonSummary', { lessonId })}
+          />
+        )
       ) : null}
     </LessonScaffold>
   );
@@ -219,27 +277,27 @@ function ChoiceCard({ title, description, onPress }: { readonly title: string; r
   );
 }
 
-function screenTitle(step: FlowStep, dogName: string, concernTitle?: string): string {
+function screenTitle(step: FlowStep, dogName: string, concernTitle: string | undefined, isHelpNow: boolean): string {
   switch (step) {
-    case 'concern': return `What is ${dogName} struggling with?`;
+    case 'concern': return isHelpNow ? 'What is happening right now?' : `What is ${dogName} struggling with?`;
     case 'guide': return 'Train safely and humanely';
     case 'scenario': return 'Which description is closest?';
-    case 'body': return `How does ${dogName} look when it happens?`;
-    case 'response': return 'What can they do in that moment?';
-    case 'environment': return 'Where is this happening?';
-    case 'result': return concernTitle ? `${dogName}’s plan for: ${concernTitle}` : `${dogName}’s training plan`;
+    case 'body': return isHelpNow ? `Is it safe for ${dogName} to keep learning?` : `How does ${dogName} look when it happens?`;
+    case 'response': return isHelpNow ? `What can ${dogName} manage right now?` : 'What can they do in that moment?';
+    case 'environment': return isHelpNow ? 'Where are you right now?' : 'Where is this happening?';
+    case 'result': return isHelpNow ? `One step at a time with ${dogName}` : concernTitle ? `${dogName}’s plan for: ${concernTitle}` : `${dogName}’s training plan`;
   }
 }
 
-function screenIntro(step: FlowStep): string {
+function screenIntro(step: FlowStep, isHelpNow: boolean): string {
   switch (step) {
-    case 'concern': return 'Choose the closest match. The app will ask three short questions before suggesting a practical exercise.';
+    case 'concern': return isHelpNow ? 'Choose the closest match. Safety comes first, then the app will give you one clear action.' : 'Choose the closest match. The app will ask three short questions before suggesting a practical exercise.';
     case 'guide': return 'Use this reference before choosing equipment, rewards, or outside help.';
     case 'scenario': return 'Choose what you see most often. It does not need to be a perfect match.';
-    case 'body': return 'Body language changes whether training is appropriate or safety and health come first.';
-    case 'response': return 'This helps separate distraction, reward value, cue clarity, and session length.';
-    case 'environment': return 'Skills do not automatically transfer between places. Be specific but brief.';
-    case 'result': return 'Use the immediate exercise first. Related lessons are optional and appear after the fallback plan.';
+    case 'body': return isHelpNow ? 'If anyone could be hurt, your dog is panicking, or pain may be involved, training stops.' : 'Body language changes whether training is appropriate or safety and health come first.';
+    case 'response': return isHelpNow ? 'This checks whether the situation is easy enough for learning.' : 'This helps separate distraction, reward value, cue clarity, and session length.';
+    case 'environment': return isHelpNow ? 'A short description helps the app remember where this plan was tried.' : 'Skills do not automatically transfer between places. Be specific but brief.';
+    case 'result': return isHelpNow ? 'Complete only the action shown. Stop if safety or comfort gets worse.' : 'Use the immediate exercise first. Related lessons are optional and appear after the fallback plan.';
   }
 }
 

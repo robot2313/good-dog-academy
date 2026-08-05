@@ -353,6 +353,14 @@ export const styles = StyleSheet.create({
   homePlanLessonDescription: { color: '#667069', fontSize: 14, lineHeight: 20 },
   homePrimaryButton: { minHeight: 54, margin: 18, borderRadius: 15, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, backgroundColor: '#2F604A', shadowColor: '#18372B', shadowOpacity: 0.16, shadowRadius: 9, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
   homePrimaryButtonText: { color: '#FFFFFF', fontSize: 16, lineHeight: 21, fontWeight: '900' },
+  homeHelpNowCard: { width: '100%', minHeight: 112, flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: 22, padding: 18, backgroundColor: '#18372B', borderWidth: 1, borderColor: '#2F604A', shadowColor: '#18372B', shadowOpacity: 0.16, shadowRadius: 14, shadowOffset: { width: 0, height: 7 }, elevation: 5 },
+  homeHelpNowCopy: { flex: 1, minWidth: 0, gap: 3 },
+  homeHelpNowKicker: { color: '#E8A17F', fontSize: 9, lineHeight: 13, letterSpacing: 1.4, fontWeight: '900' },
+  homeHelpNowTitle: { color: '#FFFFFF', fontSize: 19, lineHeight: 24, fontWeight: '900' },
+  homeHelpNowBody: { color: 'rgba(255,255,255,0.72)', fontSize: 13, lineHeight: 19 },
+  homeHelpNowAction: { minWidth: 58, minHeight: 58, alignItems: 'center', justifyContent: 'center', borderRadius: 18, backgroundColor: '#C56F4A' },
+  homeHelpNowActionText: { color: '#FFFFFF', fontSize: 9, lineHeight: 12, letterSpacing: 0.7, fontWeight: '900' },
+  homeHelpNowArrow: { color: '#FFFFFF', fontSize: 20, lineHeight: 22, fontWeight: '900' },
 
   // ---- Get Ready (lesson summary) image ----
   getReadyImageCard: { alignSelf: 'center', width: '76%' },

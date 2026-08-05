@@ -65,6 +65,15 @@ describe('Home navigation', () => {
     expect(await view.findByRole('header', { name: 'Journey destination' })).toBeTruthy();
   });
 
+  it('opens Help Me Now in rapid mode from Home', async () => {
+    const view = renderTestApp();
+
+    fireEvent.press(await view.findByRole('button', { name: 'Help me now with a training problem' }));
+
+    expect(await view.findByRole('header', { name: 'Help Me Now destination' })).toBeTruthy();
+    expect(view.getByText('help-now')).toBeTruthy();
+  });
+
   it('reloads the selected-dog plan whenever Home regains focus', async () => {
     const view = renderTestApp();
 
@@ -146,12 +155,24 @@ function JourneyDestination(): React.JSX.Element {
   );
 }
 
+function TroubleshooterDestination({
+  route,
+}: NativeStackScreenProps<RootStackParamList, 'Troubleshooter'>): React.JSX.Element {
+  return (
+    <View>
+      <Text accessibilityRole="header">Help Me Now destination</Text>
+      <Text>{route.params?.mode ?? 'standard'}</Text>
+    </View>
+  );
+}
+
 function renderTestApp() {
   return render(
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ animation: 'none', headerShown: false }}>
         <Stack.Screen name="Main" component={MainTabs} />
         <Stack.Screen name="Journey" component={JourneyDestination} />
+        <Stack.Screen name="Troubleshooter" component={TroubleshooterDestination} />
         <Stack.Screen name="LessonSummary" component={LessonDestination} />
       </Stack.Navigator>
     </NavigationContainer>,
