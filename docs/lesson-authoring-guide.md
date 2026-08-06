@@ -37,7 +37,7 @@ Every `LessonDefinition` must contain:
 
 ## Difficulty and duration
 
-The initial catalogue maps Foundation to difficulty 1 and approximately 5–8 minutes, Developing to difficulty 2 and 7–12 minutes, and Advanced to difficulty 3 and 10–15 minutes. Levels 4 and 5 remain available for future reviewed progressions.
+The catalogue maps Foundation to difficulty 1 and approximately 5–8 minutes, Developing and support lessons to difficulty 2 and 7–12 minutes, Advanced and applied-practice lessons to difficulty 3 and 10–15 minutes, and reviewed maintenance lessons to difficulty 4 and approximately 13–16 minutes. Level 5 remains available for future specialist progressions.
 
 Higher difficulty must reflect a fair increase in duration, distance, distraction, complexity, generalisation, or environmental challenge. It must never mean harsher handling, corrections, intimidation, or forced exposure.
 
@@ -55,6 +55,9 @@ Higher difficulty must reflect a fair increase in duration, distance, distractio
 - Foundation lessons normally have no lesson prerequisite.
 - Developing lessons require the matching Foundation lesson.
 - Advanced lessons require the matching Developing lesson.
+- Support lessons normally require the matching Foundation lesson.
+- Applied-practice lessons may require both the matching Developing lesson and its support lesson.
+- Maintenance lessons may require both the matching Advanced lesson and its applied-practice lesson.
 - Do not create unrelated cross-skill chains without an explicit product and training rationale.
 - Every referenced ID must exist in the catalogue.
 - Circular and self-referential chains are prohibited and rejected during catalogue loading.

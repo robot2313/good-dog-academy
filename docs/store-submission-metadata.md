@@ -31,7 +31,7 @@ When something is not working, the Training Troubleshooter asks focused question
 Key features:
 
 - personalised dog profile and behaviour assessment;
-- 30 structured reward-based training lessons;
+- 60 structured reward-based training lessons;
 - daily training plans and guided sessions;
 - lesson library, search, filters, and journey progress;
 - training history, achievements, and progress tracking;

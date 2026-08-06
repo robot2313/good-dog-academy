@@ -76,7 +76,7 @@ describe('TodayScreen (Home)', () => {
 
     expect(view.queryByText("Today's lessons")).toBeNull();
     expect(view.queryByText(/focused lesson/)).toBeNull();
-    expect(view.queryByText(/Browse all 30 lessons/)).toBeNull();
+    expect(view.queryByText(/Browse all 60 lessons/)).toBeNull();
     expect(view.queryByText('Explore the Academy')).toBeNull();
   });
 

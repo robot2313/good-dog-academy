@@ -1,6 +1,6 @@
 # Good Dog Academy
 
-Good Dog Academy is an Expo React Native dog-training application focused on personalised, adaptive training. The current build includes production onboarding, a dog profile, deterministic behaviour assessment, and a validated 30-lesson immutable training catalogue.
+Good Dog Academy is an Expo React Native dog-training application focused on personalised, adaptive training. The current build includes production onboarding, a dog profile, deterministic behaviour assessment, and a validated 60-lesson immutable training catalogue.
 
 ## Current status
 
@@ -23,6 +23,7 @@ Completed milestones:
 - **Milestone 9 — Premium personalised experience:** warm editorial visual design, selected-dog identity, optional managed profile photography, production lesson imagery, and a dog-training troubleshooter.
 - **Milestone 10 — Release-ready MVP:** permanent app identity, production icon and splash branding, EAS build profiles, in-app privacy disclosure, confirmed local-data deletion, and an expanded adaptive Training Troubleshooter.
 - **Milestone 10.1 — Release candidate preparation (in progress):** physical-device smoke testing, public privacy-policy hosting, signed preview builds, screenshots, and store metadata. See the [release-candidate checklist](docs/milestone-10-1-release-candidate-checklist.md).
+- **Milestone 11 — Curriculum expansion:** the catalogue now contains 60 force-free lessons, with three additional support, applied-practice, and maintenance lessons for every behaviour skill. Thirty new lesson-image specifications are included; their temporary per-skill fallback images must be replaced before final media sign-off. See [Milestone 11 documentation](docs/milestone-11-curriculum-expansion.md).
 
 Not implemented yet:
 
@@ -157,7 +158,7 @@ Corrupt assessment data has a separate recoverable startup state. The app explai
 
 `LessonDefinition` records are bundled, deeply frozen application content. They are never stored in AsyncStorage and have no mutable repository. Startup loads and validates the complete catalogue, rejecting malformed definitions, unsupported skills, duplicate IDs, missing prerequisite references, and circular dependency chains with structured errors. Ordering is deterministic by difficulty and stable lesson ID.
 
-The initial catalogue contains 30 active lessons: Foundation, Developing, and Advanced lessons for Recall, Loose Lead Walking, Focus, Jumping, Barking, Chewing, Reactivity, House Training, Confidence, and Impulse Control. Definitions are organised into one module per skill under `src/features/lessons/catalogue/definitions`. All lessons use reward-based, force-free methods, practical safety notes, measurable criteria, and complete text-based instructions. Authoring rules are documented in [docs/lesson-authoring-guide.md](docs/lesson-authoring-guide.md).
+The expanded catalogue contains 60 active lessons: six lessons for each of Recall, Loose Lead Walking, Focus, Jumping, Barking, Chewing, Reactivity, House Training, Confidence, and Impulse Control. Every skill retains its Foundation, Developing, and Advanced core path and adds support, applied-practice, and maintenance content. Definitions are organised into one module per skill under `src/features/lessons/catalogue/definitions`. All lessons use reward-based, force-free methods, practical safety notes, measurable criteria, and complete text-based instructions. Authoring rules are documented in [docs/lesson-authoring-guide.md](docs/lesson-authoring-guide.md).
 
 `LessonProgress` is mutable per-Owner/per-Dog data stored through the standard repository abstraction. It tracks status, attempts, successful completions, performance, difficulty adjustment, unlock dates, and activity timestamps while referencing a stable immutable lesson ID.
 

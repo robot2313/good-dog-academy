@@ -12,7 +12,7 @@ describe('LessonLibraryService', () => {
     const items = new LessonLibraryService(productionCatalogue, sampleDog.id, []).getAllLessons();
 
     expect(items).toHaveLength(productionCatalogue.definitions.length);
-    expect(items).toHaveLength(30);
+    expect(items).toHaveLength(60);
     expect(items.every((item) => item.id && item.title && item.description && item.estimatedMinutes > 0 && item.keywords.length > 0)).toBe(true);
     expect(Object.isFrozen(items)).toBe(true);
     expect(Object.isFrozen(items[0].keywords)).toBe(true);

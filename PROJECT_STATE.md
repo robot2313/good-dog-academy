@@ -2,7 +2,7 @@
 
 ## Current checkpoint
 
-**Milestone 10 implementation is committed and pushed on `feature/milestone-10-release-readiness` at `0748023`. Milestone 10.1 release-candidate preparation is now in progress.**
+**Milestone 11 curriculum expansion is in progress on `feature/milestone-11-curriculum-expansion`. The catalogue has been expanded from 30 to 60 lessons and requires final verification plus media completion before release-candidate work resumes.**
 
 The warm editorial redesign and expanded adaptive Training Troubleshooter have received an Expo Go visual approval on a physical device. The complete destructive-data and relaunch smoke-test gate is still pending.
 
@@ -10,7 +10,7 @@ The warm editorial redesign and expanded adaptive Training Troubleshooter have r
 
 - Local Owner and Dog onboarding with optional managed dog photo
 - Deterministic behaviour assessment and personalised training plan
-- Thirty immutable reward-based lessons with search, filters, prerequisites, and journey states
+- Sixty immutable reward-based lessons with search, filters, prerequisites, and journey states
 - Guided lesson sessions, completion persistence, session history, and progress views
 - Warm bone, forest, sage, and clay visual system with selected-dog identity and production lesson photography
 - Adaptive Training Troubleshooter with thirteen topics, safety overrides, immediate exercises, fallback levels, saved outcomes, and a practical reference guide
@@ -25,6 +25,15 @@ The warm editorial redesign and expanded adaptive Training Troubleshooter have r
 - Confirmed production deletion of every registered app storage key and managed dog-photo directory
 - Atomic rollback if local record deletion cannot commit
 - TypeScript, 70 Jest suites / 483 tests, Git whitespace validation, and Android Metro bundling all passed before commit `0748023`
+
+## Milestone 11 curriculum expansion
+
+- Added three lessons to every behaviour skill: one support lesson, one applied-practice lesson, and one maintenance lesson
+- Preserved all 30 permanent existing lesson IDs and their original prerequisite chains
+- Added 30 new permanent lesson IDs with measurable completion criteria, practical troubleshooting, and safety guidance
+- Added image-generation specifications for all new lessons
+- Kept the existing 30 approved lesson photographs; the 30 new lessons currently use per-skill fallback imagery until unique photographs are generated and approved
+- Updated catalogue audits, library/coaching counts, architecture notes, store metadata, and authoring guidance for 60 lessons
 
 ## Milestone 10.1 release gates
 

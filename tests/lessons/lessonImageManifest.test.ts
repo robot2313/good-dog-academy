@@ -7,6 +7,38 @@ import {
 } from '../../src/features/lessons/coaching/lessonImageManifest';
 
 const activeLessonIds = productionLessonDefinitions.map((lesson) => lesson.id);
+const approvedUniqueLessonIds = new Set([
+  'recall-name-response',
+  'recall-short-distance',
+  'recall-around-distractions',
+  'loose-lead-reward-zone',
+  'loose-lead-direction-changes',
+  'loose-lead-real-world-distractions',
+  'focus-check-in',
+  'focus-hold-attention',
+  'focus-around-distractions',
+  'jumping-four-paws-down',
+  'jumping-calm-greetings',
+  'jumping-visitors-and-excitement',
+  'barking-identify-triggers',
+  'barking-quiet-reinforcement',
+  'barking-real-world-management',
+  'chewing-appropriate-items',
+  'chewing-redirection-routine',
+  'chewing-independence-and-prevention',
+  'reactivity-safe-distance',
+  'reactivity-look-and-disengage',
+  'reactivity-controlled-exposure',
+  'house-training-routine',
+  'house-training-signal-and-reward',
+  'house-training-reliability',
+  'confidence-choice-and-exploration',
+  'confidence-new-surfaces-and-sounds',
+  'confidence-new-environments',
+  'impulse-control-wait-for-reward',
+  'impulse-control-doorways',
+  'impulse-control-real-world-distractions',
+]);
 
 describe('lesson image manifest', () => {
   it('covers every active lesson id with no omissions', () => {
@@ -48,13 +80,20 @@ describe('lesson image manifest', () => {
     expect(getLessonImageSource(null)).toBe(getLessonImageSource('unknown', null));
   });
 
-  it('serves a unique photograph for every active lesson (no shared fallback renders)', () => {
+  it('serves approved unique photographs and safe skill fallbacks for lessons awaiting images', () => {
     for (const id of activeLessonIds) {
       const entry = lessonImageManifest[id];
-      expect(entry.hasUniqueImage).toBe(true);
-      // The lesson renders its own photo, distinct from the shared skill fallback.
+      const skillFallback = getLessonImageSource('unknown-lesson', entry.skill);
+
       expect(getLessonImageSource(id, entry.skill)).toBe(entry.source);
-      expect(entry.source).not.toBe(getLessonImageSource('unknown-lesson', entry.skill));
+
+      if (approvedUniqueLessonIds.has(id)) {
+        expect(entry.hasUniqueImage).toBe(true);
+        expect(entry.source).not.toBe(skillFallback);
+      } else {
+        expect(entry.hasUniqueImage).toBe(false);
+        expect(entry.source).toBe(skillFallback);
+      }
     }
   });
 

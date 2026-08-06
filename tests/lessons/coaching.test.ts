@@ -9,7 +9,7 @@ describe('lesson coaching guidance', () => {
   const lessons = loadBundledLessonCatalogue().definitions;
 
   it('builds a concise, immutable three-stage roadmap for every bundled lesson', () => {
-    expect(lessons).toHaveLength(30);
+    expect(lessons).toHaveLength(60);
 
     for (const lesson of lessons) {
       const flow = createLessonFlow(lesson);
