@@ -1,0 +1,9 @@
+node_modules/
+.expo/
+dist/
+*.log
+.DS_Store
+
+# Local assistant/tooling files are never part of an Expo build upload.
+.claude/
+npx.cmd

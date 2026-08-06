@@ -20,8 +20,9 @@ Completed milestones:
 - **Milestones 7.2 and 7.3 — Lesson Library UI, Search, and Filters:** the Academy tab now provides an accessible, phone-friendly lesson browser with selected-dog context, deterministic skill sections, textual progress states, prerequisite guidance, service-backed search, combinable filters, distinct recovery states, and a minimal safe summary route. See [Milestones 7.2 and 7.3 documentation](docs/milestone-7-2-7-3-lesson-library-ui-search-filters.md).
 - **Milestone 7.4 — Functional training experience:** Today plans, lesson preparation, guided sessions, completion persistence, and one-time celebration now form a complete local training loop.
 - **Milestone 8 — Training history and progress:** saved sessions can be reviewed from the Progress experience, with per-dog history and detail views.
-- **Milestone 9 — Premium personalised experience:** dark charcoal-and-gold visual design, selected-dog identity, optional managed profile photography, production lesson imagery, and a dog-training troubleshooter.
-- **Milestone 10 — Release-ready MVP (in progress):** permanent app identity, production icon and splash branding, EAS build profiles, in-app privacy disclosure, and confirmed local-data deletion. See [Milestone 10 documentation](docs/milestone-10-release-readiness.md).
+- **Milestone 9 — Premium personalised experience:** warm editorial visual design, selected-dog identity, optional managed profile photography, production lesson imagery, and a dog-training troubleshooter.
+- **Milestone 10 — Release-ready MVP:** permanent app identity, production icon and splash branding, EAS build profiles, in-app privacy disclosure, confirmed local-data deletion, and an expanded adaptive Training Troubleshooter.
+- **Milestone 10.1 — Release candidate preparation (in progress):** physical-device smoke testing, public privacy-policy hosting, signed preview builds, screenshots, and store metadata. See the [release-candidate checklist](docs/milestone-10-1-release-candidate-checklist.md).
 
 Not implemented yet:
 

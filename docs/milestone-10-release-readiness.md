@@ -12,7 +12,7 @@ Turn the verified local MVP into a buildable, reviewable release candidate witho
 - iOS bundle identifier: `com.robot2313.gooddogacademy`
 - Android package: `com.robot2313.gooddogacademy`
 - URL scheme: `gooddogacademy`
-- Native appearance: dark, with `#0E0E0E` launch background
+- Native appearance: light, with the warm bone `#F5F0E6` launch background
 - Production assets: `assets/branding/app-icon.png` and `assets/branding/app-mark.png`
 
 The package identifiers are permanent release identity. Changing either after publication would create a different store application.
@@ -38,7 +38,7 @@ The Dog tab links to an in-app **Privacy and Your Data** screen. The privacy con
 - `preview`: internal release-candidate builds
 - `production`: store-targeted builds with locally controlled version numbers
 
-Creating signed builds requires the product owner's Expo account and platform credentials. Store submission is not part of this milestone branch.
+Creating signed builds requires the product owner's Expo account and platform credentials. Store submission is handled by Milestone 10.1 after this implementation milestone.
 
 ## Verification gate
 
@@ -54,4 +54,4 @@ Before approval to commit:
 
 ## Store work still required
 
-The in-app disclosure does not replace the public privacy-policy URL required in store listing metadata. A hosted policy, screenshots, listing copy, ratings questionnaires, data-safety declarations, signed preview builds, and final human device review remain release-management tasks.
+The in-app disclosure does not replace the public privacy-policy URL required in store listing metadata. A hosted policy, screenshots, listing copy, ratings questionnaires, data-safety declarations, signed preview builds, and the complete human device gate are tracked in `docs/milestone-10-1-release-candidate-checklist.md`.
