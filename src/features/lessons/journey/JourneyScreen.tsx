@@ -69,7 +69,7 @@ export function JourneyScreen({ navigation }: Props): React.JSX.Element {
       {completedCount} of {lessons.length} lessons complete
     </Text>
     <Text style={styles.journeyIntro}>
-      Follow the path from where you started. Tap any lesson to open it.
+      This is your recommended step-by-step path. You can also choose any category or lesson from Home or the Academy without changing this Journey.
     </Text>
 
     {groups.map((group) => (

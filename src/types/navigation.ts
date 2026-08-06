@@ -1,3 +1,5 @@
+import type { BehaviourSkill } from '../domain/models';
+import type { LessonCollectionId } from '../features/lessons/discovery';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
 export type RootStackParamList = {
@@ -11,10 +13,11 @@ export type RootStackParamList = {
   AssessmentResults: undefined;
   Main: NavigatorScreenParams<MainTabParamList> | undefined;
   Journey: undefined;
+  LessonBrowse: { skill?: BehaviourSkill; collectionId?: LessonCollectionId; recommended?: boolean } | undefined;
   Troubleshooter: { mode?: 'standard' | 'help-now' } | undefined;
   Privacy: undefined;
-  LessonSummary: { lessonId: string; dailyPlanId?: string };
-  LessonSession: { lessonId: string; dailyPlanId?: string };
+  LessonSummary: { lessonId: string; dailyPlanId?: string; selfDirected?: boolean };
+  LessonSession: { lessonId: string; dailyPlanId?: string; selfDirected?: boolean };
   SessionHistory: undefined;
   SessionDetail: { sessionId: string };
 };

@@ -85,6 +85,8 @@ Production content is reward-based, force-free, non-diagnostic, and usable witho
 
 The Daily Plan engine reads the frozen catalogue through the eligibility service and combines the latest profile-linked assessment, dog age, LessonProgress, and seven recent plans. It creates at most two typed items, persists once per owner/dog/local date in a transaction, and reuses the dated plan on subsequent requests. It never creates training sessions or achievements.
 
+Lesson discovery is a presentation-only layer over the immutable catalogue and derived `LessonLibraryItem` state. `src/features/lessons/discovery` defines the ten category entry points, curated puppy/adult/senior/rescue collections, and deterministic recommendations that prioritise in-progress and available lessons while varying skills. Discovery does not rewrite prerequisite definitions, progress records, or Daily Plans. The Journey and Daily Plan continue to use prerequisites as the recommended sequence. Academy, category, and life-stage browsing can explicitly open a lesson as self-directed training; session completion may bypass unmet prerequisites only for an unlinked, active, known-skill, age-eligible lesson. It cannot bypass age, inactive-content, ownership, storage-integrity, or Daily Plan checks.
+
 ## Behaviour assessment
 
 `BehaviourAssessment` belongs to both an Owner and a Dog. Each immutable record preserves every raw response, its stable question ID, typed skill, selected option, frequency value, and scoring direction, plus the calculated scores and unknown skills. Completing a new assessment appends a record; the BehaviourProfile points at the current assessment without deleting older history.

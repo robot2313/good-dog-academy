@@ -1,4 +1,5 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 
 import { productionLessonDefinitions } from '../../src/features/lessons/catalogue/definitions';
@@ -10,38 +11,7 @@ import {
 } from '../../src/features/lessons/coaching/lessonImageManifest';
 
 const activeLessonIds = productionLessonDefinitions.map((lesson) => lesson.id);
-const approvedUniqueLessonIds = new Set([
-  'recall-name-response',
-  'recall-short-distance',
-  'recall-around-distractions',
-  'loose-lead-reward-zone',
-  'loose-lead-direction-changes',
-  'loose-lead-real-world-distractions',
-  'focus-check-in',
-  'focus-hold-attention',
-  'focus-around-distractions',
-  'jumping-four-paws-down',
-  'jumping-calm-greetings',
-  'jumping-visitors-and-excitement',
-  'barking-identify-triggers',
-  'barking-quiet-reinforcement',
-  'barking-real-world-management',
-  'chewing-appropriate-items',
-  'chewing-redirection-routine',
-  'chewing-independence-and-prevention',
-  'reactivity-safe-distance',
-  'reactivity-look-and-disengage',
-  'reactivity-controlled-exposure',
-  'house-training-routine',
-  'house-training-signal-and-reward',
-  'house-training-reliability',
-  'confidence-choice-and-exploration',
-  'confidence-new-surfaces-and-sounds',
-  'confidence-new-environments',
-  'impulse-control-wait-for-reward',
-  'impulse-control-doorways',
-  'impulse-control-real-world-distractions',
-]);
+const approvedUniqueLessonIds = new Set(activeLessonIds);
 
 const approvedRealisticFallbacks = {
   barking: require('../../assets/lesson-images/by-lesson/barking-identify-triggers.jpg'),
@@ -118,20 +88,27 @@ describe('lesson image manifest', () => {
     }
   });
 
-  it('serves approved unique photographs and approved realistic fallbacks for lessons awaiting images', () => {
+  it('serves an approved unique realistic photograph for every active lesson', () => {
     for (const id of activeLessonIds) {
       const entry = lessonImageManifest[id];
-      const skillFallback = getLessonImageSource('unknown-lesson', entry.skill);
-
       expect(getLessonImageSource(id, entry.skill)).toBe(entry.source);
 
-      if (approvedUniqueLessonIds.has(id)) {
-        expect(entry.hasUniqueImage).toBe(true);
-      } else {
-        expect(entry.hasUniqueImage).toBe(false);
-        expect(entry.source).toBe(skillFallback);
-      }
+      expect(approvedUniqueLessonIds.has(id)).toBe(true);
+      expect(entry.hasUniqueImage).toBe(true);
+      expect(entry.source).toBeDefined();
     }
+  });
+
+  it('ships a non-trivial unique committed JPEG for every active lesson', () => {
+    const root = resolve(__dirname, '../..');
+    const hashes = new Set<string>();
+    for (const id of activeLessonIds) {
+      const imagePath = resolve(root, 'assets', 'lesson-images', 'by-lesson', `${id}.jpg`);
+      expect(existsSync(imagePath)).toBe(true);
+      expect(statSync(imagePath).size).toBeGreaterThan(60_000);
+      hashes.add(createHash('sha256').update(readFileSync(imagePath)).digest('hex'));
+    }
+    expect(hashes.size).toBe(activeLessonIds.length);
   });
 
   it('gives every spec a photorealistic prompt, humane negative prompt and id-based filename', () => {

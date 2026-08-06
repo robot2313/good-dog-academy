@@ -24,13 +24,14 @@ type LessonSummaryScreenViewProps = {
   loading: boolean;
   error: unknown | null;
   onRetry: () => void;
+  allowLockedStart?: boolean;
   onBack: () => void;
   onStart: () => void;
 };
 
 const fallbackEquipment = Object.freeze(['Small rewards your dog enjoys']);
 
-export function LessonSummaryScreenView({ lessonId, lessonDefinition, dogName, service, loading, error, onRetry, onBack, onStart }: LessonSummaryScreenViewProps): React.JSX.Element {
+export function LessonSummaryScreenView({ lessonId, lessonDefinition, dogName, service, loading, error, onRetry, allowLockedStart = false, onBack, onStart }: LessonSummaryScreenViewProps): React.JSX.Element {
   let lesson: LessonLibraryItem | null = null;
   let derivedError = error;
   if (!loading && !derivedError) {
@@ -60,7 +61,9 @@ export function LessonSummaryScreenView({ lessonId, lessonDefinition, dogName, s
   const illustrationLabel = lessonDefinition
     ? lessonIllustrationForSkill(lessonDefinition.skill).accessibilityLabel
     : undefined;
-  const canStart = lesson.state !== 'LOCKED' && definitionMatches;
+  const selfDirectedLock = lesson.state === 'LOCKED' && allowLockedStart ? lesson.lock : null;
+  const selfDirectedLockedLesson = selfDirectedLock !== null;
+  const canStart = (lesson.state !== 'LOCKED' || selfDirectedLockedLesson) && definitionMatches;
 
   return <LessonScaffold
     footer={<LessonActionBar
@@ -72,7 +75,11 @@ export function LessonSummaryScreenView({ lessonId, lessonDefinition, dogName, s
 
     <View style={styles.libraryLessonTopRow}>
       <Text style={styles.librarySkillLabel}>{skillLabel(lesson.skill)}</Text>
-      <LessonStateBadge state={lesson.state} />
+      {selfDirectedLock ? (
+        <View style={[styles.libraryStateBadge, styles.libraryStateAvailable]}>
+          <Text style={styles.libraryStateText}>Self-directed</Text>
+        </View>
+      ) : <LessonStateBadge state={lesson.state} />}
     </View>
     <Text accessibilityRole="header" style={styles.pageTitle}>{lesson.title}</Text>
     {lessonDefinition ? <Text style={styles.body}>{lessonDefinition.goal}</Text> : <Text style={styles.body}>{lesson.description}</Text>}
@@ -97,29 +104,37 @@ export function LessonSummaryScreenView({ lessonId, lessonDefinition, dogName, s
       </View>
     ) : null}
 
-    {lesson.state === 'LOCKED' ? (
+    {lesson.state === 'LOCKED' && !selfDirectedLockedLesson ? (
       <View accessible accessibilityLabel={`Locked. ${lesson.lock.reason}`} style={styles.librarySummaryLockCard}>
         <Text style={styles.libraryLockLabel}>WHY THIS IS LOCKED</Text>
         <Text style={styles.librarySummaryLockReason}>{lesson.lock.reason}</Text>
         {lesson.lock.missingPrerequisiteNames.length > 0 ? <Text style={styles.librarySummarySupportText}>Required first: {lesson.lock.missingPrerequisiteNames.join(', ')}</Text> : null}
       </View>
     ) : (
-      <View style={styles.card}>
-        <Text accessibilityRole="header" style={styles.sectionTitle}>Before we start</Text>
-        <Text style={styles.body}>Have everything within reach and choose a calm, safe place to practise.</Text>
-        <View style={styles.coachingListCard}>
-          {equipment.map((item, index) => (
-            <View key={`${lesson.id}-equipment-${index}`} style={styles.coachingListRow}>
+      <>
+        {selfDirectedLock ? (
+          <View accessible accessibilityLabel={`Self-directed lesson. ${selfDirectedLock.reason} You can still choose this lesson now.`} style={styles.librarySummaryNotice}>
+            <Text style={styles.librarySummaryNoticeTitle}>Later in the recommended Journey</Text>
+            <Text style={styles.librarySummarySupportText}>{selfDirectedLock.reason} That order is recommended, but you can still choose this lesson now.</Text>
+          </View>
+        ) : null}
+        <View style={styles.card}>
+          <Text accessibilityRole="header" style={styles.sectionTitle}>Before we start</Text>
+          <Text style={styles.body}>Have everything within reach and choose a calm, safe place to practise.</Text>
+          <View style={styles.coachingListCard}>
+            {equipment.map((item, index) => (
+              <View key={`${lesson.id}-equipment-${index}`} style={styles.coachingListRow}>
+                <Text accessible={false} style={styles.coachingBullet}>✓</Text>
+                <Text style={styles.coachingListText}>{item}</Text>
+              </View>
+            ))}
+            <View style={styles.coachingListRow}>
               <Text accessible={false} style={styles.coachingBullet}>✓</Text>
-              <Text style={styles.coachingListText}>{item}</Text>
+              <Text style={styles.coachingListText}>About {lesson.estimatedMinutes} minutes of relaxed practice time</Text>
             </View>
-          ))}
-          <View style={styles.coachingListRow}>
-            <Text accessible={false} style={styles.coachingBullet}>✓</Text>
-            <Text style={styles.coachingListText}>About {lesson.estimatedMinutes} minutes of relaxed practice time</Text>
           </View>
         </View>
-      </View>
+      </>
     )}
   </LessonScaffold>;
 }

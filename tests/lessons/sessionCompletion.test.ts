@@ -193,6 +193,40 @@ describe('LessonSessionCompletionService', () => {
     });
   });
 
+  it('allows an initialized locked lesson as self-directed training without weakening age rules', async () => {
+    const locked = await setup([foundationLesson, recallLesson], [
+      lessonProgress(),
+      lessonProgress({
+        id: 'recall-progress',
+        lessonId: recallLesson.id,
+        status: 'locked',
+        unlockedAt: null,
+      }),
+    ]);
+
+    const result = await locked.service.complete({
+      ...baseRequest,
+      lessonId: recallLesson.id,
+      allowPrerequisiteBypass: true,
+    });
+    expect(result.progressRecords.find((record) => record.lessonId === recallLesson.id)).toMatchObject({
+      status: 'completed',
+      attempts: 1,
+      successfulCompletions: 1,
+    });
+
+    const ageRestricted: LessonDefinition = { ...recallLesson, minimumDogAgeMonths: 999 };
+    const age = await setup([foundationLesson, ageRestricted], [
+      lessonProgress(),
+      lessonProgress({ id: 'age-progress', lessonId: recallLesson.id, status: 'locked', unlockedAt: null }),
+    ]);
+    await expect(age.service.complete({
+      ...baseRequest,
+      lessonId: recallLesson.id,
+      allowPrerequisiteBypass: true,
+    })).rejects.toMatchObject({ code: 'LESSON_LOCKED' });
+  });
+
   it('requires an initialized progress record', async () => {
     const { service } = await setup([foundationLesson], []);
     await expect(service.complete(baseRequest)).rejects.toMatchObject({

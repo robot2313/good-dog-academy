@@ -22,7 +22,7 @@ describe('Lesson Library navigation', () => {
     jest.useRealTimers();
   });
 
-  it('opens available and locked Get Ready screens through the existing Academy tab', async () => {
+  it('opens available and self-directed Get Ready screens through the Academy tab', async () => {
     const view = render(<App />);
     expect(await view.findByRole('button', { name: 'Your journey so far' })).toBeTruthy();
     fireEvent.press(view.getByText('Academy'));
@@ -41,9 +41,10 @@ describe('Lesson Library navigation', () => {
 
     fireEvent.press(view.getByRole('button', { name: 'Back' }));
     expect(await view.findByText('Lesson Library')).toBeTruthy();
-    fireEvent.press(view.getByRole('button', { name: 'Short-Distance Recall. Recall. Level 2. 9 minutes. Locked. Complete Name Response first.' }));
-    expect(await view.findByText('WHY THIS IS LOCKED')).toBeTruthy();
-    expect(view.getByText('Complete Name Response first.')).toBeTruthy();
-    expect(view.queryByRole('button', { name: 'Next' })).toBeNull();
+    fireEvent.press(view.getByRole('button', { name: /Short-Distance Recall.*Self-directed choice.*You can choose this lesson now/ }));
+    expect(await view.findByText('Later in the recommended Journey')).toBeTruthy();
+    expect(view.getByText('Self-directed')).toBeTruthy();
+    expect(view.getByText(/Complete Name Response first.*you can still choose this lesson now/i)).toBeTruthy();
+    expect(view.getByRole('button', { name: 'Next' })).toBeTruthy();
   });
 });

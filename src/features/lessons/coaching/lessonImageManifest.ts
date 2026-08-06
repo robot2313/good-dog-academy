@@ -15,8 +15,7 @@ export interface LessonImageManifestEntry extends LessonImageSpec {
   /**
    * True only when a verified, lesson-specific image is committed under
    * assets/lesson-images/by-lesson/ and wired into `uniqueLessonImageSources`.
-   * Otherwise the entry temporarily reuses an approved realistic photograph
-   * from the same skill until a lesson-specific photograph is approved.
+   * Every active production lesson now has a committed, lesson-specific realistic photograph.
    */
   readonly hasUniqueImage: boolean;
 }
@@ -26,8 +25,7 @@ export interface LessonImageManifestEntry extends LessonImageSpec {
  *
  * VISUAL POLICY LOCK: runtime lesson imagery must always be a real photograph.
  * The legacy category illustrations under `assets/lesson-images/<skill>.jpg`
- * are intentionally forbidden here. A lesson awaiting its own photograph may
- * temporarily reuse an approved real photograph from the same skill only.
+ * are intentionally forbidden here. Every active lesson must also have a committed unique photograph; the fallback exists only as a defensive guard for unknown IDs.
  *
  * React Native requires every asset to be referenced by a static, literal
  * `require()` path so the bundler can resolve it — no dynamic runtime paths.
@@ -92,6 +90,36 @@ const uniqueLessonImageSources: Readonly<Record<string, ImageSourcePropType>> =
     'impulse-control-wait-for-reward': require('../../../../assets/lesson-images/by-lesson/impulse-control-wait-for-reward.jpg') as ImageSourcePropType,
     'impulse-control-doorways': require('../../../../assets/lesson-images/by-lesson/impulse-control-doorways.jpg') as ImageSourcePropType,
     'impulse-control-real-world-distractions': require('../../../../assets/lesson-images/by-lesson/impulse-control-real-world-distractions.jpg') as ImageSourcePropType,
+    'recall-reward-reset': require('../../../../assets/lesson-images/by-lesson/recall-reward-reset.jpg') as ImageSourcePropType,
+    'recall-collar-touch-and-release': require('../../../../assets/lesson-images/by-lesson/recall-collar-touch-and-release.jpg') as ImageSourcePropType,
+    'recall-real-world-maintenance': require('../../../../assets/lesson-images/by-lesson/recall-real-world-maintenance.jpg') as ImageSourcePropType,
+    'loose-lead-stop-and-reset': require('../../../../assets/lesson-images/by-lesson/loose-lead-stop-and-reset.jpg') as ImageSourcePropType,
+    'loose-lead-sniffing-rewards': require('../../../../assets/lesson-images/by-lesson/loose-lead-sniffing-rewards.jpg') as ImageSourcePropType,
+    'loose-lead-longer-routes': require('../../../../assets/lesson-images/by-lesson/loose-lead-longer-routes.jpg') as ImageSourcePropType,
+    'focus-disengage-and-reset': require('../../../../assets/lesson-images/by-lesson/focus-disengage-and-reset.jpg') as ImageSourcePropType,
+    'focus-predictable-patterns': require('../../../../assets/lesson-images/by-lesson/focus-predictable-patterns.jpg') as ImageSourcePropType,
+    'focus-real-world-duration': require('../../../../assets/lesson-images/by-lesson/focus-real-world-duration.jpg') as ImageSourcePropType,
+    'jumping-station-on-a-mat': require('../../../../assets/lesson-images/by-lesson/jumping-station-on-a-mat.jpg') as ImageSourcePropType,
+    'jumping-greetings-with-movement': require('../../../../assets/lesson-images/by-lesson/jumping-greetings-with-movement.jpg') as ImageSourcePropType,
+    'jumping-maintenance-in-public': require('../../../../assets/lesson-images/by-lesson/jumping-maintenance-in-public.jpg') as ImageSourcePropType,
+    'barking-meet-needs-first': require('../../../../assets/lesson-images/by-lesson/barking-meet-needs-first.jpg') as ImageSourcePropType,
+    'barking-doorbell-routine': require('../../../../assets/lesson-images/by-lesson/barking-doorbell-routine.jpg') as ImageSourcePropType,
+    'barking-recovery-and-maintenance': require('../../../../assets/lesson-images/by-lesson/barking-recovery-and-maintenance.jpg') as ImageSourcePropType,
+    'chewing-puppy-teething-plan': require('../../../../assets/lesson-images/by-lesson/chewing-puppy-teething-plan.jpg') as ImageSourcePropType,
+    'chewing-leave-and-trade': require('../../../../assets/lesson-images/by-lesson/chewing-leave-and-trade.jpg') as ImageSourcePropType,
+    'chewing-rotation-and-settle': require('../../../../assets/lesson-images/by-lesson/chewing-rotation-and-settle.jpg') as ImageSourcePropType,
+    'reactivity-emergency-u-turn': require('../../../../assets/lesson-images/by-lesson/reactivity-emergency-u-turn.jpg') as ImageSourcePropType,
+    'reactivity-recovery-after-trigger': require('../../../../assets/lesson-images/by-lesson/reactivity-recovery-after-trigger.jpg') as ImageSourcePropType,
+    'reactivity-generalisation-and-maintenance': require('../../../../assets/lesson-images/by-lesson/reactivity-generalisation-and-maintenance.jpg') as ImageSourcePropType,
+    'house-training-accident-reset': require('../../../../assets/lesson-images/by-lesson/house-training-accident-reset.jpg') as ImageSourcePropType,
+    'house-training-clear-outdoor-signal': require('../../../../assets/lesson-images/by-lesson/house-training-clear-outdoor-signal.jpg') as ImageSourcePropType,
+    'house-training-new-places-and-weather': require('../../../../assets/lesson-images/by-lesson/house-training-new-places-and-weather.jpg') as ImageSourcePropType,
+    'confidence-consent-based-handling': require('../../../../assets/lesson-images/by-lesson/confidence-consent-based-handling.jpg') as ImageSourcePropType,
+    'confidence-recovery-after-surprise': require('../../../../assets/lesson-images/by-lesson/confidence-recovery-after-surprise.jpg') as ImageSourcePropType,
+    'confidence-generalise-brave-choices': require('../../../../assets/lesson-images/by-lesson/confidence-generalise-brave-choices.jpg') as ImageSourcePropType,
+    'impulse-control-leave-it': require('../../../../assets/lesson-images/by-lesson/impulse-control-leave-it.jpg') as ImageSourcePropType,
+    'impulse-control-settle-on-mat': require('../../../../assets/lesson-images/by-lesson/impulse-control-settle-on-mat.jpg') as ImageSourcePropType,
+    'impulse-control-maintenance-and-release': require('../../../../assets/lesson-images/by-lesson/impulse-control-maintenance-and-release.jpg') as ImageSourcePropType,
   });
 
 function fallbackForSkill(skill: string): ImageSourcePropType {

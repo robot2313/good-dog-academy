@@ -14,7 +14,7 @@ describe('LessonThumbnail', () => {
       />,
     );
     expect(view.getByRole('image', {
-      name: 'Name Response lesson illustration',
+      name: 'Name Response lesson photograph',
     })).toBeTruthy();
     expect(view.UNSAFE_getByType(Image).props.source)
       .toBe(getLessonImageSource('recall-name-response', 'recall'));
@@ -24,7 +24,7 @@ describe('LessonThumbnail', () => {
   it('renders a safe visual fallback when no skill is available', () => {
     const view = render(<LessonThumbnail skill={null} lessonTitle="Unknown lesson" />);
     expect(view.getByRole('image', {
-      name: 'Unknown lesson lesson illustration',
+      name: 'Unknown lesson lesson photograph',
     })).toBeTruthy();
   });
 

@@ -35,6 +35,30 @@ describe('Lesson Library UI', () => {
     expect(view.getByRole('button', { name: `${recallLesson.title}. Recall. Level 2. 5 minutes. Locked. Complete ${foundationLesson.title} first.` })).toBeTruthy();
   });
 
+  it('limits the visible library to a discovery category scope', () => {
+    const view = renderLibrary({ scope: { type: 'skill', skill: 'recall' } });
+
+    expect(view.getByLabelText('1 lesson')).toBeTruthy();
+    expect(view.getByRole('header', { name: 'Recall lessons' })).toBeTruthy();
+    expect(view.getByText(recallLesson.title)).toBeTruthy();
+    expect(view.queryByText(foundationLesson.title)).toBeNull();
+    expect(view.queryByText(advancedLesson.title)).toBeNull();
+  });
+
+  it('presents locked category lessons as self-directed choices when enabled', () => {
+    const onOpenLesson = jest.fn();
+    const view = renderLibrary({
+      scope: { type: 'skill', skill: 'recall' },
+      allowLockedSelection: true,
+      onOpenLesson,
+    });
+
+    expect(view.getByText('Self-directed')).toBeTruthy();
+    expect(view.getByText(/You can choose this lesson now/)).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: new RegExp(`^${recallLesson.title}`) }));
+    expect(onOpenLesson).toHaveBeenCalledWith(recallLesson.id);
+  });
+
   it('opens both available and locked lesson summaries without starting training', () => {
     const onOpenLesson = jest.fn();
     const view = renderLibrary({ onOpenLesson });
@@ -195,6 +219,16 @@ describe('Get Ready (lesson summary)', () => {
     expect(view.getByText(`Complete ${foundationLesson.title} first.`)).toBeTruthy();
     expect(view.getByText(`Required first: ${foundationLesson.title}`)).toBeTruthy();
     expect(view.queryByRole('button', { name: 'Next' })).toBeNull();
+  });
+
+  it('allows a category-selected lesson later in the Journey to start as self-directed training', () => {
+    const onStart = jest.fn();
+    const view = render(<LessonSummaryScreenView lessonId={recallLesson.id} lessonDefinition={recallLesson} dogName="Scout" service={availableService} loading={false} error={null} onRetry={jest.fn()} allowLockedStart onBack={jest.fn()} onStart={onStart} />);
+
+    expect(view.getByText('Later in the recommended Journey')).toBeTruthy();
+    expect(view.getByText('Self-directed')).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: 'Next' }));
+    expect(onStart).toHaveBeenCalledTimes(1);
   });
 
   it('handles invalid lesson IDs safely and returns to the library', () => {

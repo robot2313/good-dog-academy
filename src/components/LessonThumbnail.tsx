@@ -17,7 +17,7 @@ export function LessonThumbnail({
   lessonTitle,
   decorative = false,
 }: LessonThumbnailProps): React.JSX.Element {
-  const accessibilityLabel = `${lessonTitle} lesson illustration`;
+  const accessibilityLabel = `${lessonTitle} lesson photograph`;
 
   const skillMark = skill ? skill.split('-').map((w) => w[0]?.toUpperCase()).join('') : 'G';
   const imageSource = skill ? getLessonImageSource(lessonId, skill) : null;

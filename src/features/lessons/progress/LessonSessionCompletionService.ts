@@ -60,6 +60,7 @@ export type CompleteLessonSessionRequest = {
   readonly startedAt: string;
   readonly rating: LessonPerformanceRating;
   readonly notes: string;
+  readonly allowPrerequisiteBypass?: boolean;
 };
 
 export type LessonSessionCompletionResult = {
@@ -173,7 +174,13 @@ export class LessonSessionCompletionService {
           dogAgeMonthsAt(dog, completedAt),
           dogProgress,
         );
-        if (!eligibility.eligible) {
+        const prerequisiteBypassAllowed = request.allowPrerequisiteBypass === true
+          && request.dailyPlanId === null
+          && eligibility.isActive
+          && eligibility.isKnownSkill
+          && eligibility.ageEligible
+          && eligibility.reasons.every((reason) => reason === 'PREREQUISITES_NOT_MET' || reason === 'LESSON_LOCKED');
+        if (!eligibility.eligible && !prerequisiteBypassAllowed) {
           throw new LessonSessionCompletionError(
             eligibility.status === 'locked' ? 'LESSON_LOCKED' : 'LESSON_INELIGIBLE',
             { lessonId: lesson.id, reasons: eligibility.reasons },

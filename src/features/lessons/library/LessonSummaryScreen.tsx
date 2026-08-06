@@ -22,10 +22,12 @@ export function LessonSummaryScreen({ navigation, route }: Props): React.JSX.Ele
     loading={loading}
     error={error}
     onRetry={retry}
+    allowLockedStart={route.params.selfDirected === true}
     onBack={() => navigation.goBack()}
     onStart={() => navigation.navigate('LessonSession', {
       lessonId: route.params.lessonId,
       ...(route.params.dailyPlanId ? { dailyPlanId: route.params.dailyPlanId } : {}),
+      ...(route.params.selfDirected ? { selfDirected: true } : {}),
     })}
   />;
 }

@@ -10,6 +10,7 @@ import { PrimaryButton } from '../../../components/PrimaryButton';
 import { SecondaryTextButton } from '../../../components/SecondaryTextButton';
 import { behaviourSkills, type BehaviourSkill, type LessonDifficultyLevel, type LessonId } from '../../../domain/models';
 import { styles } from '../../../theme/styles';
+import { lessonsForDiscoveryScope, type LessonDiscoveryScope } from '../discovery';
 import { LessonLibraryCard } from './LessonLibraryCard';
 import { LessonLibraryFilterChip } from './LessonLibraryFilterChip';
 import { lessonDifficultyLabels, lessonLibraryErrorMessage, lessonStateLabels, skillLabel } from './lessonLibraryPresentation';
@@ -18,6 +19,8 @@ import type { LessonLibraryItem, LessonState } from './lessonLibraryTypes';
 
 type LessonLibraryScreenViewProps = {
   hero?: React.JSX.Element;
+  scope?: LessonDiscoveryScope;
+  allowLockedSelection?: boolean;
   dogName: string | null;
   service: LessonLibraryService;
   loading: boolean;
@@ -35,7 +38,7 @@ type LibrarySection = {
 const difficultyOptions: readonly LessonDifficultyLevel[] = [1, 2, 3, 4, 5];
 const stateOptions: readonly LessonState[] = ['AVAILABLE', 'LOCKED', 'IN_PROGRESS', 'COMPLETED'];
 
-export function LessonLibraryScreenView({ hero, dogName, service, loading, error, onRetry, onOpenLesson }: LessonLibraryScreenViewProps): React.JSX.Element {
+export function LessonLibraryScreenView({ hero, scope = { type: 'all' }, allowLockedSelection = false, dogName, service, loading, error, onRetry, onOpenLesson }: LessonLibraryScreenViewProps): React.JSX.Element {
   const [query, setQuery] = useState('');
   const [selectedSkill, setSelectedSkill] = useState<BehaviourSkill | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<LessonDifficultyLevel | null>(null);
@@ -48,12 +51,12 @@ export function LessonLibraryScreenView({ hero, dogName, service, loading, error
   let sections: readonly LibrarySection[] = [];
   if (!loading && !derivedError) {
     try {
-      allLessons = service.getAllLessons();
-      matchingLessons = service.queryLessons(query, {
+      allLessons = lessonsForDiscoveryScope(service.getAllLessons(), scope);
+      matchingLessons = lessonsForDiscoveryScope(service.queryLessons(query, {
         skill: selectedSkill ?? undefined,
         difficulty: selectedDifficulty ?? undefined,
         state: selectedState ?? undefined,
-      });
+      }), scope);
       sections = service.getGroupedLessons(matchingLessons).map((group) => ({ skill: group.skill, title: group.title, data: group.lessons }));
     } catch (cause) {
       derivedError = cause;
@@ -164,7 +167,7 @@ export function LessonLibraryScreenView({ hero, dogName, service, loading, error
         <Text accessibilityLiveRegion="polite" accessibilityLabel={resultLabel} style={styles.libraryResultCount}>{resultLabel}</Text>
       </View>}
       renderSectionHeader={({ section }) => <View accessible accessibilityRole="header" accessibilityLabel={`${section.title} lessons`} style={styles.librarySectionHeader}><Text style={styles.librarySectionTitle}>{section.title}</Text><Text style={styles.librarySectionCount}>{section.data.length}</Text></View>}
-      renderItem={({ item }) => <View style={styles.libraryCardSpacing}><LessonLibraryCard lesson={item} onPress={() => onOpenLesson(item.id)} /></View>}
+      renderItem={({ item }) => <View style={styles.libraryCardSpacing}><LessonLibraryCard lesson={item} allowLockedSelection={allowLockedSelection} onPress={() => onOpenLesson(item.id)} /></View>}
       ListEmptyComponent={<View style={styles.libraryNoResultsCard}>
         <Text style={styles.sectionTitle}>No lessons match your search</Text>
         <Text style={styles.body}>Try a different phrase or remove one of the active filters.</Text>

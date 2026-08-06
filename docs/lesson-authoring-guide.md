@@ -110,7 +110,7 @@ The loader validates definitions during normal application initialization. It re
 
 - Lesson and skill imagery must be **photorealistic photography only**.
 - Cartoons, illustrations, animation stills, vector art, paintings, sketches, emoji, CGI, and 3D renders are prohibited in the app.
-- A lesson without its own approved photograph may temporarily reuse an approved realistic photograph from the same skill.
+- Every active production lesson must have its own committed, approved realistic photograph before release. Same-skill fallback images exist only as a defensive guard for unknown IDs and are not an acceptable media-completion state.
 - Legacy category illustrations under `assets/lesson-images/<skill>.jpg` must never be wired into runtime manifests or components.
 - Every generation prompt must explicitly request a photorealistic documentary-style colour photograph and explicitly reject cartoon, illustration, CGI, render, and related styles.
 - Automated tests must fail if a runtime fallback points to a legacy category illustration.
@@ -132,5 +132,7 @@ Future media manifests must reference the permanent lesson ID plus their own med
 - [ ] Language is friendly, non-judgmental, and uses Australian/British spelling.
 - [ ] Methods are reward-based, force-free, choice-aware, and humane.
 - [ ] Safety notes address the actual risks and appropriate professional support.
+- [ ] A unique realistic photograph is committed and wired into `uniqueLessonImageSources`.
+- [ ] Puppy, adult, senior, or rescue collection membership is reviewed where relevant.
 - [ ] Inactive and content-version effects on existing progress have been reviewed.
 - [ ] Catalogue, policy, TypeScript, Expo Doctor, and Android export checks pass.

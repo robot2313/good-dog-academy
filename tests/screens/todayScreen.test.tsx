@@ -52,6 +52,20 @@ describe('TodayScreen (Home)', () => {
     expect(navigate).toHaveBeenCalledWith('Journey');
   });
 
+  it('opens category and dog-stage lesson browsing without changing the Journey', () => {
+    mockUseTodayPlan.mockReturnValue(result());
+    const { view, navigate } = renderHome();
+
+    fireEvent.press(view.getByRole('button', { name: /^House Training\./ }));
+    expect(navigate).toHaveBeenCalledWith('LessonBrowse', { skill: 'house-training' });
+
+    fireEvent.press(view.getByRole('button', { name: /^Puppy\./ }));
+    expect(navigate).toHaveBeenCalledWith('LessonBrowse', { collectionId: 'puppy' });
+
+    fireEvent.press(view.getByRole('button', { name: 'Your journey so far' }));
+    expect(navigate).toHaveBeenCalledWith('Journey');
+  });
+
   it('shows the new-user welcome when the dog has no sessions yet', () => {
     mockUseTodayPlan.mockReturnValue(result());
     mockUseLibrary.mockReturnValue(libraryValue({ progressRecords: [] }));

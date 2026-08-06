@@ -109,6 +109,7 @@ export function LessonSessionScreen({ navigation, route }: Props): React.JSX.Ele
         startedAt: state.startedAt,
         rating: state.selectedRating,
         notes: createGuidedSessionNote(state, lesson?.steps.length ?? 1),
+        allowPrerequisiteBypass: route.params.selfDirected === true && route.params.dailyPlanId === undefined,
       });
       // Progress is now persisted AND the shared lesson-library state has been
       // refreshed by completeLessonSession. Return to Home so it renders the
@@ -145,7 +146,8 @@ export function LessonSessionScreen({ navigation, route }: Props): React.JSX.Ele
       <ErrorState message="This lesson is no longer available." onRetry={() => navigation.goBack()} actionTitle="Back to lesson" />
     </AppScreen>;
   }
-  if (summary.state === 'LOCKED' || !lesson.isActive) {
+  const selfDirectedLockedLesson = summary.state === 'LOCKED' && route.params.selfDirected === true && route.params.dailyPlanId === undefined;
+  if ((summary.state === 'LOCKED' && !selfDirectedLockedLesson) || !lesson.isActive) {
     return <AppScreen>
       <SecondaryTextButton title="Back to lesson" onPress={() => navigation.goBack()} />
       <View style={styles.errorCard}>

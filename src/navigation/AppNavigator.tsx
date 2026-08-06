@@ -23,6 +23,7 @@ import { AssessmentSectionScreen } from '../features/assessment/screens/Assessme
 import { LessonSummaryScreen } from '../features/lessons/library/LessonSummaryScreen';
 import { LessonSessionScreen } from '../features/lessons/session/LessonSessionScreen';
 import { JourneyScreen } from '../features/lessons/journey/JourneyScreen';
+import { LessonBrowseScreen } from '../features/lessons/discovery/LessonBrowseScreen';
 import { DogTroubleshooterScreen } from '../features/troubleshooter/DogTroubleshooterScreen';
 import { PrivacyScreen } from '../features/privacy/PrivacyScreen';
 
@@ -53,6 +54,7 @@ export function AppNavigator(): React.JSX.Element {
         {status.state === 'complete' ? <>
             <Stack.Screen name="Main" component={MainTabs} />
             <Stack.Screen name="Journey" component={JourneyScreen} />
+            <Stack.Screen name="LessonBrowse" component={LessonBrowseScreen} />
             <Stack.Screen name="Troubleshooter" component={DogTroubleshooterScreen} />
             <Stack.Screen name="Privacy" component={PrivacyScreen} />
             <Stack.Screen name="LessonSummary" component={LessonSummaryScreen} />

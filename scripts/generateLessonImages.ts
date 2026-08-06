@@ -230,13 +230,12 @@ function buildDoc(states: readonly LessonState[]): string {
   lines.push('## Status legend');
   lines.push('');
   lines.push('- `VERIFIED REALISTIC IMAGE EXISTS` — a real photograph is committed and validated.');
-  lines.push('- `NOT YET CREATED` — no unique per-lesson image yet; the app temporarily reuses an approved realistic photograph from the same skill.');
+  lines.push('- `NOT YET CREATED` — release-blocking: the lesson still needs its unique realistic photograph.');
   lines.push('- `REJECTED CARTOON OR ILLUSTRATION` — a produced image was rejected for style/safety and must be redone.');
   lines.push('');
   lines.push('> **Visual policy lock:** legacy category illustrations under');
   lines.push('> `assets/lesson-images/<skill>.jpg` are rejected and never used at runtime.');
-  lines.push('> Lessons awaiting a unique image temporarily reuse an approved realistic');
-  lines.push('> photograph from the same skill until their own photograph is approved.');
+  lines.push('> Every active lesson must have a committed unique realistic photograph before release.');
   lines.push('');
   lines.push(`## Lessons (${now} active)`);
   lines.push('');

@@ -21,15 +21,15 @@ export function skillLabel(skill: BehaviourSkill): string {
   return skill.replaceAll('-', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-export function lessonCardAccessibilityLabel(lesson: LessonLibraryItem): string {
+export function lessonCardAccessibilityLabel(lesson: LessonLibraryItem, allowLockedSelection = false): string {
   const parts = [
     lesson.title,
     skillLabel(lesson.skill),
     lessonDifficultyLabels[lesson.difficulty],
     `${lesson.estimatedMinutes} minutes`,
-    lessonStateLabels[lesson.state],
+    lesson.state === 'LOCKED' && allowLockedSelection ? 'Self-directed choice' : lessonStateLabels[lesson.state],
   ];
-  if (lesson.state === 'LOCKED') parts.push(lesson.lock.reason);
+  if (lesson.state === 'LOCKED') parts.push(allowLockedSelection ? `${lesson.lock.reason} You can choose this lesson now` : lesson.lock.reason);
   return `${parts.map((part) => part.replace(/[.!?]+$/, '')).join('. ')}.`;
 }
 

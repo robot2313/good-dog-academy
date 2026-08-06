@@ -33,6 +33,8 @@ Key features:
 - personalised dog profile and behaviour assessment;
 - 60 structured reward-based training lessons;
 - daily training plans and guided sessions;
+- a personalised Journey plus independent recommended, category, puppy, adult, senior, and rescue-dog lesson browsing;
+- a personalised Journey plus independent recommended, category, puppy, adult, senior, and rescue-dog lesson browsing;
 - lesson library, search, filters, and journey progress;
 - training history, achievements, and progress tracking;
 - adaptive troubleshooting for common training challenges;
@@ -54,7 +56,7 @@ Final keywords must be adjusted to each store's character limits and metadata ru
 Capture these screens from a clean signed preview build with fictional tester data:
 
 1. **A plan made for your dog** — Today screen with selected-dog identity and daily plan.
-2. **Build skills step by step** — Academy library with lesson photography and progress states.
+2. **Learn your way** — Academy showing Journey, recommendations, training categories, dog-stage collections, and realistic lesson photography.
 3. **Clear coaching in every session** — active guided lesson.
 4. **See progress that matters** — Progress overview and recent history.
 5. **Help when training gets stuck** — Training Troubleshooter plan.

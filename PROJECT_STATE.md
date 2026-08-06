@@ -2,7 +2,7 @@
 
 ## Current checkpoint
 
-**Milestone 11 curriculum expansion is in progress on `feature/milestone-11-curriculum-expansion`. The catalogue has been expanded from 30 to 60 lessons and requires final verification plus media completion before release-candidate work resumes.**
+**Milestone 11 curriculum expansion and lesson discovery are implemented on `feature/milestone-11-curriculum-expansion`. The catalogue now contains 60 lessons, every lesson has a committed realistic photograph, and the app supports Journey, recommendations, category browsing, and puppy/adult/senior/rescue collections. Final device verification is still required before release-candidate work resumes.**
 
 The warm editorial redesign and expanded adaptive Training Troubleshooter have received an Expo Go visual approval on a physical device. The complete destructive-data and relaunch smoke-test gate is still pending.
 
@@ -33,7 +33,9 @@ The warm editorial redesign and expanded adaptive Training Troubleshooter have r
 - Added 30 new permanent lesson IDs with measurable completion criteria, practical troubleshooting, and safety guidance
 - Added image-generation specifications for all new lessons
 - Locked runtime lesson imagery to photorealistic photographs only; legacy category cartoons are prohibited and test-guarded
-- Kept the existing 30 approved lesson photographs; the 30 new lessons temporarily reuse approved realistic same-skill photographs until unique photographs are generated and approved
+- Added and wired 30 new realistic lesson photographs, giving all 60 active lessons a committed lesson-specific image; cartoon and illustrated runtime imagery remains prohibited and test-guarded
+- Added independent lesson discovery: recommended lessons, ten category entry points, and curated puppy, adult, senior, and rescue-dog collections while keeping Journey as the personalised recommended path
+- Added explicit self-directed lesson access so owners can choose any active age-appropriate lesson without waiting for Journey prerequisites; Daily Plan, age, activity, ownership, and data-integrity safeguards remain enforced
 - Updated catalogue audits, library/coaching counts, architecture notes, store metadata, and authoring guidance for 60 lessons
 
 ## Milestone 10.1 release gates

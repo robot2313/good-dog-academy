@@ -1,7 +1,7 @@
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -12,6 +12,9 @@ import { LessonCompletionCelebration } from '../components/LessonCompletionCeleb
 import { useTodayPlan } from '../features/daily-plan/useTodayPlan';
 import { homeWelcomeMessage } from '../features/home/homeWelcomeMessage';
 import { useLessonLibraryData } from '../features/lessons/library/LessonLibraryContext';
+import { LessonLibraryService } from '../features/lessons/library/LessonLibraryService';
+import { LifeStageCard, RecommendedLessonCard, TrainingCategoryCard } from '../features/lessons/discovery/LessonDiscoveryCards';
+import { lessonCollections, recommendedLessons, trainingCategories } from '../features/lessons/discovery';
 import { getLessonImageSource } from '../features/lessons/coaching/lessonImageManifest';
 import { useOnboarding } from '../features/onboarding/OnboardingContext';
 import { styles } from '../theme/styles';
@@ -35,6 +38,20 @@ export function TodayScreen({ navigation, route }: TodayScreenProps): React.JSX.
   const completedLessons = progress.filter((record) => record.status === 'completed').length;
   const successRate = sessionCount > 0 ? successfulTotal / sessionCount : null;
   const message = homeWelcomeMessage({ dogName, completedLessons, sessionCount, successRate });
+  const discoveryService = useMemo(
+    () => library ? new LessonLibraryService(library.catalogue, library.selectedDog?.id ?? null, library.progressRecords) : null,
+    [library?.catalogue, library?.progressRecords, library?.selectedDog?.id],
+  );
+  let recommendations = [] as ReturnType<typeof recommendedLessons>;
+  try {
+    recommendations = discoveryService ? recommendedLessons(discoveryService.getAllLessons(), 3) : [];
+  } catch {
+    recommendations = [];
+  }
+  const categoryCounts = new Map(trainingCategories.map((category) => [
+    category.skill,
+    library?.catalogue.definitions.filter((lesson) => lesson.skill === category.skill && lesson.isActive).length ?? 0,
+  ]));
 
   const nextItem = plan?.items.find((item) => !item.completed && item.lessonAvailable) ?? null;
   const allComplete = plan
@@ -157,6 +174,68 @@ export function TodayScreen({ navigation, route }: TodayScreenProps): React.JSX.
             </Pressable>
           </View>
 
+          <View style={styles.homeDiscoverySection}>
+            <View style={styles.discoverySectionHeader}>
+              <View style={styles.discoverySectionHeaderCopy}>
+                <Text style={styles.discoverySectionKicker}>RECOMMENDED FOR YOU</Text>
+                <Text accessibilityRole="header" style={styles.discoverySectionTitle}>What to train next</Text>
+              </View>
+              <Text style={styles.discoverySectionLink} onPress={() => navigation.navigate('LessonBrowse', { recommended: true })}>See all</Text>
+            </View>
+            {recommendations.length > 0 ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.discoveryHorizontalContent}>
+                {recommendations.map((lesson) => (
+                  <RecommendedLessonCard
+                    key={lesson.id}
+                    lesson={lesson}
+                    onPress={() => navigation.navigate('LessonSummary', { lessonId: lesson.id })}
+                  />
+                ))}
+              </ScrollView>
+            ) : (
+              <Text style={styles.discoveryEmptyText}>Your recommendations will appear as soon as lesson progress is ready.</Text>
+            )}
+          </View>
+
+          <View style={styles.homeDiscoverySection}>
+            <View style={styles.discoverySectionHeader}>
+              <View style={styles.discoverySectionHeaderCopy}>
+                <Text style={styles.discoverySectionKicker}>CHOOSE YOUR OWN PATH</Text>
+                <Text accessibilityRole="header" style={styles.discoverySectionTitle}>Browse by category</Text>
+              </View>
+              <Text style={styles.discoverySectionLink} onPress={() => navigation.navigate('Academy')}>See all</Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.discoveryHorizontalContent}>
+              {trainingCategories.map((category) => (
+                <TrainingCategoryCard
+                  key={category.skill}
+                  category={category}
+                  compact
+                  lessonCount={categoryCounts.get(category.skill) ?? 0}
+                  onPress={() => navigation.navigate('LessonBrowse', { skill: category.skill })}
+                />
+              ))}
+            </ScrollView>
+          </View>
+
+          <View style={styles.homeDiscoverySection}>
+            <View style={styles.discoverySectionHeaderCopy}>
+              <Text style={styles.discoverySectionKicker}>LESSONS FOR YOUR DOG</Text>
+              <Text accessibilityRole="header" style={styles.discoverySectionTitle}>Puppy, adult, senior or rescue</Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.discoveryHorizontalContent}>
+              {lessonCollections.map((collection) => (
+                <LifeStageCard
+                  key={collection.id}
+                  collection={collection}
+                  compact
+                  lessonCount={collection.lessonIds.length}
+                  onPress={() => navigation.navigate('LessonBrowse', { collectionId: collection.id })}
+                />
+              ))}
+            </ScrollView>
+          </View>
+
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Help me now with a training problem"
@@ -230,8 +309,8 @@ function getOnboardingDog() {
 
 function getLibraryData() {
   try {
-    const { selectedDog, progressRecords } = useLessonLibraryData();
-    return { selectedDog, progressRecords };
+    const { catalogue, selectedDog, progressRecords } = useLessonLibraryData();
+    return { catalogue, selectedDog, progressRecords };
   } catch {
     return null;
   }
