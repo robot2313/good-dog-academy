@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Good Dog Academy",
-    "slug": "gooddogacademy",
+    "slug": "good-dog-academy",
     "description": "Private, practical dog training plans and guided lessons for everyday life.",
     "version": "1.0.0",
     "icon": "./assets/branding/app-icon.png",
