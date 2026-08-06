@@ -36,7 +36,7 @@ describe('Lesson Library navigation', () => {
     fireEvent.press(view.getByRole('button', { name: 'Name Response. Recall. Level 1. 6 minutes. Available.' }));
     expect(await view.findByText('GET READY')).toBeTruthy();
     expect(view.getByRole('header', { name: 'Before we start' })).toBeTruthy();
-    expect(view.getByRole('image', { name: /Recall training illustration/ })).toBeTruthy();
+    expect(view.getByRole('image', { name: /Recall training photograph/ })).toBeTruthy();
     expect(view.getByRole('button', { name: 'Next' })).toBeTruthy();
 
     fireEvent.press(view.getByRole('button', { name: 'Back' }));

@@ -23,7 +23,7 @@ Completed milestones:
 - **Milestone 9 — Premium personalised experience:** warm editorial visual design, selected-dog identity, optional managed profile photography, production lesson imagery, and a dog-training troubleshooter.
 - **Milestone 10 — Release-ready MVP:** permanent app identity, production icon and splash branding, EAS build profiles, in-app privacy disclosure, confirmed local-data deletion, and an expanded adaptive Training Troubleshooter.
 - **Milestone 10.1 — Release candidate preparation (in progress):** physical-device smoke testing, public privacy-policy hosting, signed preview builds, screenshots, and store metadata. See the [release-candidate checklist](docs/milestone-10-1-release-candidate-checklist.md).
-- **Milestone 11 — Curriculum expansion:** the catalogue now contains 60 force-free lessons, with three additional support, applied-practice, and maintenance lessons for every behaviour skill. Thirty new lesson-image specifications are included; their temporary per-skill fallback images must be replaced before final media sign-off. See [Milestone 11 documentation](docs/milestone-11-curriculum-expansion.md).
+- **Milestone 11 — Curriculum expansion:** the catalogue now contains 60 force-free lessons, with three additional support, applied-practice, and maintenance lessons for every behaviour skill. Thirty new lesson-image specifications are included. Lessons awaiting unique images temporarily reuse approved realistic same-skill photographs; cartoon and illustrated runtime assets are prohibited and test-guarded. Unique images must still be added before final media sign-off. See [Milestone 11 documentation](docs/milestone-11-curriculum-expansion.md).
 
 Not implemented yet:
 
@@ -179,6 +179,8 @@ Development builds expose a confirmed **Reset App Data** action under Dog → De
 Production builds expose **Privacy and Your Data** under Dog. It explains the app's local-only data model, provides the privacy contact, and offers a confirmed **Delete All App Data** action. Storage keys are cleared through the transaction layer; managed dog photos are also removed, and the app returns to Welcome.
 
 ## Project safeguards
+
+- **Photorealistic-only lesson imagery:** runtime manifests and skill fallbacks may reference approved real photographs only. Legacy category cartoons are prohibited and covered by automated tests.
 
 - Do not run `npm audit fix --force`; it may force an incompatible Expo upgrade.
 - Install native packages through `npx expo install` to retain SDK 54 alignment.

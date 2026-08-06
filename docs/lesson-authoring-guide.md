@@ -106,7 +106,17 @@ Begin at a safe below-threshold distance. Avoid forced greetings and uncontrolle
 
 The loader validates definitions during normal application initialization. It rejects malformed content, duplicate IDs, unsupported skills, missing prerequisites, and circular chains. Automated production audits also enforce lesson counts, IDs, versions, content depth, stage progression, durations, and force-free policy.
 
-## Future videos and illustrations
+## Visual media policy — locked
+
+- Lesson and skill imagery must be **photorealistic photography only**.
+- Cartoons, illustrations, animation stills, vector art, paintings, sketches, emoji, CGI, and 3D renders are prohibited in the app.
+- A lesson without its own approved photograph may temporarily reuse an approved realistic photograph from the same skill.
+- Legacy category illustrations under `assets/lesson-images/<skill>.jpg` must never be wired into runtime manifests or components.
+- Every generation prompt must explicitly request a photorealistic documentary-style colour photograph and explicitly reject cartoon, illustration, CGI, render, and related styles.
+- Automated tests must fail if a runtime fallback points to a legacy category illustration.
+- A generated image is not approved merely because it exists. It must be visually reviewed for realism, canine anatomy, humane handling, lesson accuracy, and absence of text or branding.
+
+## Future videos and photographs
 
 Future media manifests must reference the permanent lesson ID plus their own media version or locale. Media changes do not rename the lesson, change its competency, or reset LessonProgress. Do not couple media to a title, list index, or mutable display order.
 

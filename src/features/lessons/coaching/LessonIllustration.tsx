@@ -20,72 +20,72 @@ interface LessonIllustrationProps {
 const lessonIllustrations: Readonly<Record<BehaviourSkill, LessonIllustrationDetails>> =
   Object.freeze({
     recall: Object.freeze({
-      source: require('../../../../assets/lesson-images/recall.jpg'),
+      source: require('../../../../assets/lesson-images/by-lesson/recall-name-response.jpg'),
       accessibilityLabel:
-        'Recall training illustration: a relaxed dog returns to a crouching owner in a secure garden while a long line stays loose.',
+        'Recall training photograph: a relaxed dog returns to a crouching owner in a secure garden while a long line stays loose.',
       caption:
         'Keep the long line loose, turn your body toward your dog and reward close to your legs when they arrive.',
     }),
     'loose-lead-walking': Object.freeze({
-      source: require('../../../../assets/lesson-images/loose-lead-walking.jpg'),
+      source: require('../../../../assets/lesson-images/by-lesson/loose-lead-reward-zone.jpg'),
       accessibilityLabel:
-        'Loose-lead walking illustration: a relaxed dog walks beside an owner while the lead hangs in a soft curve.',
+        'Loose-lead walking photograph: a relaxed dog walks beside an owner while the lead hangs in a soft curve.',
       caption:
         'Reward beside the leg you want your dog to follow, and keep both your hand and the lead relaxed.',
     }),
     focus: Object.freeze({
-      source: require('../../../../assets/lesson-images/focus.jpg'),
+      source: require('../../../../assets/lesson-images/by-lesson/focus-check-in.jpg'),
       accessibilityLabel:
-        'Focus training illustration: a dog voluntarily checks in with an owner while a cyclist remains far away.',
+        'Focus training photograph: a dog voluntarily checks in with an owner while a cyclist remains far away.',
       caption:
         'Wait for freely offered attention, reward low and keep the distraction at a comfortable distance.',
     }),
     jumping: Object.freeze({
-      source: require('../../../../assets/lesson-images/jumping.jpg'),
+      source: require('../../../../assets/lesson-images/by-lesson/jumping-four-paws-down.jpg'),
       accessibilityLabel:
-        'Calm greeting illustration: a dog keeps four paws on the floor while an owner rewards low and a visitor waits calmly.',
+        'Calm greeting photograph: a dog keeps four paws on the floor while an owner rewards low and a visitor waits calmly.',
       caption:
         'Deliver rewards near the ground, ask the visitor to stay still and keep a gate or exit ready if needed.',
     }),
     barking: Object.freeze({
-      source: require('../../../../assets/lesson-images/barking.jpg'),
+      source: require('../../../../assets/lesson-images/by-lesson/barking-identify-triggers.jpg'),
       accessibilityLabel:
-        'Barking lesson illustration: a dog sees a delivery person through a window and receives a reward for a calm pause on a mat.',
+        'Barking lesson photograph: a dog sees a delivery person through a window and receives a reward for a calm pause on a mat.',
       caption:
         'Keep the trigger outside and far away, and have a mat, curtain or exit route ready before practice.',
     }),
     chewing: Object.freeze({
-      source: require('../../../../assets/lesson-images/chewing.jpg'),
+      source: require('../../../../assets/lesson-images/by-lesson/chewing-appropriate-items.jpg'),
       accessibilityLabel:
-        'Chewing lesson illustration: a supervised dog rests on a mat with safe chew toys while shoes are stored away.',
+        'Chewing lesson photograph: a supervised dog rests on a mat with safe chew toys while shoes are stored away.',
       caption:
         'Make safe choices easy to reach and manage tempting household items before your dog can practise chewing them.',
     }),
     reactivity: Object.freeze({
-      source: require('../../../../assets/lesson-images/reactivity.jpg'),
+      source: require('../../../../assets/lesson-images/by-lesson/reactivity-safe-distance.jpg'),
       accessibilityLabel:
-        'Reactivity training illustration: a dog checks in with an owner behind a hedge while another dog remains very far away.',
+        'Reactivity training photograph: a dog checks in with an owner behind a hedge while another dog remains very far away.',
       caption:
         'Use distance and a visual barrier, keep the lead slack and always leave yourself a clear path away.',
     }),
     'house-training': Object.freeze({
-      source: require('../../../../assets/lesson-images/house-training.jpg'),
+      source: require('../../../../assets/lesson-images/by-lesson/house-training-routine.jpg'),
       accessibilityLabel:
-        'House-training illustration: a dog receives an immediate reward in an outdoor toileting area beside an open back door.',
+        'House-training photograph: a dog receives an immediate reward in an outdoor toileting area beside an open back door.',
       caption:
         'Keep the route outside short and predictable, then reward immediately after your dog finishes.',
     }),
     confidence: Object.freeze({
-      source: require('../../../../assets/lesson-images/confidence.jpg'),
+      source: require('../../../../assets/lesson-images/by-lesson/confidence-choice-and-exploration.jpg'),
       accessibilityLabel:
-        'Confidence-building illustration: a dog voluntarily investigates a harmless box while the owner stays back and a retreat path remains open.',
+        'Confidence-building photograph: a dog voluntarily investigates a harmless box while the owner stays back and a retreat path remains open.',
       caption:
         'Let your dog choose the distance, use familiar flooring and keep a clear retreat path available.',
     }),
     'impulse-control': Object.freeze({
-      source: require('../../../../assets/lesson-images/impulse-control.jpg'),
+      source: require('../../../../assets/lesson-images/by-lesson/impulse-control-wait-for-reward.jpg'),
       accessibilityLabel:
-        'Impulse-control illustration: a relaxed dog pauses before an open hand holding a reward without being physically restrained.',
+        'Impulse-control photograph: a relaxed dog pauses before an open hand holding a reward without being physically restrained.',
       caption:
         'Ask for a tiny achievable pause, keep your hands open and relaxed, then deliver the next reward promptly.',
     }),

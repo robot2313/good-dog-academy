@@ -1,3 +1,6 @@
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 import { productionLessonDefinitions } from '../../src/features/lessons/catalogue/definitions';
 import { lessonImageGenerationSpecs } from '../../src/features/lessons/coaching/lessonImageGenerationData';
 import {
@@ -40,6 +43,20 @@ const approvedUniqueLessonIds = new Set([
   'impulse-control-real-world-distractions',
 ]);
 
+const approvedRealisticFallbacks = {
+  barking: require('../../assets/lesson-images/by-lesson/barking-identify-triggers.jpg'),
+  chewing: require('../../assets/lesson-images/by-lesson/chewing-appropriate-items.jpg'),
+  confidence: require('../../assets/lesson-images/by-lesson/confidence-choice-and-exploration.jpg'),
+  focus: require('../../assets/lesson-images/by-lesson/focus-check-in.jpg'),
+  'house-training': require('../../assets/lesson-images/by-lesson/house-training-routine.jpg'),
+  'impulse-control': require('../../assets/lesson-images/by-lesson/impulse-control-wait-for-reward.jpg'),
+  jumping: require('../../assets/lesson-images/by-lesson/jumping-four-paws-down.jpg'),
+  'loose-lead-walking': require('../../assets/lesson-images/by-lesson/loose-lead-reward-zone.jpg'),
+  reactivity: require('../../assets/lesson-images/by-lesson/reactivity-safe-distance.jpg'),
+  recall: require('../../assets/lesson-images/by-lesson/recall-name-response.jpg'),
+} as const;
+
+
 describe('lesson image manifest', () => {
   it('covers every active lesson id with no omissions', () => {
     for (const id of activeLessonIds) {
@@ -67,20 +84,41 @@ describe('lesson image manifest', () => {
     expect(getLessonImageSource(id, 'recall')).toBe(lessonImageManifest[id].source);
   });
 
-  it('uses the shared skill fallback only for an unknown or missing lesson id', () => {
-    // An unknown id returns a stable shared fallback for the requested skill...
-    const unknownConfidence = getLessonImageSource('not-a-real-lesson', 'confidence');
-    expect(unknownConfidence).toBe(getLessonImageSource('also-not-real', 'confidence'));
-    expect(unknownConfidence).toBe(getLessonImageSource(null, 'confidence'));
-    // ...which is NOT any real lesson's unique photograph.
-    expect(unknownConfidence).not.toBe(
-      lessonImageManifest['confidence-choice-and-exploration'].source,
-    );
-    // A missing id with no skill hint falls back to a stable last-resort image.
-    expect(getLessonImageSource(null)).toBe(getLessonImageSource('unknown', null));
+  it('uses approved realistic photographs for every skill fallback and never a legacy cartoon', () => {
+    for (const skill of Object.keys(approvedRealisticFallbacks) as Array<
+      keyof typeof approvedRealisticFallbacks
+    >) {
+      const fallback = getLessonImageSource('not-a-real-lesson', skill);
+      expect(fallback).toBe(approvedRealisticFallbacks[skill]);
+      expect(getLessonImageSource(null, skill)).toBe(fallback);
+    }
+
+    // A missing id with no skill hint falls back to the approved recall photograph.
+    expect(getLessonImageSource(null)).toBe(approvedRealisticFallbacks.recall);
+    expect(getLessonImageSource('unknown', null)).toBe(approvedRealisticFallbacks.recall);
   });
 
-  it('serves approved unique photographs and safe skill fallbacks for lessons awaiting images', () => {
+  it('keeps legacy cartoon category assets out of the repository', () => {
+    const root = resolve(__dirname, '../..');
+    const legacyFilenames = [
+      'barking.jpg',
+      'chewing.jpg',
+      'confidence.jpg',
+      'focus.jpg',
+      'house-training.jpg',
+      'impulse-control.jpg',
+      'jumping.jpg',
+      'loose-lead-walking.jpg',
+      'reactivity.jpg',
+      'recall.jpg',
+    ];
+
+    for (const filename of legacyFilenames) {
+      expect(existsSync(resolve(root, 'assets/lesson-images', filename))).toBe(false);
+    }
+  });
+
+  it('serves approved unique photographs and approved realistic fallbacks for lessons awaiting images', () => {
     for (const id of activeLessonIds) {
       const entry = lessonImageManifest[id];
       const skillFallback = getLessonImageSource('unknown-lesson', entry.skill);
@@ -89,7 +127,6 @@ describe('lesson image manifest', () => {
 
       if (approvedUniqueLessonIds.has(id)) {
         expect(entry.hasUniqueImage).toBe(true);
-        expect(entry.source).not.toBe(skillFallback);
       } else {
         expect(entry.hasUniqueImage).toBe(false);
         expect(entry.source).toBe(skillFallback);

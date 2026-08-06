@@ -230,13 +230,13 @@ function buildDoc(states: readonly LessonState[]): string {
   lines.push('## Status legend');
   lines.push('');
   lines.push('- `VERIFIED REALISTIC IMAGE EXISTS` — a real photograph is committed and validated.');
-  lines.push('- `NOT YET CREATED` — no unique per-lesson image yet; the app shows a temporary shared skill fallback.');
+  lines.push('- `NOT YET CREATED` — no unique per-lesson image yet; the app temporarily reuses an approved realistic photograph from the same skill.');
   lines.push('- `REJECTED CARTOON OR ILLUSTRATION` — a produced image was rejected for style/safety and must be redone.');
   lines.push('');
-  lines.push('> **Audit note:** the current shared per-skill fallback images');
-  lines.push('> (`assets/lesson-images/<skill>.jpg`) are non-photorealistic illustrations.');
-  lines.push('> They are classified `REJECTED CARTOON OR ILLUSTRATION` and serve only as a');
-  lines.push('> temporary compatibility fallback until each lesson has a verified photograph.');
+  lines.push('> **Visual policy lock:** legacy category illustrations under');
+  lines.push('> `assets/lesson-images/<skill>.jpg` are rejected and never used at runtime.');
+  lines.push('> Lessons awaiting a unique image temporarily reuse an approved realistic');
+  lines.push('> photograph from the same skill until their own photograph is approved.');
   lines.push('');
   lines.push(`## Lessons (${now} active)`);
   lines.push('');
@@ -257,10 +257,22 @@ function buildDoc(states: readonly LessonState[]): string {
     lines.push(`- **Destination filename:** \`assets/lesson-images/by-lesson/${spec.destinationFilename}\``);
     lines.push(`- **Generation prompt:** ${spec.prompt}`);
     lines.push(`- **Negative prompt:** ${spec.negativePrompt}`);
+    const realisticFallbackBySkill: Readonly<Record<string, string>> = {
+      barking: 'barking-identify-triggers.jpg',
+      chewing: 'chewing-appropriate-items.jpg',
+      confidence: 'confidence-choice-and-exploration.jpg',
+      focus: 'focus-check-in.jpg',
+      'house-training': 'house-training-routine.jpg',
+      'impulse-control': 'impulse-control-wait-for-reward.jpg',
+      jumping: 'jumping-four-paws-down.jpg',
+      'loose-lead-walking': 'loose-lead-reward-zone.jpg',
+      reactivity: 'reactivity-safe-distance.jpg',
+      recall: 'recall-name-response.jpg',
+    };
     const currentSource =
       status === 'VERIFIED REALISTIC IMAGE EXISTS'
         ? `verified photograph \`assets/lesson-images/by-lesson/${spec.destinationFilename}\``
-        : `shared skill illustration \`assets/lesson-images/${spec.skill}.jpg\` (temporary fallback)`;
+        : `approved realistic fallback \`assets/lesson-images/by-lesson/${realisticFallbackBySkill[spec.skill]}\` (temporary)`;
     lines.push(`- **Current image source:** ${currentSource}`);
     lines.push(`- **Current status:** ${status}`);
     lines.push('');

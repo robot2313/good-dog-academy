@@ -40,7 +40,7 @@ All content remains reward-based, force-free, non-diagnostic, and usable without
 
 ## Media status
 
-The existing 30 lessons retain approved unique photographs. Every new lesson has a complete photorealistic generation specification and a valid runtime manifest entry, but currently uses its skill-level fallback image. Unique images must be generated, reviewed, committed, and wired into `uniqueLessonImageSources` before final media sign-off.
+The existing 30 lessons retain approved unique photographs. Every new lesson has a complete photorealistic generation specification and a valid runtime manifest entry. Until its own image is approved, it temporarily reuses an approved realistic photograph from the same skill. Legacy cartoon/category illustrations are prohibited from runtime and are guarded by automated tests. Unique images must still be generated, reviewed, committed, and wired into `uniqueLessonImageSources` before final media sign-off.
 
 ## Verification gates
 

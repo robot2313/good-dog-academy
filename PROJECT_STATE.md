@@ -32,7 +32,8 @@ The warm editorial redesign and expanded adaptive Training Troubleshooter have r
 - Preserved all 30 permanent existing lesson IDs and their original prerequisite chains
 - Added 30 new permanent lesson IDs with measurable completion criteria, practical troubleshooting, and safety guidance
 - Added image-generation specifications for all new lessons
-- Kept the existing 30 approved lesson photographs; the 30 new lessons currently use per-skill fallback imagery until unique photographs are generated and approved
+- Locked runtime lesson imagery to photorealistic photographs only; legacy category cartoons are prohibited and test-guarded
+- Kept the existing 30 approved lesson photographs; the 30 new lessons temporarily reuse approved realistic same-skill photographs until unique photographs are generated and approved
 - Updated catalogue audits, library/coaching counts, architecture notes, store metadata, and authoring guidance for 60 lessons
 
 ## Milestone 10.1 release gates
