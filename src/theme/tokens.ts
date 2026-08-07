@@ -1,44 +1,45 @@
-// Warm editorial palette: soft bone canvas, paper-like cards, deep forest
-// actions, sage selections and a restrained clay accent.
+// The approved reference palette: warm paper canvas, white surfaces, deep navy
+// headings, forest-green actions, and a sage selection wash. Gold is reserved
+// for the dog-photo ring and a small number of caution surfaces.
 export const colorTokens = {
   background: {
-    canvas: '#F5F0E6',
-    subtle: '#ECE5D8',
+    canvas: '#FAF7F0',
+    subtle: '#F4F0E8',
   },
   surface: {
-    primary: '#FFFCF6',
+    primary: '#FFFFFF',
     elevated: '#FFFFFF',
-    selected: '#E3EBDD',
+    selected: '#EDF5E9',
   },
   brand: {
-    forest: '#18372B',
-    primary: '#2F604A',
-    pressed: '#244A3A',
-    gold: '#C56F4A',
+    forest: '#1D6337',
+    primary: '#2F8148',
+    pressed: '#1D6337',
+    gold: '#D99A22',
   },
   text: {
-    primary: '#1C2B24',
-    secondary: '#667069',
+    primary: '#0B2545',
+    secondary: '#66707C',
     inverse: '#FFFFFF',
-    disabled: '#969B96',
-    accent: '#B85F3E',
-    success: '#2F6B4E',
+    disabled: '#9AA39C',
+    accent: '#1D6337',
+    success: '#1D6337',
   },
   border: {
-    subtle: '#DDD6C9',
-    strong: '#C8C0B2',
+    subtle: '#E4DED3',
+    strong: '#D3CCBE',
   },
   status: {
-    successSurface: '#E0EBDD',
-    successText: '#2F6B4E',
-    warningSurface: '#F6E8D5',
-    warningText: '#8A5A24',
-    errorSurface: '#F6E2DE',
-    errorText: '#9A4D43',
-    infoSurface: '#E0EBEF',
-    infoText: '#3F6878',
-    neutralSurface: '#EEEAE2',
-    neutralText: '#667069',
+    successSurface: '#EDF5E9',
+    successText: '#1D6337',
+    warningSurface: '#FFF2D8',
+    warningText: '#835B0E',
+    errorSurface: '#F8E7E2',
+    errorText: '#984B3E',
+    infoSurface: '#E6F2F6',
+    infoText: '#306A7B',
+    neutralSurface: '#F1EEE7',
+    neutralText: '#657168',
   },
 } as const;
 
@@ -54,24 +55,26 @@ export const spacingTokens = {
   huge: 48,
 } as const;
 
+// Reference geometry: nothing is rounder than 14px except true pills.
 export const radiusTokens = {
   sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  hero: 28,
+  md: 10,
+  lg: 12,
+  xl: 12,
+  hero: 14,
   pill: 999,
 } as const;
 
+// Reference type scale, matching the six approved screens.
 export const typographyTokens = {
-  display: { fontSize: 34, lineHeight: 40, fontWeight: '900' },
-  pageTitle: { fontSize: 30, lineHeight: 36, fontWeight: '900' },
-  sectionTitle: { fontSize: 21, lineHeight: 27, fontWeight: '800' },
-  cardTitle: { fontSize: 17, lineHeight: 23, fontWeight: '800' },
-  body: { fontSize: 16, lineHeight: 24, fontWeight: '400' },
-  supporting: { fontSize: 14, lineHeight: 21, fontWeight: '400' },
-  label: { fontSize: 12, lineHeight: 16, fontWeight: '800' },
-  caption: { fontSize: 11, lineHeight: 16, fontWeight: '600' },
+  display: { fontSize: 28, lineHeight: 34, fontWeight: '900' },
+  pageTitle: { fontSize: 26, lineHeight: 32, fontWeight: '900' },
+  sectionTitle: { fontSize: 15, lineHeight: 20, fontWeight: '900' },
+  cardTitle: { fontSize: 14, lineHeight: 19, fontWeight: '800' },
+  body: { fontSize: 13, lineHeight: 19, fontWeight: '400' },
+  supporting: { fontSize: 12, lineHeight: 17, fontWeight: '400' },
+  label: { fontSize: 10, lineHeight: 14, fontWeight: '800' },
+  caption: { fontSize: 10, lineHeight: 14, fontWeight: '600' },
 } as const;
 
 export const borderTokens = {
@@ -81,18 +84,18 @@ export const borderTokens = {
 
 export const shadowTokens = {
   low: {
-    shadowColor: '#4B4136',
-    shadowOpacity: 0.10,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 4,
+    shadowColor: '#243245',
+    shadowOpacity: 0.045,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 1,
   },
   medium: {
-    shadowColor: '#4B4136',
-    shadowOpacity: 0.16,
-    shadowRadius: 22,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 7,
+    shadowColor: '#243245',
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 2,
   },
 } as const;
 

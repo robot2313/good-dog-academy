@@ -58,7 +58,7 @@ function markerStyle(tone: PassportTimelineTone) {
 
 const componentStyles = StyleSheet.create({
   list: { gap: spacingTokens.sm },
-  item: { borderRadius: radiusTokens.xl, padding: spacingTokens.lg, gap: spacingTokens.xs },
+  item: { borderRadius: radiusTokens.md, padding: spacingTokens.md, gap: spacingTokens.xxs },
   headingRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacingTokens.sm },
   marker: { width: 12, height: 12, marginTop: spacingTokens.xs, borderRadius: radiusTokens.pill },
   markerPositive: { backgroundColor: colorTokens.status.successText },
@@ -70,6 +70,6 @@ const componentStyles = StyleSheet.create({
   date: { ...typographyTokens.caption, flexShrink: 0, color: colorTokens.text.secondary },
   detail: { ...typographyTokens.supporting, color: colorTokens.text.secondary },
   action: { ...typographyTokens.label, color: colorTokens.brand.primary, marginTop: spacingTokens.xs },
-  emptyCard: { borderRadius: radiusTokens.xl, padding: spacingTokens.lg },
+  emptyCard: { borderRadius: radiusTokens.md, padding: spacingTokens.md },
   emptyTitle: { ...typographyTokens.cardTitle, color: colorTokens.text.primary },
 });

@@ -4,15 +4,15 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { AppScreen } from '../components/AppScreen';
+import { AppBackHeader } from '../components/AppBackHeader';
 import { AppButton } from '../components/AppButton';
 import { DogIdentityHero } from '../components/DogIdentityHero';
 import { InlineValidationMessage } from '../components/InlineValidationMessage';
-import { PremiumCard } from '../components/PremiumCard';
 import { SectionHeader } from '../components/SectionHeader';
 import { SecondaryTextButton } from '../components/SecondaryTextButton';
 import { useOnboarding } from '../features/onboarding/OnboardingContext';
 import { dogPhotoUpdateService } from '../features/onboarding/photo/dogPhotoUpdateServiceInstance';
-import { styles } from '../theme/styles';
+import { referenceScreenStyles } from '../theme/referenceStyles';
 import type { RootStackParamList } from '../types/navigation';
 
 declare const require: (moduleName: string) => { DeveloperToolsSection: () => React.JSX.Element | null };
@@ -48,11 +48,7 @@ export function ProfileScreen(): React.JSX.Element {
     if (!result.canceled && result.assets[0]) {
       try {
         setIsUpdatingPhoto(true);
-        await dogPhotoUpdateService.replacePhoto(
-          dog,
-          result.assets[0].uri,
-          refreshApplicationStatus,
-        );
+        await dogPhotoUpdateService.replacePhoto(dog, result.assets[0].uri, refreshApplicationStatus);
       } catch {
         setPhotoError('Unable to save photo. Please try again.');
       } finally {
@@ -74,8 +70,17 @@ export function ProfileScreen(): React.JSX.Element {
     }
   };
 
+  const canGoBack = navigation.canGoBack?.() ?? false;
+
   return (
     <AppScreen>
+      {canGoBack ? <AppBackHeader onPress={() => navigation.goBack()} /> : null}
+
+      <View style={referenceScreenStyles.pageHeader}>
+        <Text style={referenceScreenStyles.pageTitle}>Your Dog</Text>
+        <Text style={referenceScreenStyles.pageSubtitle}>Photo, details and your data</Text>
+      </View>
+
       <DogIdentityHero
         dogName={dogName}
         photoUri={photoUri}
@@ -84,19 +89,15 @@ export function ProfileScreen(): React.JSX.Element {
         size="profile"
         footer={
           dog ? (
-            <View style={styles.photoActionRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
               <SecondaryTextButton
                 title={photoUri ? 'Change photo' : 'Add photo'}
-                onPress={() => {
-                  if (!isUpdatingPhoto) void handleAddOrChangePhoto();
-                }}
+                onPress={() => { if (!isUpdatingPhoto) void handleAddOrChangePhoto(); }}
               />
               {photoUri ? (
                 <SecondaryTextButton
                   title="Remove photo"
-                  onPress={() => {
-                    if (!isUpdatingPhoto) void handleRemovePhoto();
-                  }}
+                  onPress={() => { if (!isUpdatingPhoto) void handleRemovePhoto(); }}
                 />
               ) : null}
             </View>
@@ -104,28 +105,30 @@ export function ProfileScreen(): React.JSX.Element {
         }
       />
       {photoError ? <InlineValidationMessage message={photoError} /> : null}
-      <View style={styles.membershipCard}>
-        <View style={styles.membershipTopRow}>
-          <Text style={styles.membershipEyebrow}>FOUNDER ACCOUNT</Text>
-          <View style={styles.membershipBadge}><Text style={styles.membershipBadgeText}>LIFETIME</Text></View>
-        </View>
-        <Text style={styles.membershipTitle}>Lifetime All Access</Text>
-        <Text style={styles.membershipBody}>Your academy access stays unlocked as the training experience grows.</Text>
+
+      <View style={referenceScreenStyles.cardSelected}>
+        <SectionHeader eyebrow="FOUNDER ACCOUNT" title="Lifetime All Access" />
+        <Text style={referenceScreenStyles.blockIntro}>
+          Your academy access stays unlocked as the training experience grows.
+        </Text>
       </View>
-      <PremiumCard tone="elevated">
+
+      <View style={referenceScreenStyles.card}>
         <SectionHeader eyebrow="PROFILE" title="Your training partnership" />
         <ProfileDetailRow label="Dog" value={dog?.name ?? 'Not selected'} />
         <ProfileDetailRow label="Breed or mix" value={dog ? (dog.breedUnknown ? 'Unknown' : dog.breed) : 'Not specified'} />
         <ProfileDetailRow label="Owner" value={owner?.displayName ?? 'Not specified'} last />
-      </PremiumCard>
-      <PremiumCard>
+      </View>
+
+      <View style={referenceScreenStyles.card}>
         <SectionHeader
           eyebrow="YOUR CONTROL"
           title="Privacy and your data"
           supportingText="See what is stored on this device or permanently delete all app data."
         />
         <AppButton title="Privacy and Your Data" variant="secondary" onPress={() => navigation.navigate('Privacy')} />
-      </PremiumCard>
+      </View>
+
       {__DEV__ && DeveloperToolsSection ? <DeveloperToolsSection /> : null}
     </AppScreen>
   );
@@ -133,9 +136,9 @@ export function ProfileScreen(): React.JSX.Element {
 
 function ProfileDetailRow({ label, value, last = false }: { label: string; value: string; last?: boolean }): React.JSX.Element {
   return (
-    <View style={[styles.profileDetailRow, last && styles.profileDetailRowLast]}>
-      <Text style={styles.profileDetailLabel}>{label}</Text>
-      <Text style={styles.profileDetailValue}>{value}</Text>
+    <View style={[referenceScreenStyles.dataRow, last && referenceScreenStyles.dataRowLast]}>
+      <Text style={referenceScreenStyles.dataLabel}>{label}</Text>
+      <Text style={referenceScreenStyles.dataValue}>{value}</Text>
     </View>
   );
 }

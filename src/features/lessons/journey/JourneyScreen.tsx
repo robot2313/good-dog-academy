@@ -1,134 +1,94 @@
-import { useMemo } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 
 import { AppScreen } from '../../../components/AppScreen';
 import { ErrorState } from '../../../components/ErrorState';
 import { LoadingState } from '../../../components/LoadingState';
-import { SecondaryTextButton } from '../../../components/SecondaryTextButton';
-import { styles } from '../../../theme/styles';
-import { colorTokens } from '../../../theme/tokens';
-import type { RootStackParamList } from '../../../types/navigation';
+import { IdentityHeader } from '../../../components/IdentityHeader';
+import { ReferenceIcon } from '../../../components/ReferenceIcon';
+import { referencePalette, referenceStyles } from '../../../theme/referenceStyles';
+import type { MainTabParamList, RootStackParamList } from '../../../types/navigation';
 import { useLessonLibraryData } from '../library/LessonLibraryContext';
-import { lessonLibraryErrorMessage, skillLabel } from '../library/lessonLibraryPresentation';
+import { lessonLibraryErrorMessage } from '../library/lessonLibraryPresentation';
 import { LessonLibraryService } from '../library/LessonLibraryService';
 import type { LessonLibraryItem } from '../library/lessonLibraryTypes';
 
-type Props = CompositeScreenProps<
-  NativeStackScreenProps<RootStackParamList, 'Journey'>,
-  NativeStackScreenProps<RootStackParamList>
->;
+type StackProps = NativeStackScreenProps<RootStackParamList, 'Journey'>;
+type TabProps = CompositeScreenProps<BottomTabScreenProps<MainTabParamList, 'Plan'>, NativeStackScreenProps<RootStackParamList, 'Main'>>;
+type JourneyStageId = 'foundation' | 'building' | 'real-world' | 'lifelong';
+type JourneyStage = { readonly id: JourneyStageId; readonly number: number; readonly title: string; readonly lessons: readonly LessonLibraryItem[] };
 
-type JourneyMarker = 'completed' | 'current' | 'upcoming';
+export function JourneyScreen({ navigation }: StackProps): React.JSX.Element {
+  return <JourneyContent onBack={() => navigation.goBack()} onOpenLesson={(lessonId) => navigation.navigate('LessonSummary', { lessonId })} />;
+}
 
-export function JourneyScreen({ navigation }: Props): React.JSX.Element {
+export function JourneyTabScreen({ navigation }: TabProps): React.JSX.Element {
+  return <JourneyContent onOpenLesson={(lessonId) => navigation.navigate('LessonSummary', { lessonId })} />;
+}
+
+function JourneyContent({ onBack, onOpenLesson }: { readonly onBack?: () => void; readonly onOpenLesson: (lessonId: string) => void }): React.JSX.Element {
   const { catalogue, selectedDog, progressRecords, loading, error, retry } = useLessonLibraryData();
-  const selectedDogId = selectedDog?.id ?? null;
-  const service = useMemo(
-    () => new LessonLibraryService(catalogue, selectedDogId, progressRecords),
-    [catalogue, progressRecords, selectedDogId],
-  );
+  const [expandedStage, setExpandedStage] = useState<JourneyStageId | 'all'>('foundation');
+  const service = useMemo(() => new LessonLibraryService(catalogue, selectedDog?.id ?? null, progressRecords), [catalogue, progressRecords, selectedDog?.id]);
 
   let lessons: readonly LessonLibraryItem[] | null = null;
   let derivedError: unknown | null = error;
   if (!loading && !derivedError) {
-    try {
-      lessons = service.getAllLessons();
-    } catch (cause) {
-      derivedError = cause;
-    }
+    try { lessons = service.getAllLessons(); } catch (cause) { derivedError = cause; }
   }
-
   if (loading) return <AppScreen scroll={false}><LoadingState message="Building your training journey…" /></AppScreen>;
-  if (derivedError || !lessons) {
-    return <AppScreen>
-      <SecondaryTextButton title="Back" onPress={() => navigation.goBack()} />
-      <Text style={styles.eyebrowDark}>YOUR JOURNEY</Text>
-      <ErrorState message={lessonLibraryErrorMessage(derivedError)} onRetry={retry} />
-    </AppScreen>;
-  }
+  if (derivedError || !lessons) return <AppScreen><ErrorState message={lessonLibraryErrorMessage(derivedError)} onRetry={retry} /></AppScreen>;
 
+  const stages = createJourneyStages(lessons);
+  const firstIncompleteStage = stages.find((stage) => stage.lessons.some((lesson) => lesson.state !== 'COMPLETED'))?.id ?? stages[0]?.id ?? 'foundation';
   const completedCount = lessons.filter((lesson) => lesson.state === 'COMPLETED').length;
-  const currentId = lessons.find(
-    (lesson) => lesson.state === 'IN_PROGRESS' || lesson.state === 'AVAILABLE',
-  )?.id ?? null;
-  const groups = service.getGroupedLessons(lessons);
 
-  const markerFor = (lesson: LessonLibraryItem): JourneyMarker => {
-    if (lesson.state === 'COMPLETED') return 'completed';
-    if (lesson.id === currentId) return 'current';
-    return 'upcoming';
-  };
-
-  return <AppScreen>
-    <SecondaryTextButton title="Back" onPress={() => navigation.goBack()} />
-    <Text style={styles.eyebrowDark}>YOUR JOURNEY</Text>
-    <Text accessibilityRole="header" style={styles.pageTitle}>Your journey so far</Text>
-    <Text style={styles.journeyProgressText}>
-      {completedCount} of {lessons.length} lessons complete
-    </Text>
-    <Text style={styles.journeyIntro}>
-      This is your recommended step-by-step path. You can also choose any category or lesson from Home or the Academy without changing this Journey.
-    </Text>
-
-    {groups.map((group) => (
-      <View key={group.skill} style={styles.journeyGroup}>
-        <Text accessibilityRole="header" style={styles.journeyGroupTitle}>{skillLabel(group.skill)}</Text>
-        {group.lessons.map((lesson, index) => {
-          const marker = markerFor(lesson);
-          const isLast = index === group.lessons.length - 1;
-          const stateLabel = lesson.state === 'COMPLETED'
-            ? 'Complete'
-            : lesson.state === 'LOCKED'
-              ? 'Upcoming'
-              : marker === 'current'
-                ? 'Next up'
-                : 'Available';
-          const stateColor = lesson.state === 'COMPLETED'
-            ? colorTokens.brand.primary
-            : marker === 'current'
-              ? colorTokens.text.primary
-              : colorTokens.text.disabled;
-          return (
-            <View key={lesson.id} style={styles.journeyNode}>
-              <View style={styles.journeyRail}>
-                <View style={[
-                  styles.journeyMarker,
-                  marker === 'completed' && styles.journeyMarkerCompleted,
-                  marker === 'current' && styles.journeyMarkerCurrent,
-                  marker === 'upcoming' && styles.journeyMarkerUpcoming,
-                ]}>
-                  <Text accessible={false} style={[
-                    styles.journeyMarkerText,
-                    marker === 'completed' && styles.journeyMarkerTextCompleted,
-                    marker === 'current' && styles.journeyMarkerTextCurrent,
-                    marker === 'upcoming' && styles.journeyMarkerTextUpcoming,
-                  ]}>
-                    {marker === 'completed' ? '✓' : marker === 'current' ? '●' : '○'}
-                  </Text>
-                </View>
-                {!isLast ? <View style={styles.journeyConnector} /> : null}
-              </View>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`${lesson.title}. ${stateLabel}. Open lesson`}
-                onPress={() => navigation.navigate('LessonSummary', { lessonId: lesson.id })}
-                style={({ pressed }) => [
-                  styles.journeyCard,
-                  marker === 'current' && styles.journeyCardCurrent,
-                  marker === 'upcoming' && styles.journeyCardUpcoming,
-                  pressed && styles.pressed,
-                ]}
-              >
-                <Text style={styles.journeyCardTitle}>{lesson.title}</Text>
-                <Text style={styles.journeyCardMeta}>{lesson.estimatedMinutes} minutes · Level {lesson.difficulty}</Text>
-                <Text style={[styles.journeyCardStateText, { color: stateColor }]}>{stateLabel}</Text>
-              </Pressable>
-            </View>
-          );
+  return <SafeAreaView style={referenceStyles.screen}>
+    <StatusBar style="dark" />
+    <ScrollView contentContainerStyle={referenceStyles.scroll} showsVerticalScrollIndicator={false}>
+      {onBack ? <View style={referenceStyles.headerRow}><Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={onBack} style={({ pressed }) => [referenceStyles.iconButton, pressed && referenceStyles.pressed]}><ReferenceIcon name="back" /></Pressable><View style={{ width: 38 }} /></View> : null}
+      <IdentityHeader />
+      <View style={referenceStyles.header}><Text accessibilityRole="header" style={referenceStyles.title}>Your Journey</Text><Text style={referenceStyles.subtitle}>Your personalised path to success</Text></View>
+      <Text style={referenceStyles.journeyIntro}>This is the recommended order. You can still choose any lesson from Categories whenever your dog needs something different.</Text>
+      <View style={referenceStyles.stageList}>
+        {stages.map((stage) => {
+          const complete = stage.lessons.filter((lesson) => lesson.state === 'COMPLETED').length;
+          const expanded = expandedStage === 'all' || expandedStage === stage.id;
+          const active = stage.id === firstIncompleteStage;
+          return <View key={stage.id} style={referenceStyles.stageCard}>
+            <Pressable accessibilityRole="button" accessibilityLabel={`Stage ${stage.number}: ${stage.title}. ${complete} of ${stage.lessons.length} completed.`} accessibilityState={{ expanded }} onPress={() => setExpandedStage((current) => current === stage.id ? 'all' : stage.id)} style={({ pressed }) => [referenceStyles.stageHeader, pressed && referenceStyles.pressed]}>
+              <View style={[referenceStyles.stageNumber, active && referenceStyles.stageNumberActive]}><Text style={[referenceStyles.stageNumberText, active && referenceStyles.stageNumberTextActive]}>{stage.number}</Text></View>
+              <View style={referenceStyles.stageHeaderCopy}><Text style={referenceStyles.stageTitle}>Stage {stage.number}: {stage.title}</Text><Text style={referenceStyles.stageProgress}>{complete} / {stage.lessons.length} completed</Text></View>
+              <ReferenceIcon name="chevron" size={18} color={referencePalette.muted} />
+            </Pressable>
+            {expanded ? <View style={referenceStyles.stageBody}>{stage.lessons.map((lesson) => {
+              const completed = lesson.state === 'COMPLETED';
+              const current = lesson.state === 'IN_PROGRESS' || lesson.state === 'AVAILABLE';
+              return <Pressable key={lesson.id} accessibilityRole="button" accessibilityLabel={`${lesson.title}. ${completed ? 'Completed' : current ? 'Available' : 'Upcoming'}. Open lesson`} onPress={() => onOpenLesson(lesson.id)} style={({ pressed }) => [referenceStyles.stageLessonRow, pressed && referenceStyles.pressed]}>
+                <View style={[referenceStyles.stageLessonMarker, completed && referenceStyles.stageLessonMarkerComplete, current && !completed && referenceStyles.stageLessonMarkerCurrent]}>{completed ? <ReferenceIcon name="check" size={13} color="#FFFFFF" strokeWidth={2.4} /> : current ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: referencePalette.navy }} /> : <ReferenceIcon name="lock" size={12} color={referencePalette.inactive} />}</View>
+                <View style={{ flex: 1, minWidth: 0 }}><Text numberOfLines={2} style={referenceStyles.stageLessonTitle}>{lesson.title}</Text><Text style={referenceStyles.stageLessonMeta}>{lesson.estimatedMinutes} min · Level {lesson.difficulty}</Text></View>
+              </Pressable>;
+            })}</View> : null}
+          </View>;
         })}
       </View>
-    ))}
-  </AppScreen>;
+      <Pressable accessibilityRole="button" accessibilityLabel="View full journey" onPress={() => setExpandedStage('all')} style={({ pressed }) => [referenceStyles.largeGreenButton, pressed && referenceStyles.pressed]}><Text style={referenceStyles.largeGreenButtonText}>View Full Journey</Text></Pressable>
+      <Text style={[referenceStyles.smallSubtitle, { textAlign: 'center' }]}>{completedCount} of {lessons.length} lessons complete</Text>
+    </ScrollView>
+  </SafeAreaView>;
+}
+
+function createJourneyStages(lessons: readonly LessonLibraryItem[]): readonly JourneyStage[] {
+  const stages: JourneyStage[] = [
+    { id: 'foundation', number: 1, title: 'Foundation', lessons: lessons.filter((lesson) => lesson.difficulty === 1) },
+    { id: 'building', number: 2, title: 'Building Skills', lessons: lessons.filter((lesson) => lesson.difficulty === 2) },
+    { id: 'real-world', number: 3, title: 'Real World', lessons: lessons.filter((lesson) => lesson.difficulty === 3) },
+    { id: 'lifelong', number: 4, title: 'Lifelong Skills', lessons: lessons.filter((lesson) => lesson.difficulty >= 4) },
+  ];
+  return stages.filter((stage) => stage.lessons.length > 0);
 }

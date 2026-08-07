@@ -10,13 +10,39 @@ export function TrainingCategoryCard({
   category,
   lessonCount,
   compact = false,
+  layout = 'tile',
   onPress,
 }: {
   readonly category: TrainingCategory;
   readonly lessonCount: number;
   readonly compact?: boolean;
+  readonly layout?: 'tile' | 'row';
   readonly onPress: () => void;
 }): React.JSX.Element {
+  if (layout === 'row') {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${category.label}. ${lessonCount} lessons. ${category.description}`}
+        onPress={onPress}
+        style={({ pressed }) => [styles.discoveryCategoryRow, pressed && styles.homeButtonPressed]}
+      >
+        <Image
+          accessible={false}
+          resizeMode="cover"
+          source={getLessonImageSource(category.anchorLessonId, category.skill)}
+          style={styles.discoveryCategoryRowImage}
+        />
+        <View style={styles.discoveryCategoryRowCopy}>
+          <Text style={styles.discoveryCategoryRowTitle}>{category.label}</Text>
+          <Text style={styles.discoveryCategoryRowCount}>{lessonCount} lessons</Text>
+          <Text numberOfLines={2} style={styles.discoveryCategoryRowDescription}>{category.description}</Text>
+        </View>
+        <Text accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.discoveryCategoryRowArrow}>›</Text>
+      </Pressable>
+    );
+  }
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -44,11 +70,38 @@ export function TrainingCategoryCard({
 
 export function RecommendedLessonCard({
   lesson,
+  layout = 'card',
   onPress,
 }: {
   readonly lesson: LessonLibraryItem;
+  readonly layout?: 'card' | 'row';
   readonly onPress: () => void;
 }): React.JSX.Element {
+  if (layout === 'row') {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Recommended lesson: ${lesson.title}. ${skillLabel(lesson.skill)}. ${lessonDifficultyLabels[lesson.difficulty]}. ${lesson.estimatedMinutes} minutes.`}
+        onPress={onPress}
+        style={({ pressed }) => [styles.discoveryRecommendedRow, pressed && styles.homeButtonPressed]}
+      >
+        <Image
+          accessible={false}
+          resizeMode="cover"
+          source={getLessonImageSource(lesson.id, lesson.skill)}
+          style={styles.discoveryRecommendedRowImage}
+        />
+        <View style={styles.discoveryRecommendedRowCopy}>
+          <Text style={styles.discoveryRecommendedKicker}>{skillLabel(lesson.skill)}</Text>
+          <Text numberOfLines={2} style={styles.discoveryRecommendedTitle}>{lesson.title}</Text>
+          <Text numberOfLines={2} style={styles.discoveryRecommendedRowDescription}>{lesson.description}</Text>
+          <Text style={styles.discoveryRecommendedMeta}>{lessonDifficultyLabels[lesson.difficulty]} · {lesson.estimatedMinutes} min</Text>
+        </View>
+        <Text accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.discoveryRecommendedRowArrow}>›</Text>
+      </Pressable>
+    );
+  }
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -75,13 +128,40 @@ export function LifeStageCard({
   collection,
   lessonCount,
   compact = false,
+  layout = 'image',
   onPress,
 }: {
   readonly collection: LessonCollection;
   readonly lessonCount: number;
   readonly compact?: boolean;
+  readonly layout?: 'image' | 'row';
   readonly onPress: () => void;
 }): React.JSX.Element {
+  if (layout === 'row') {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${collection.label}. ${collection.ageLabel}. ${lessonCount} lessons. ${collection.description}`}
+        onPress={onPress}
+        style={({ pressed }) => [styles.discoveryStageRow, pressed && styles.homeButtonPressed]}
+      >
+        <Image
+          accessible={false}
+          resizeMode="cover"
+          source={getLessonImageSource(collection.anchorLessonId)}
+          style={styles.discoveryStageRowImage}
+        />
+        <View style={styles.discoveryStageRowCopy}>
+          <Text style={styles.discoveryStageRowTitle}>{collection.label}</Text>
+          <Text style={styles.discoveryStageRowAge}>{collection.ageLabel}</Text>
+          <Text numberOfLines={3} style={styles.discoveryStageRowDescription}>{collection.description}</Text>
+          <Text style={styles.discoveryStageRowCount}>{lessonCount} lessons</Text>
+        </View>
+        <Text accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.discoveryStageRowArrow}>›</Text>
+      </Pressable>
+    );
+  }
+
   return (
     <Pressable
       accessibilityRole="button"

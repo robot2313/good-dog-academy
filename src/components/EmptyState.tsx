@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { colorTokens, spacingTokens, typographyTokens } from '../theme/tokens';
+import { referenceScreenStyles } from '../theme/referenceStyles';
 import { AppButton } from './AppButton';
-import { PremiumCard } from './PremiumCard';
 
 type EmptyStateProps = {
   readonly title: string;
@@ -13,48 +12,17 @@ type EmptyStateProps = {
   readonly onAction?: () => void;
 };
 
-export function EmptyState({
-  title,
-  message,
-  illustration,
-  actionTitle,
-  onAction,
-}: EmptyStateProps): React.JSX.Element {
+export function EmptyState({ title, message, illustration, actionTitle, onAction }: EmptyStateProps): React.JSX.Element {
   return (
-    <PremiumCard tone="elevated" style={componentStyles.card}>
-      {illustration ? <View style={componentStyles.illustration}>{illustration}</View> : null}
-      <Text accessibilityRole="header" style={componentStyles.title}>{title}</Text>
-      <Text style={componentStyles.message}>{message}</Text>
+    <View style={referenceScreenStyles.emptyCard}>
+      {illustration ? <View style={{ alignItems: 'center', justifyContent: 'center' }}>{illustration}</View> : null}
+      <Text accessibilityRole="header" style={referenceScreenStyles.emptyTitle}>{title}</Text>
+      <Text style={referenceScreenStyles.emptyBody}>{message}</Text>
       {actionTitle && onAction ? (
-        <View style={componentStyles.action}>
+        <View style={{ alignSelf: 'stretch', marginTop: 6 }}>
           <AppButton title={actionTitle} onPress={onAction} />
         </View>
       ) : null}
-    </PremiumCard>
+    </View>
   );
 }
-
-const componentStyles = StyleSheet.create({
-  card: {
-    alignItems: 'center',
-    paddingVertical: spacingTokens.xl,
-  },
-  illustration: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    ...typographyTokens.sectionTitle,
-    color: colorTokens.text.primary,
-    textAlign: 'center',
-  },
-  message: {
-    ...typographyTokens.body,
-    color: colorTokens.text.secondary,
-    textAlign: 'center',
-  },
-  action: {
-    alignSelf: 'stretch',
-    marginTop: spacingTokens.xxs,
-  },
-});

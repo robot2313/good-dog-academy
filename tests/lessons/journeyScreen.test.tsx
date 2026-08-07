@@ -48,10 +48,9 @@ describe('JourneyScreen', () => {
     mockUseLessonLibraryData.mockReturnValue(contextValue());
     const { view, navigate } = renderJourney();
 
-    expect(view.getByRole('header', { name: 'Your journey so far' })).toBeTruthy();
+    expect(view.getByRole('header', { name: 'Your Journey' })).toBeTruthy();
     expect(view.getByText(`0 of ${catalogue.definitions.length} lessons complete`)).toBeTruthy();
-    // The first lesson is the next step and is tappable.
-    expect(view.getByText('Next up')).toBeTruthy();
+    expect(view.getByRole('button', { name: /Stage 1: Foundation/ })).toBeTruthy();
     fireEvent.press(view.getByRole('button', { name: new RegExp(`^${firstLesson.title}\\.`) }));
     expect(navigate).toHaveBeenCalledWith('LessonSummary', { lessonId: firstLesson.id });
   });
@@ -73,7 +72,7 @@ describe('JourneyScreen', () => {
     const view = renderJourney().view;
 
     expect(view.getByText(`1 of ${catalogue.definitions.length} lessons complete`)).toBeTruthy();
-    expect(view.getAllByText('Complete').length).toBeGreaterThan(0);
+    expect(view.getByRole('button', { name: new RegExp(`^${firstLesson.title}\. Completed`) })).toBeTruthy();
   });
 
   it('surfaces a loading state without a crash', () => {

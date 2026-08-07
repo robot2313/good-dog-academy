@@ -1,15 +1,14 @@
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { AppButton } from '../components/AppButton';
 import { AppScreen } from '../components/AppScreen';
-import { DogIdentityHero } from '../components/DogIdentityHero';
 import { ErrorState } from '../components/ErrorState';
+import { IdentityHeader } from '../components/IdentityHeader';
 import { LoadingState } from '../components/LoadingState';
 import { Metric } from '../components/Metric';
-import { PremiumCard } from '../components/PremiumCard';
 import { SectionHeader } from '../components/SectionHeader';
 import { DogLearningPassportError } from '../features/progress/passport/DogLearningPassportError';
 import type { DogLearningPassport } from '../features/progress/passport/DogLearningPassportTypes';
@@ -17,8 +16,7 @@ import { PassportSkillCard } from '../features/progress/passport/PassportSkillCa
 import { PassportTimeline } from '../features/progress/passport/PassportTimeline';
 import { useDogLearningPassport } from '../features/progress/passport/useDogLearningPassport';
 import { useOnboarding } from '../features/onboarding/OnboardingContext';
-import { colorTokens, spacingTokens, typographyTokens } from '../theme/tokens';
-import { styles } from '../theme/styles';
+import { referenceScreenStyles } from '../theme/referenceStyles';
 import type { MainTabParamList, RootStackParamList } from '../types/navigation';
 
 type Props = CompositeScreenProps<
@@ -30,7 +28,6 @@ export function ProgressScreen({ navigation }: Props): React.JSX.Element {
   const { status } = useOnboarding();
   const dog = status?.state === 'complete' ? status.dog : null;
   const dogName = dog?.name ?? 'My Dog';
-  const photoUri = dog?.photoUri ?? null;
   const { passport, loading, error, retry } = useDogLearningPassport();
 
   const openNextStep = (current: DogLearningPassport) => {
@@ -47,41 +44,41 @@ export function ProgressScreen({ navigation }: Props): React.JSX.Element {
 
   return (
     <AppScreen>
-      <DogIdentityHero
-        dogName={dogName}
-        photoUri={photoUri}
-        eyebrow="TRAINING INTELLIGENCE"
-        title="Learning Passport"
-        supportingText={`A private evidence record of what ${dogName} has practised, where it worked, and what should come next.`}
-        size="standard"
-      />
+      <IdentityHeader />
+
+      <View style={referenceScreenStyles.pageHeader}>
+        <Text accessibilityRole="header" style={referenceScreenStyles.pageTitle}>Learning Passport</Text>
+        <Text style={referenceScreenStyles.pageSubtitle}>
+          A private evidence record of what {dogName} has practised, where it worked, and what should come next.
+        </Text>
+      </View>
 
       {loading ? <LoadingState message={`Building ${dogName}'s Learning Passport...`} /> : null}
       {!loading && error ? <ErrorState message={passportErrorMessage(error)} onRetry={retry} /> : null}
       {!loading && !error && passport ? <>
           <PassportSnapshot dogName={dogName} passport={passport} />
 
-          <PremiumCard tone="selected">
+          <View style={referenceScreenStyles.cardSelected}>
             <SectionHeader
               eyebrow="NEXT SAFEST STEP"
               title={passport.nextStep.title}
               supportingText={passport.nextStep.reason}
             />
             <AppButton title={passport.nextStep.title} onPress={() => openNextStep(passport)} />
-          </PremiumCard>
+          </View>
 
-          <View style={componentStyles.section}>
+          <View style={{ gap: 10 }}>
             <SectionHeader
               eyebrow="SKILL EVIDENCE"
               title="What the record supports"
               supportingText="Reliability appears only when it was explicitly reported in a named environment."
             />
-            <View accessibilityRole="list" style={componentStyles.list}>
+            <View accessibilityRole="list" style={referenceScreenStyles.listGap}>
               {passport.skills.map((record) => <PassportSkillCard key={record.skill} record={record} />)}
             </View>
           </View>
 
-          <View style={componentStyles.section}>
+          <View style={{ gap: 10 }}>
             <SectionHeader
               eyebrow="TRAINING STORY"
               title="Recent evidence"
@@ -93,20 +90,23 @@ export function ProgressScreen({ navigation }: Props): React.JSX.Element {
             />
           </View>
 
-          <PremiumCard tone="elevated">
+          <View style={referenceScreenStyles.card}>
             <SectionHeader
               eyebrow="FULL JOURNAL"
               title="Training history"
               supportingText="Review every completed guided session, outcome, rating range, and saved note."
             />
             <AppButton title="View session history" onPress={() => navigation.navigate('SessionHistory')} />
-          </PremiumCard>
+          </View>
 
-          <PremiumCard>
-            <Text accessibilityRole="header" style={componentStyles.evidenceTitle}>How Passport evidence works</Text>
-            <Text style={componentStyles.evidenceText}>A successful lesson shows useful progress, not mastery. “Reliable here” is reserved for an explicit reliable result and always names the recorded environment.</Text>
+          <View style={referenceScreenStyles.card}>
+            <Text accessibilityRole="header" style={referenceScreenStyles.blockTitle}>How Passport evidence works</Text>
+            <Text style={referenceScreenStyles.blockIntro}>
+              A successful lesson shows useful progress, not mastery. “Reliable here” is reserved for an explicit
+              reliable result and always names the recorded environment.
+            </Text>
             <AppButton variant="secondary" title="Browse the Academy" onPress={() => navigation.navigate('Academy')} />
-          </PremiumCard>
+          </View>
         </> : null}
     </AppScreen>
   );
@@ -116,22 +116,21 @@ function PassportSnapshot({ dogName, passport }: { readonly dogName: string; rea
   const reliableSkills = passport.skills.filter((record) => record.evidenceLevel === 'reliable').length;
   const growingSkills = passport.skills.filter((record) => record.evidenceLevel === 'growing').length;
   return (
-    <PremiumCard tone="forest" style={styles.progressSnapshotCard}>
+    <View style={{ gap: 10 }}>
       <SectionHeader
-        inverse
         eyebrow="PASSPORT SNAPSHOT"
         title={`${dogName}'s evidence`}
         supportingText={`${reliableSkills} environment-specific reliable skills and ${growingSkills} growing skills recorded so far.`}
       />
-      <View style={styles.metricRow}>
+      <View style={referenceScreenStyles.statRow}>
         <Metric value={passport.snapshot.completedLessons} label="Lessons" />
         <Metric value={passport.snapshot.completedSessions} label="Sessions" />
         <Metric value={passport.snapshot.trainingMinutes} label="Minutes" />
       </View>
-      <Text style={componentStyles.snapshotFootnote}>
+      <Text style={referenceScreenStyles.meta}>
         {passport.snapshot.recordedEnvironments} real-world environments recorded
       </Text>
-    </PremiumCard>
+    </View>
   );
 }
 
@@ -144,11 +143,3 @@ function passportErrorMessage(error: DogLearningPassportError): string {
   }
   return 'The Learning Passport could not be loaded. Please try again.';
 }
-
-const componentStyles = StyleSheet.create({
-  section: { gap: spacingTokens.md },
-  list: { gap: spacingTokens.sm },
-  snapshotFootnote: { ...typographyTokens.caption, color: 'rgba(255,255,255,0.72)', textAlign: 'center' },
-  evidenceTitle: { ...typographyTokens.cardTitle, color: colorTokens.text.primary },
-  evidenceText: { ...typographyTokens.body, color: colorTokens.text.secondary },
-});

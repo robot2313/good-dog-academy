@@ -7,8 +7,8 @@ import { InlineValidationMessage } from '../../components/InlineValidationMessag
 import { LessonActionBar } from '../../components/LessonActionBar';
 import { LessonScaffold } from '../../components/LessonScaffold';
 import { useOnboarding } from '../onboarding/OnboardingContext';
-import { colors } from '../../theme/colors';
-import { colorTokens, spacingTokens } from '../../theme/tokens';
+import { referencePalette } from '../../theme/referenceStyles';
+import { spacingTokens } from '../../theme/tokens';
 import type { RootStackParamList } from '../../types/navigation';
 import { localDataDeletionService } from './localDataDeletionServiceInstance';
 
@@ -88,12 +88,12 @@ export function PrivacyScreen({ navigation }: Props): React.JSX.Element {
 }
 
 const screenStyles = StyleSheet.create({
-  header: { gap: spacingTokens.sm },
-  title: { color: colors.text, fontSize: 30, lineHeight: 36, fontWeight: '900' },
-  intro: { color: colors.muted, fontSize: 16, lineHeight: 24 },
-  card: { gap: spacingTokens.sm, padding: spacingTokens.lg, borderRadius: 20, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.card },
-  dangerCard: { gap: spacingTokens.md, padding: spacingTokens.lg, borderRadius: 20, borderWidth: 1, borderColor: '#D9B0A9', backgroundColor: colorTokens.status.errorSurface },
-  heading: { color: colors.text, fontSize: 20, lineHeight: 26, fontWeight: '900' },
-  body: { color: colors.text, fontSize: 15, lineHeight: 23 },
-  email: { color: colors.gold, fontSize: 16, lineHeight: 23, fontWeight: '800' },
+  header: { gap: 3 },
+  title: { color: referencePalette.navy, fontSize: 26, lineHeight: 32, fontWeight: '900', letterSpacing: -0.5 },
+  intro: { color: referencePalette.muted, fontSize: 12.5, lineHeight: 18 },
+  card: { gap: spacingTokens.xs, padding: spacingTokens.md, borderRadius: 12, borderWidth: 1, borderColor: referencePalette.line, backgroundColor: referencePalette.surface },
+  dangerCard: { gap: spacingTokens.sm, padding: spacingTokens.md, borderRadius: 12, borderWidth: 1, borderColor: '#E2C3BB', backgroundColor: '#F8E7E2' },
+  heading: { color: referencePalette.navy, fontSize: 15, lineHeight: 20, fontWeight: '900' },
+  body: { color: referencePalette.text, fontSize: 12.5, lineHeight: 18 },
+  email: { color: referencePalette.greenDark, fontSize: 14, lineHeight: 20, fontWeight: '800' },
 });

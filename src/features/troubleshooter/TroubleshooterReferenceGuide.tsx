@@ -63,8 +63,8 @@ function GuideItem({ title, text }: { readonly title: string; readonly text: str
 }
 
 const styles = StyleSheet.create({
-  guide: { gap: spacingTokens.md },
-  section: { gap: spacingTokens.sm, padding: spacingTokens.lg, borderRadius: radiusTokens.xl, backgroundColor: colorTokens.surface.primary, borderWidth: 1, borderColor: colorTokens.border.subtle },
+  guide: { gap: spacingTokens.sm },
+  section: { gap: spacingTokens.xs, padding: spacingTokens.md, borderRadius: radiusTokens.xl, backgroundColor: colorTokens.surface.primary, borderWidth: 1, borderColor: colorTokens.border.subtle },
   sectionTitle: { ...typographyTokens.sectionTitle, color: colorTokens.text.primary },
   item: { gap: spacingTokens.xxs, paddingTop: spacingTokens.xs, borderTopWidth: 1, borderTopColor: colorTokens.border.subtle },
   itemTitle: { ...typographyTokens.cardTitle, color: colorTokens.brand.primary },

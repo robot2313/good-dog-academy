@@ -28,7 +28,7 @@ describe('release configuration', () => {
     expect(config.expo.slug).toBe('good-dog-academy');
     expect(config.expo.scheme).toBe('gooddogacademy');
     expect(config.expo.userInterfaceStyle).toBe('light');
-    expect(config.expo.backgroundColor).toBe('#F5F0E6');
+    expect(config.expo.backgroundColor).toBe('#FBF8F0');
     expect(config.expo.ios).toMatchObject({
       supportsTablet: false,
       bundleIdentifier: 'com.robot2313.gooddogacademy',

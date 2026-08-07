@@ -19,7 +19,7 @@ import Svg, { Defs, Path, Text as SvgText, TextPath } from 'react-native-svg';
  * scales fall back to straight (non-arced) gold text so nothing is clipped.
  */
 
-const GOLD = '#B85F3E';
+const GOLD = '#1D6337';
 const SHADOW = 'rgba(0,0,0,0.5)';
 
 type HomeDogNameProps = {

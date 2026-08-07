@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     marginBottom: spacingTokens.sm,
   },
   decoration: {
-    color: colorTokens.brand.gold,
+    color: colorTokens.brand.primary,
     fontSize: 24,
   },
   paw: {

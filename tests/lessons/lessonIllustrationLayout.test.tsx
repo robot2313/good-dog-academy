@@ -19,10 +19,10 @@ describe('lesson illustration layout', () => {
     expect('height' in frame).toBe(false);
   });
 
-  it('fills the frame with the image and centres it inside a dark fallback background', () => {
+  it('fills the frame with the image and centres it inside the warm green fallback background', () => {
     expect(image.width).toBe('100%');
     expect(image.height).toBe('100%');
-    expect(frame.backgroundColor).toBe('#E3EBDD');
+    expect(frame.backgroundColor).toBe('#EEF5EA');
     expect(frame.alignItems).toBe('center');
     expect(frame.justifyContent).toBe('center');
   });

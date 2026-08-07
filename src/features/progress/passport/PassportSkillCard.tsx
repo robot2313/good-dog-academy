@@ -79,7 +79,7 @@ function badgeTextStyle(level: PassportEvidenceLevel) {
 }
 
 const componentStyles = StyleSheet.create({
-  card: { borderRadius: radiusTokens.xl, padding: spacingTokens.lg, gap: spacingTokens.sm },
+  card: { borderRadius: radiusTokens.md, padding: spacingTokens.md, gap: spacingTokens.xs },
   headingRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacingTokens.sm },
   title: { ...typographyTokens.cardTitle, flex: 1, color: colorTokens.text.primary },
   badge: { flexShrink: 0, borderRadius: radiusTokens.pill, paddingHorizontal: spacingTokens.sm, paddingVertical: spacingTokens.xs, borderWidth: 1 },

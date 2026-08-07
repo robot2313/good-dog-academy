@@ -1,12 +1,13 @@
-import { Image, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 
 import { AppScreen } from '../../../components/AppScreen';
 import { ErrorState } from '../../../components/ErrorState';
-import { LessonActionBar } from '../../../components/LessonActionBar';
-import { LessonScaffold } from '../../../components/LessonScaffold';
 import { LoadingState } from '../../../components/LoadingState';
-import { SecondaryTextButton } from '../../../components/SecondaryTextButton';
+import { ReferenceIcon } from '../../../components/ReferenceIcon';
 import type { LessonDefinition, LessonId } from '../../../domain/models';
+import { referencePalette, referenceStyles } from '../../../theme/referenceStyles';
 import { styles } from '../../../theme/styles';
 import { lessonIllustrationForSkill } from '../coaching/LessonIllustration';
 import { getLessonImageSource } from '../coaching/lessonImageManifest';
@@ -14,9 +15,8 @@ import { lessonDifficultyLabels, lessonLibraryErrorMessage, skillLabel } from '.
 import { LessonLibraryError } from './LessonLibraryError';
 import type { LessonLibraryService } from './LessonLibraryService';
 import type { LessonLibraryItem } from './lessonLibraryTypes';
-import { LessonStateBadge } from './LessonStateBadge';
 
-type LessonSummaryScreenViewProps = {
+export type LessonSummaryScreenViewProps = {
   lessonId: LessonId;
   lessonDefinition: LessonDefinition | null;
   dogName: string | null;
@@ -31,110 +31,41 @@ type LessonSummaryScreenViewProps = {
 
 const fallbackEquipment = Object.freeze(['Small rewards your dog enjoys']);
 
-export function LessonSummaryScreenView({ lessonId, lessonDefinition, dogName, service, loading, error, onRetry, allowLockedStart = false, onBack, onStart }: LessonSummaryScreenViewProps): React.JSX.Element {
+export function LessonSummaryScreenView({ lessonId, lessonDefinition, service, loading, error, onRetry, allowLockedStart = false, onBack, onStart }: LessonSummaryScreenViewProps): React.JSX.Element {
   let lesson: LessonLibraryItem | null = null;
   let derivedError = error;
-  if (!loading && !derivedError) {
-    try {
-      lesson = service.getLessonSummary(lessonId);
-    } catch (cause) {
-      derivedError = cause;
-    }
-  }
-
+  if (!loading && !derivedError) { try { lesson = service.getLessonSummary(lessonId); } catch (cause) { derivedError = cause; } }
   if (loading) return <AppScreen scroll={false}><LoadingState message="Loading lesson…" /></AppScreen>;
   if (derivedError) {
-    const invalidLesson = derivedError instanceof LessonLibraryError && derivedError.code === 'LESSON_NOT_FOUND';
-    return <AppScreen>
-      <Text style={styles.eyebrowDark}>GET READY</Text>
-      <ErrorState message={lessonLibraryErrorMessage(derivedError)} onRetry={invalidLesson ? onBack : onRetry} actionTitle={invalidLesson ? 'Back to Lesson Library' : 'Try again'} />
-      <SecondaryTextButton title="Back" onPress={onBack} />
-    </AppScreen>;
+    const invalid = derivedError instanceof LessonLibraryError && derivedError.code === 'LESSON_NOT_FOUND';
+    return <AppScreen><Text style={styles.eyebrowDark}>GET READY</Text><ErrorState message={lessonLibraryErrorMessage(derivedError)} onRetry={invalid ? onBack : onRetry} actionTitle={invalid ? 'Back to Lesson Library' : 'Try again'} /></AppScreen>;
   }
-
   if (!lesson) return <AppScreen><ErrorState message="This lesson could not be displayed." onRetry={onBack} actionTitle="Back to Lesson Library" /></AppScreen>;
 
   const definitionMatches = lessonDefinition?.id === lesson.id;
-  const equipment = lessonDefinition && lessonDefinition.equipment.length > 0
-    ? lessonDefinition.equipment
-    : fallbackEquipment;
-  const illustrationLabel = lessonDefinition
-    ? lessonIllustrationForSkill(lessonDefinition.skill).accessibilityLabel
-    : undefined;
+  const equipment = lessonDefinition && lessonDefinition.equipment.length > 0 ? lessonDefinition.equipment : fallbackEquipment;
+  const imageLabel = lessonDefinition ? lessonIllustrationForSkill(lessonDefinition.skill).accessibilityLabel : `${lesson.title} lesson photograph`;
   const selfDirectedLock = lesson.state === 'LOCKED' && allowLockedStart ? lesson.lock : null;
-  const selfDirectedLockedLesson = selfDirectedLock !== null;
-  const canStart = (lesson.state !== 'LOCKED' || selfDirectedLockedLesson) && definitionMatches;
+  const selfDirected = selfDirectedLock !== null;
+  const canStart = (lesson.state !== 'LOCKED' || selfDirected) && definitionMatches;
+  const learningPoints = lessonDefinition?.steps.slice(0, 4).map(cleanStep) ?? [lesson.description];
 
-  return <LessonScaffold
-    footer={<LessonActionBar
-      back={{ label: 'Back', onPress: onBack }}
-      forward={canStart ? { label: 'Next', onPress: onStart } : undefined}
-    />}
-  >
-    <Text style={styles.eyebrowDark}>GET READY</Text>
-
-    <View style={styles.libraryLessonTopRow}>
-      <Text style={styles.librarySkillLabel}>{skillLabel(lesson.skill)}</Text>
-      {selfDirectedLock ? (
-        <View style={[styles.libraryStateBadge, styles.libraryStateAvailable]}>
-          <Text style={styles.libraryStateText}>Self-directed</Text>
-        </View>
-      ) : <LessonStateBadge state={lesson.state} />}
-    </View>
-    <Text accessibilityRole="header" style={styles.pageTitle}>{lesson.title}</Text>
-    {lessonDefinition ? <Text style={styles.body}>{lessonDefinition.goal}</Text> : <Text style={styles.body}>{lesson.description}</Text>}
-    <View style={styles.libraryMetadataRow}>
-      <Text style={styles.libraryMetadataText}>{lessonDifficultyLabels[lesson.difficulty]}</Text>
-      <Text style={styles.libraryMetadataDot}>•</Text>
-      <Text style={styles.libraryMetadataText}>{lesson.estimatedMinutes} minutes</Text>
-    </View>
-
-    {definitionMatches && illustrationLabel ? (
-      <View style={[styles.lessonIllustrationCard, styles.getReadyImageCard]}>
-        <View style={styles.lessonIllustrationFrame}>
-          <Image
-            accessible
-            accessibilityLabel={illustrationLabel}
-            accessibilityRole="image"
-            resizeMode="contain"
-            source={getLessonImageSource(lesson.id, lessonDefinition?.skill ?? null)}
-            style={styles.lessonIllustration}
-          />
-        </View>
+  return <SafeAreaView edges={['top', 'bottom']} style={referenceStyles.detailSafe}>
+    <StatusBar style="light" />
+    <ScrollView contentContainerStyle={referenceStyles.detailScrollContent} showsVerticalScrollIndicator={false}>
+      <View style={referenceStyles.detailHero}><Image accessible accessibilityLabel={imageLabel} accessibilityRole="image" resizeMode="cover" source={getLessonImageSource(lesson.id, lessonDefinition?.skill ?? null)} style={referenceStyles.detailHeroImage} /><View style={referenceStyles.detailOverlayTop}><Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={onBack} style={({ pressed }) => [referenceStyles.overlayIconButton, pressed && referenceStyles.pressed]}><ReferenceIcon name="back" color="#FFFFFF" /></Pressable><View accessible={false} style={referenceStyles.overlayIconButton}><ReferenceIcon name="bookmark" color="#FFFFFF" /></View></View></View>
+      <View style={referenceStyles.detailContent}>
+        <Text style={referenceStyles.detailKicker}>GET READY · {skillLabel(lesson.skill)}</Text>
+        <Text accessibilityRole="header" style={referenceStyles.detailTitle}>{lesson.title}</Text>
+        <View style={referenceStyles.detailChips}><View style={referenceStyles.detailChip}><Text style={referenceStyles.detailChipText}>{lessonDifficultyLabels[lesson.difficulty]}</Text></View><View style={referenceStyles.detailChip}><Text style={referenceStyles.detailChipText}>{lesson.estimatedMinutes} min</Text></View>{selfDirected ? <View style={[referenceStyles.detailChip, { backgroundColor: referencePalette.greenSoft }]}><Text style={[referenceStyles.detailChipText, { color: referencePalette.greenDark }]}>Self-directed</Text></View> : null}</View>
+        <Text style={referenceStyles.detailGoal}>{lessonDefinition?.goal ?? lesson.description}</Text>
+        {lesson.state === 'LOCKED' && !selfDirected ? <View accessible accessibilityLabel={`Locked. ${lesson.lock.reason}`} style={referenceStyles.detailNotice}><Text style={referenceStyles.detailNoticeTitle}>Why this lesson is locked</Text><Text style={referenceStyles.detailNoticeBody}>{lesson.lock.reason}</Text>{lesson.lock.missingPrerequisiteNames.length > 0 ? <Text style={referenceStyles.detailNoticeBody}>Required first: {lesson.lock.missingPrerequisiteNames.join(', ')}</Text> : null}</View> : null}
+        {selfDirectedLock ? <View accessible accessibilityLabel={`Self-directed lesson. ${selfDirectedLock.reason} You can still choose this lesson now.`} style={referenceStyles.detailNotice}><Text style={referenceStyles.detailNoticeTitle}>Later in the recommended Journey</Text><Text style={referenceStyles.detailNoticeBody}>{selfDirectedLock.reason} That order is recommended, but you can still choose this lesson now.</Text></View> : null}
+        <View style={{ gap: 10 }}><Text accessibilityRole="header" style={referenceStyles.detailSectionTitle}>You will learn</Text><View style={referenceStyles.detailBulletList}>{learningPoints.map((point, index) => <View key={`${lesson.id}-learn-${index}`} style={referenceStyles.detailBulletRow}><View style={referenceStyles.detailBulletIcon}><ReferenceIcon name="check" size={12} color="#FFFFFF" strokeWidth={2.4} /></View><Text style={referenceStyles.detailBulletText}>{point}</Text></View>)}</View></View>
+        {lesson.state !== 'LOCKED' || selfDirected ? <View style={referenceStyles.detailEquipmentCard}><Text accessibilityRole="header" style={referenceStyles.detailSectionTitle}>Before we start</Text>{equipment.map((item, index) => <View key={`${lesson.id}-equipment-${index}`} style={referenceStyles.detailBulletRow}><View style={referenceStyles.detailBulletIcon}><ReferenceIcon name="check" size={12} color="#FFFFFF" strokeWidth={2.4} /></View><Text style={referenceStyles.detailBulletText}>{item}</Text></View>)}</View> : null}
       </View>
-    ) : null}
-
-    {lesson.state === 'LOCKED' && !selfDirectedLockedLesson ? (
-      <View accessible accessibilityLabel={`Locked. ${lesson.lock.reason}`} style={styles.librarySummaryLockCard}>
-        <Text style={styles.libraryLockLabel}>WHY THIS IS LOCKED</Text>
-        <Text style={styles.librarySummaryLockReason}>{lesson.lock.reason}</Text>
-        {lesson.lock.missingPrerequisiteNames.length > 0 ? <Text style={styles.librarySummarySupportText}>Required first: {lesson.lock.missingPrerequisiteNames.join(', ')}</Text> : null}
-      </View>
-    ) : (
-      <>
-        {selfDirectedLock ? (
-          <View accessible accessibilityLabel={`Self-directed lesson. ${selfDirectedLock.reason} You can still choose this lesson now.`} style={styles.librarySummaryNotice}>
-            <Text style={styles.librarySummaryNoticeTitle}>Later in the recommended Journey</Text>
-            <Text style={styles.librarySummarySupportText}>{selfDirectedLock.reason} That order is recommended, but you can still choose this lesson now.</Text>
-          </View>
-        ) : null}
-        <View style={styles.card}>
-          <Text accessibilityRole="header" style={styles.sectionTitle}>Before we start</Text>
-          <Text style={styles.body}>Have everything within reach and choose a calm, safe place to practise.</Text>
-          <View style={styles.coachingListCard}>
-            {equipment.map((item, index) => (
-              <View key={`${lesson.id}-equipment-${index}`} style={styles.coachingListRow}>
-                <Text accessible={false} style={styles.coachingBullet}>✓</Text>
-                <Text style={styles.coachingListText}>{item}</Text>
-              </View>
-            ))}
-            <View style={styles.coachingListRow}>
-              <Text accessible={false} style={styles.coachingBullet}>✓</Text>
-              <Text style={styles.coachingListText}>About {lesson.estimatedMinutes} minutes of relaxed practice time</Text>
-            </View>
-          </View>
-        </View>
-      </>
-    )}
-  </LessonScaffold>;
+    </ScrollView>
+    {canStart ? <View style={referenceStyles.detailFooter}><Pressable accessibilityRole="button" accessibilityLabel="Next" onPress={onStart} style={({ pressed }) => [referenceStyles.largeGreenButton, pressed && referenceStyles.pressed]}><Text style={referenceStyles.largeGreenButtonText}>Start Lesson</Text></Pressable></View> : null}
+  </SafeAreaView>;
 }
+function cleanStep(step: string): string { return step.replace(/^\s*\d+[.)]\s*/, '').trim(); }

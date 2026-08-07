@@ -25,8 +25,8 @@ describe('development reset routing', () => {
 
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
     const view = render(<App />);
-    const dogTab = await view.findByRole('tab', { name: 'Dog tab' });
-    fireEvent.press(dogTab);
+    const profileButton = await view.findByRole('button', { name: 'Open dogs profile' });
+    fireEvent.press(profileButton);
     expect(await view.findByText('Developer Tools')).toBeTruthy();
     fireEvent.press(view.getByText('Reset App Data'));
 

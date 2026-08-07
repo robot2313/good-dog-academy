@@ -1,66 +1,28 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { colorTokens, spacingTokens, typographyTokens } from '../theme/tokens';
+import { referencePalette, referenceScreenStyles } from '../theme/referenceStyles';
 
 type SectionHeaderProps = {
   readonly title: string;
   readonly eyebrow?: string;
   readonly supportingText?: string;
+  /**
+   * Retained for source compatibility. The reference has no dark panels, so
+   * headings always render in navy on a light surface.
+   */
   readonly inverse?: boolean;
 };
 
-export function SectionHeader({
-  title,
-  eyebrow,
-  supportingText,
-  inverse = false,
-}: SectionHeaderProps): React.JSX.Element {
+export function SectionHeader({ title, eyebrow, supportingText }: SectionHeaderProps): React.JSX.Element {
   return (
-    <View style={componentStyles.container}>
+    <View style={{ gap: 3 }}>
       {eyebrow ? (
-        <Text style={[componentStyles.eyebrow, inverse && componentStyles.inverseAccent]}>
+        <Text style={{ color: referencePalette.greenDark, fontSize: 9, lineHeight: 13, letterSpacing: 1.1, fontWeight: '900' }}>
           {eyebrow}
         </Text>
       ) : null}
-      <Text
-        accessibilityRole="header"
-        style={[componentStyles.title, inverse && componentStyles.inverse]}
-      >
-        {title}
-      </Text>
-      {supportingText ? (
-        <Text style={[componentStyles.supporting, inverse && componentStyles.inverseSupporting]}>
-          {supportingText}
-        </Text>
-      ) : null}
+      <Text accessibilityRole="header" style={referenceScreenStyles.blockTitle}>{title}</Text>
+      {supportingText ? <Text style={referenceScreenStyles.blockIntro}>{supportingText}</Text> : null}
     </View>
   );
 }
-
-const componentStyles = StyleSheet.create({
-  container: {
-    gap: spacingTokens.xs,
-  },
-  eyebrow: {
-    ...typographyTokens.label,
-    color: colorTokens.brand.primary,
-    letterSpacing: 1.1,
-  },
-  title: {
-    ...typographyTokens.sectionTitle,
-    color: colorTokens.text.primary,
-  },
-  supporting: {
-    ...typographyTokens.supporting,
-    color: colorTokens.text.secondary,
-  },
-  inverse: {
-    color: colorTokens.text.inverse,
-  },
-  inverseAccent: {
-    color: colorTokens.brand.gold,
-  },
-  inverseSupporting: {
-    color: 'rgba(255,255,255,0.78)',
-  },
-});

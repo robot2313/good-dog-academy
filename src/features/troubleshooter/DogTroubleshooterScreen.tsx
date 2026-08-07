@@ -308,14 +308,14 @@ function isSafetyBodyState(state: TroubleshooterBodyState): boolean {
 }
 
 const styles = StyleSheet.create({
-  eyebrow: { ...typographyTokens.label, color: colorTokens.text.accent, letterSpacing: 1.2 },
-  title: { ...typographyTokens.pageTitle, color: colorTokens.text.primary },
-  intro: { ...typographyTokens.body, color: colorTokens.text.secondary },
-  list: { gap: spacingTokens.sm },
-  choiceCard: { borderRadius: radiusTokens.lg, padding: spacingTokens.lg },
+  eyebrow: { ...typographyTokens.label, color: colorTokens.text.accent, letterSpacing: 1.1 },
+  title: { ...typographyTokens.pageTitle, color: colorTokens.text.primary, letterSpacing: -0.5 },
+  intro: { ...typographyTokens.supporting, color: colorTokens.text.secondary },
+  list: { gap: spacingTokens.xs },
+  choiceCard: { borderRadius: radiusTokens.lg, padding: spacingTokens.sm, gap: 2 },
   choiceTitle: { ...typographyTokens.cardTitle, color: colorTokens.text.primary },
   choiceDescription: { ...typographyTokens.supporting, color: colorTokens.text.secondary },
   choose: { ...typographyTokens.label, color: colorTokens.text.accent, marginTop: spacingTokens.xxs },
-  environmentGroup: { gap: spacingTokens.sm },
+  environmentGroup: { gap: spacingTokens.xs },
   helper: { ...typographyTokens.supporting, color: colorTokens.text.secondary },
 });

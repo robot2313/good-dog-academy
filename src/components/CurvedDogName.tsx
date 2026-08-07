@@ -108,7 +108,7 @@ export function CurvedDogName({
         </Defs>
 
         <SvgText
-          fill={colorTokens.brand.gold}
+          fill={colorTokens.brand.primary}
           fontSize={fontSize}
           fontWeight="800"
           letterSpacing={0.4}
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   straightText: {
     ...typographyTokens.cardTitle,
     fontWeight: '800',
-    color: colorTokens.brand.gold,
+    color: colorTokens.brand.primary,
     textAlign: 'center',
   },
 });

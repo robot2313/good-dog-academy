@@ -5,7 +5,7 @@ import { LessonThumbnail } from '../../src/components/LessonThumbnail';
 import { getLessonImageSource } from '../../src/features/lessons/coaching/lessonImageManifest';
 
 describe('LessonThumbnail', () => {
-  it('uses the bundled skill illustration with a concise label', () => {
+  it('uses the bundled lesson photograph with a concise label', () => {
     const view = render(
       <LessonThumbnail
         lessonId="recall-name-response"

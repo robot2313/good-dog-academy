@@ -1,6 +1,6 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
-import { colorTokens, radiusTokens, spacingTokens, typographyTokens } from '../theme/tokens';
+import { referencePalette, referenceScreenStyles, referenceStyles } from '../theme/referenceStyles';
 
 export type AppButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive';
 
@@ -13,6 +13,10 @@ type AppButtonProps = {
   readonly accessibilityLabel?: string;
 };
 
+/**
+ * The reference button: a squared-off rectangle with a 9px radius, matching the
+ * Continue Lesson / Start Lesson / View Full Journey controls in the reference.
+ */
 export function AppButton({
   title,
   onPress,
@@ -22,6 +26,18 @@ export function AppButton({
   accessibilityLabel,
 }: AppButtonProps): React.JSX.Element {
   const inactive = disabled || loading;
+  const container = variant === 'primary'
+    ? referenceScreenStyles.primaryButton
+    : variant === 'destructive'
+      ? referenceScreenStyles.destructiveButton
+      : variant === 'ghost'
+        ? componentStyles.ghost
+        : referenceScreenStyles.secondaryButton;
+  const label = variant === 'primary'
+    ? referenceScreenStyles.primaryButtonText
+    : variant === 'destructive'
+      ? referenceScreenStyles.destructiveButtonText
+      : referenceScreenStyles.secondaryButtonText;
 
   return (
     <Pressable
@@ -31,90 +47,33 @@ export function AppButton({
       disabled={inactive}
       onPress={onPress}
       style={({ pressed }) => [
-        componentStyles.button,
-        componentStyles[variant],
-        pressed && !inactive && componentStyles.pressed,
+        container,
+        pressed && !inactive && referenceStyles.pressed,
         inactive && componentStyles.disabled,
       ]}
     >
       {loading ? (
         <ActivityIndicator
           accessibilityElementsHidden
-          color={variant === 'destructive'
-            ? colorTokens.status.errorText
-            : variant === 'primary'
-              ? colorTokens.text.inverse
-              : colorTokens.brand.primary}
+          color={variant === 'primary' ? '#FFFFFF' : referencePalette.greenDark}
           size="small"
         />
       ) : null}
-      <Text style={[
-        componentStyles.label,
-        variant === 'destructive'
-          ? componentStyles.destructiveLabel
-          : variant === 'primary'
-            ? componentStyles.primaryLabel
-            : componentStyles.secondaryLabel,
-      ]}>
-        {title}
-      </Text>
+      <Text style={label}>{title}</Text>
     </Pressable>
   );
 }
 
 const componentStyles = StyleSheet.create({
-  button: {
-    minHeight: 54,
-    borderRadius: radiusTokens.pill,
-    paddingHorizontal: spacingTokens.lg,
-    paddingVertical: spacingTokens.sm,
+  ghost: {
+    minHeight: 44,
+    borderRadius: 9,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    gap: spacingTokens.xs,
-    borderWidth: 1.5,
-  },
-  primary: {
-    backgroundColor: colorTokens.brand.primary,
-    borderColor: colorTokens.brand.primary,
-    shadowColor: colorTokens.brand.forest,
-    shadowOpacity: 0.16,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 5,
-  },
-  secondary: {
-    backgroundColor: colorTokens.surface.primary,
-    borderColor: colorTokens.border.strong,
-  },
-  ghost: {
+    gap: 8,
+    paddingHorizontal: 12,
     backgroundColor: 'transparent',
-    borderColor: 'transparent',
   },
-  destructive: {
-    backgroundColor: colorTokens.status.errorSurface,
-    borderColor: colorTokens.status.errorText,
-  },
-  label: {
-    ...typographyTokens.body,
-    fontWeight: '800',
-    textAlign: 'center',
-    letterSpacing: 0.25,
-  },
-  primaryLabel: {
-    color: colorTokens.text.inverse,
-  },
-  secondaryLabel: {
-    color: colorTokens.brand.primary,
-  },
-  destructiveLabel: {
-    color: colorTokens.status.errorText,
-  },
-  pressed: {
-    opacity: 0.86,
-    transform: [{ scale: 0.985 }],
-  },
-  disabled: {
-    opacity: 0.48,
-  },
+  disabled: { opacity: 0.45 },
 });

@@ -97,8 +97,8 @@ export function DogIdentityHero({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    padding: spacingTokens.lg,
-    borderRadius: 24,
+    padding: spacingTokens.md,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: colorTokens.border.subtle,
     backgroundColor: colorTokens.surface.primary,
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     padding: 3,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: colorTokens.brand.gold,
+    borderColor: '#F0D6A6',
     backgroundColor: colorTokens.background.subtle,
   },
   copy: {
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     ...typographyTokens.label,
-    color: colorTokens.text.accent,
+    color: '#1D6337',
     textTransform: 'uppercase',
     letterSpacing: 1.2,
   },
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     backgroundColor: colorTokens.surface.selected,
   },
   title: {
-    ...typographyTokens.sectionTitle,
+    ...typographyTokens.cardTitle,
     color: colorTokens.text.primary,
     letterSpacing: -0.25,
   },

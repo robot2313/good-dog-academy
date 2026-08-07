@@ -1,160 +1,39 @@
-import { useMemo } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { AppButton } from '../components/AppButton';
-import { DogIdentityHero } from '../components/DogIdentityHero';
-import {
-  LifeStageCard,
-  RecommendedLessonCard,
-  TrainingCategoryCard,
-} from '../features/lessons/discovery/LessonDiscoveryCards';
-import {
-  lessonCollections,
-  recommendedLessons,
-  trainingCategories,
-} from '../features/lessons/discovery';
-import { LessonLibraryScreen } from '../features/lessons/library/LessonLibraryScreen';
-import { LessonLibraryService } from '../features/lessons/library/LessonLibraryService';
+import { IdentityHeader } from '../components/IdentityHeader';
+import { ReferenceIcon } from '../components/ReferenceIcon';
+import { trainingCategories } from '../features/lessons/discovery';
 import { useLessonLibraryData } from '../features/lessons/library/LessonLibraryContext';
-import { styles } from '../theme/styles';
+import { referencePalette, referenceStyles } from '../theme/referenceStyles';
 import type { RootStackParamList } from '../types/navigation';
+
+const categoryTones = [
+  ['#EEF4E9', '#477B43'], ['#FFF0D9', '#A7660E'], ['#E8F2FA', '#2C719C'], ['#FFF0E5', '#B76823'], ['#E8F5EE', '#2B8050'],
+  ['#F5EAF8', '#7A4A88'], ['#E9F2FB', '#2D6E9C'], ['#FFF4DB', '#A77914'], ['#EAF4EC', '#39754A'], ['#FBE9EC', '#B64C62'],
+] as const;
 
 export function AcademyScreen(): React.JSX.Element {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { catalogue, selectedDog, progressRecords } = useLessonLibraryData();
-  const dogName = selectedDog?.name ?? 'My Dog';
-  const photoUri = selectedDog?.photoUri ?? null;
-  const selectedDogId = selectedDog?.id ?? null;
-  const service = useMemo(
-    () => new LessonLibraryService(catalogue, selectedDogId, progressRecords),
-    [catalogue, progressRecords, selectedDogId],
-  );
+  const { catalogue } = useLessonLibraryData();
+  const categoryCounts = new Map(trainingCategories.map((category) => [category.skill, catalogue.definitions.filter((lesson) => lesson.skill === category.skill && lesson.isActive).length]));
 
-  let recommendations = [] as ReturnType<typeof recommendedLessons>;
-  try {
-    recommendations = recommendedLessons(service.getAllLessons(), 4);
-  } catch {
-    recommendations = [];
-  }
-
-  const categoryCounts = new Map(
-    trainingCategories.map((category) => [
-      category.skill,
-      catalogue.definitions.filter((lesson) => lesson.skill === category.skill && lesson.isActive).length,
-    ]),
-  );
-
-  return (
-    <LessonLibraryScreen
-      allowLockedSelection
-      hero={(
-        <View style={styles.academyDiscoveryHero}>
-          <DogIdentityHero
-            dogName={dogName}
-            photoUri={photoUri}
-            eyebrow="ACADEMY"
-            title="Choose Your Training"
-            supportingText={`Follow ${dogName}'s recommended Journey, use smart recommendations, or choose any category and lesson yourself.`}
-            size="compact"
-          />
-
-          <View style={styles.discoveryPathRow}>
-            <AppButton
-              title="Your Journey"
-              accessibilityLabel={`${dogName}'s recommended training journey`}
-              onPress={() => navigation.navigate('Journey')}
-            />
-            <AppButton
-              title="Recommended"
-              variant="secondary"
-              accessibilityLabel={`Recommended lessons for ${dogName}`}
-              onPress={() => navigation.navigate('LessonBrowse', { recommended: true })}
-            />
-          </View>
-
-          <View style={styles.discoverySection}>
-            <View style={styles.discoverySectionHeader}>
-              <View style={styles.discoverySectionHeaderCopy}>
-                <Text style={styles.discoverySectionKicker}>PICKED FOR YOU</Text>
-                <Text accessibilityRole="header" style={styles.discoverySectionTitle}>Recommended next</Text>
-              </View>
-              <Text style={styles.discoverySectionLink} onPress={() => navigation.navigate('LessonBrowse', { recommended: true })}>See all</Text>
-            </View>
-            {recommendations.length > 0 ? (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.discoveryHorizontalContent}
-              >
-                {recommendations.map((lesson) => (
-                  <RecommendedLessonCard
-                    key={lesson.id}
-                    lesson={lesson}
-                    onPress={() => navigation.navigate('LessonSummary', { lessonId: lesson.id })}
-                  />
-                ))}
-              </ScrollView>
-            ) : (
-              <Text style={styles.discoveryEmptyText}>Recommendations will appear after your dog’s lesson progress is ready.</Text>
-            )}
-          </View>
-
-          <View style={styles.discoverySection}>
-            <View style={styles.discoverySectionHeaderCopy}>
-              <Text style={styles.discoverySectionKicker}>CHOOSE YOUR OWN PATH</Text>
-              <Text accessibilityRole="header" style={styles.discoverySectionTitle}>Browse by category</Text>
-              <Text style={styles.discoverySectionIntro}>Open a training area, then choose any lesson that suits what is happening now.</Text>
-            </View>
-            <View style={styles.discoveryCategoryGrid}>
-              {trainingCategories.map((category) => (
-                <TrainingCategoryCard
-                  key={category.skill}
-                  category={category}
-                  lessonCount={categoryCounts.get(category.skill) ?? 0}
-                  onPress={() => navigation.navigate('LessonBrowse', { skill: category.skill })}
-                />
-              ))}
-            </View>
-          </View>
-
-          <View style={styles.discoverySection}>
-            <View style={styles.discoverySectionHeaderCopy}>
-              <Text style={styles.discoverySectionKicker}>LESSONS FOR YOUR DOG</Text>
-              <Text accessibilityRole="header" style={styles.discoverySectionTitle}>Browse by life stage</Text>
-              <Text style={styles.discoverySectionIntro}>These are curated collections, not a replacement for veterinary advice or your dog’s individual limits.</Text>
-            </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.discoveryHorizontalContent}
-            >
-              {lessonCollections.map((collection) => (
-                <LifeStageCard
-                  key={collection.id}
-                  collection={collection}
-                  lessonCount={collection.lessonIds.length}
-                  onPress={() => navigation.navigate('LessonBrowse', { collectionId: collection.id })}
-                />
-              ))}
-            </ScrollView>
-          </View>
-
-          <AppButton
-            title="Troubleshoot a Problem"
-            variant="secondary"
-            accessibilityLabel={`Troubleshoot a training problem for ${dogName}`}
-            onPress={() => navigation.navigate('Troubleshooter')}
-          />
-
-          <View style={styles.discoveryLibraryIntro}>
-            <Text style={styles.discoverySectionKicker}>FULL CATALOGUE</Text>
-            <Text accessibilityRole="header" style={styles.pageTitle}>Lesson Library</Text>
-            <Text style={styles.libraryDogContext}>Search, filter and open all {catalogue.definitions.length} lessons for {dogName}.</Text>
-          </View>
-        </View>
-      )}
-    />
-  );
+  return <SafeAreaView style={referenceStyles.screen}>
+    <StatusBar style="dark" />
+    <ScrollView contentContainerStyle={referenceStyles.scroll} showsVerticalScrollIndicator={false}>
+      <IdentityHeader />
+      <View style={referenceStyles.header}><Text accessibilityRole="header" style={referenceStyles.title}>Categories</Text><Text style={referenceStyles.subtitle}>Explore training topics</Text></View>
+      <View style={referenceStyles.categoryList}>{trainingCategories.map((category, index) => {
+        const [backgroundColor, iconColor] = categoryTones[index % categoryTones.length]!;
+        const count = categoryCounts.get(category.skill) ?? 0;
+        return <Pressable key={category.skill} accessibilityRole="button" accessibilityLabel={`${category.label}. ${count} lessons. ${category.description}`} onPress={() => navigation.navigate('LessonBrowse', { skill: category.skill })} style={({ pressed }) => [referenceStyles.categoryRow, pressed && referenceStyles.pressed]}>
+          <View style={[referenceStyles.categoryIconBox, { backgroundColor }]}><ReferenceIcon name={category.skill} size={21} color={iconColor} /></View>
+          <Text style={referenceStyles.categoryRowTitle}>{category.label}</Text><Text style={referenceStyles.categoryCount}>{count} lessons</Text><ReferenceIcon name="chevron" size={16} color={referencePalette.inactive} />
+        </Pressable>;
+      })}</View>
+    </ScrollView>
+  </SafeAreaView>;
 }

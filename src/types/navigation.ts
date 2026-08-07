@@ -13,6 +13,9 @@ export type RootStackParamList = {
   AssessmentResults: undefined;
   Main: NavigatorScreenParams<MainTabParamList> | undefined;
   Journey: undefined;
+  Profile: undefined;
+  DogStages: undefined;
+  Recommended: undefined;
   LessonBrowse: { skill?: BehaviourSkill; collectionId?: LessonCollectionId; recommended?: boolean } | undefined;
   Troubleshooter: { mode?: 'standard' | 'help-now' } | undefined;
   Privacy: undefined;
@@ -24,6 +27,7 @@ export type RootStackParamList = {
 
 export type MainTabParamList = {
   Today: { celebrateLessonId?: string; celebrateLessonTitle?: string } | undefined;
+  Plan: undefined;
   Academy: undefined;
   Progress: undefined;
   Dog: undefined;

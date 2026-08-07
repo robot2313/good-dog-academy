@@ -8,7 +8,7 @@ describe('AppButton', () => {
     const view = render(<AppButton title="Continue training" onPress={onPress} />);
     const button = view.getByRole('button', { name: 'Continue training' });
 
-    expect(button).toHaveStyle({ minHeight: 54 });
+    expect(button).toHaveStyle({ minHeight: 52 });
     expect(button.props.accessibilityState).toEqual({ disabled: false });
     fireEvent.press(button);
     expect(onPress).toHaveBeenCalledTimes(1);

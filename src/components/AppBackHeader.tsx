@@ -1,15 +1,7 @@
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import {
-  colorTokens,
-  radiusTokens,
-  spacingTokens,
-  typographyTokens,
-} from '../theme/tokens';
+import { Pressable, Text, View } from 'react-native';
+
+import { referenceScreenStyles, referenceStyles } from '../theme/referenceStyles';
+import { ReferenceIcon } from './ReferenceIcon';
 
 type AppBackHeaderProps = {
   onPress: () => void;
@@ -19,6 +11,7 @@ type AppBackHeaderProps = {
   testID?: string;
 };
 
+/** Circular back control matching the reference lesson and browse screens. */
 export function AppBackHeader({
   onPress,
   label = 'Back',
@@ -27,7 +20,7 @@ export function AppBackHeader({
   testID,
 }: AppBackHeaderProps): React.JSX.Element {
   return (
-    <View style={styles.container}>
+    <View style={referenceStyles.headerRow}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel ?? label}
@@ -35,61 +28,11 @@ export function AppBackHeader({
         hitSlop={8}
         onPress={onPress}
         testID={testID}
-        style={({ pressed }) => [
-          styles.button,
-          pressed && styles.buttonPressed,
-        ]}
+        style={({ pressed }) => [referenceScreenStyles.identityBackRow, pressed && referenceStyles.pressed]}
       >
-        <Text
-          accessible={false}
-          style={styles.icon}
-        >
-          ‹
-        </Text>
-
-        <Text
-          accessible={false}
-          style={styles.label}
-        >
-          {label}
-        </Text>
+        <View style={referenceStyles.iconButton}><ReferenceIcon name="back" /></View>
+        <Text accessible={false} style={referenceScreenStyles.textButtonLabel}>{label}</Text>
       </Pressable>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    minHeight: 52,
-    justifyContent: 'center',
-    paddingHorizontal: spacingTokens.lg,
-    backgroundColor: colorTokens.background.canvas,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colorTokens.border.subtle,
-  },
-  button: {
-    minHeight: 44,
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacingTokens.sm,
-    borderRadius: radiusTokens.pill,
-  },
-  buttonPressed: {
-    backgroundColor: colorTokens.surface.selected,
-  },
-  icon: {
-    color: colorTokens.brand.primary,
-    fontSize: 28,
-    lineHeight: 32,
-    fontWeight: '600',
-    marginRight: spacingTokens.xs,
-  },
-  label: {
-    ...typographyTokens.body,
-    color: colorTokens.text.primary,
-    fontWeight: '700',
-  },
-});

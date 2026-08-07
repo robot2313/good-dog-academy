@@ -4,11 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
 import { AppScreen } from '../../../components/AppScreen';
+import { IdentityHeader } from '../../../components/IdentityHeader';
 import { ErrorState } from '../../../components/ErrorState';
 import { LoadingState } from '../../../components/LoadingState';
 import { PrimaryButton } from '../../../components/PrimaryButton';
 import { SecondaryTextButton } from '../../../components/SecondaryTextButton';
 import { behaviourSkills, type BehaviourSkill, type LessonDifficultyLevel, type LessonId } from '../../../domain/models';
+import { referenceStyles } from '../../../theme/referenceStyles';
 import { styles } from '../../../theme/styles';
 import { lessonsForDiscoveryScope, type LessonDiscoveryScope } from '../discovery';
 import { LessonLibraryCard } from './LessonLibraryCard';
@@ -92,7 +94,7 @@ export function LessonLibraryScreenView({ hero, scope = { type: 'all' }, allowLo
     </AppScreen>;
   }
 
-  return <SafeAreaView style={styles.safe}>
+  return <SafeAreaView style={referenceStyles.screen}>
     <StatusBar style="dark" />
     <SectionList<LessonLibraryItem, LibrarySection>
       sections={sections}
@@ -103,6 +105,7 @@ export function LessonLibraryScreenView({ hero, scope = { type: 'all' }, allowLo
       stickySectionHeadersEnabled={false}
       contentContainerStyle={styles.libraryListContent}
       ListHeaderComponent={<View style={styles.libraryHeader}>
+        <IdentityHeader />
         {hero ?? (
           <>
             <Text style={styles.eyebrowDark}>ACADEMY</Text>

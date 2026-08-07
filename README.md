@@ -138,6 +138,12 @@ tests/
 └── support/          In-memory StorageAdapter
 ```
 
+## Reference-inspired navigation and visual system
+
+The main navigation is presented as **Home**, **Today**, **Library**, **Progress**, and **Profile**. Home provides direct access to the recommended Journey, personalised recommendations, category browsing, dog-stage collections, and the next Daily Plan lesson. Library begins with ten realistic-photo category rows and continues into the complete searchable catalogue. Dog-stage collections remain curated views over the same immutable lesson catalogue.
+
+The production palette uses a light cream canvas, white cards, deep forest-green actions, sage selections, and a restrained gold accent. Lesson and discovery imagery remains photorealistic-only.
+
 ## Persistence and onboarding
 
 AsyncStorage is accessed only through `StorageAdapter` and validated repositories. Startup runs the schema migration manager before the persisted domain is used.
@@ -187,3 +193,8 @@ Production builds expose **Privacy and Your Data** under Dog. It explains the ap
 - Add storage migrations whenever persisted model shapes change.
 - Keep screens independent of raw AsyncStorage.
 - Keep multi-record domain writes inside the transaction layer.
+
+
+## Reference UI
+
+The primary UI follows the approved six-screen reference: Home, Categories, Lessons in Category, Lesson Detail, Journey, and Training by Life Stage. Bottom navigation is Home, Journey, Categories, Dogs, and Progress.

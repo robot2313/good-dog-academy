@@ -201,7 +201,7 @@ describe('Get Ready (lesson summary)', () => {
   it('shows the goal and required equipment, then advances with Next', () => {
     const onStart = jest.fn();
     const view = render(<LessonSummaryScreenView lessonId={foundationLesson.id} lessonDefinition={foundationLesson} dogName="Scout" service={availableService} loading={false} error={null} onRetry={jest.fn()} onBack={jest.fn()} onStart={onStart} />);
-    expect(view.getByText('GET READY')).toBeTruthy();
+    expect(view.getByText(/GET READY/)).toBeTruthy();
     expect(view.getByRole('header', { name: foundationLesson.title })).toBeTruthy();
     expect(view.getByText(foundationLesson.goal)).toBeTruthy();
     expect(view.getByRole('header', { name: 'Before we start' })).toBeTruthy();
@@ -213,9 +213,9 @@ describe('Get Ready (lesson summary)', () => {
 
   it('shows why a locked lesson is locked and offers no Next action', () => {
     const view = render(<LessonSummaryScreenView lessonId={recallLesson.id} lessonDefinition={recallLesson} dogName="Scout" service={availableService} loading={false} error={null} onRetry={jest.fn()} onBack={jest.fn()} onStart={jest.fn()} />);
-    expect(view.getByText('GET READY')).toBeTruthy();
+    expect(view.getByText(/GET READY/)).toBeTruthy();
     expect(view.getByRole('header', { name: recallLesson.title })).toBeTruthy();
-    expect(view.getByText('Locked')).toBeTruthy();
+    expect(view.getByText('Why this lesson is locked')).toBeTruthy();
     expect(view.getByText(`Complete ${foundationLesson.title} first.`)).toBeTruthy();
     expect(view.getByText(`Required first: ${foundationLesson.title}`)).toBeTruthy();
     expect(view.queryByRole('button', { name: 'Next' })).toBeNull();

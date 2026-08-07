@@ -1,13 +1,8 @@
 import type { PropsWithChildren } from 'react';
 import type { AccessibilityRole, StyleProp, ViewStyle } from 'react-native';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
-import {
-  colorTokens,
-  radiusTokens,
-  shadowTokens,
-  spacingTokens,
-} from '../theme/tokens';
+import { referenceScreenStyles, referenceStyles } from '../theme/referenceStyles';
 
 export type PremiumCardTone = 'default' | 'elevated' | 'selected' | 'forest';
 
@@ -19,6 +14,11 @@ type PremiumCardProps = PropsWithChildren<{
   readonly style?: StyleProp<ViewStyle>;
 }>;
 
+/**
+ * The reference card: white (or a soft green wash when selected), 12px radius,
+ * hairline warm border, no heavy shadow. `forest` is kept as an alias of the
+ * selected wash so older callers keep working without dark panels reappearing.
+ */
 export function PremiumCard({
   children,
   tone = 'default',
@@ -27,19 +27,16 @@ export function PremiumCard({
   accessibilityRole,
   style,
 }: PremiumCardProps): React.JSX.Element {
-  const cardStyle = [
-    componentStyles.card,
-    componentStyles[tone],
-    style,
-  ];
+  const toneStyle = tone === 'selected' || tone === 'forest'
+    ? referenceScreenStyles.cardSelected
+    : tone === 'elevated'
+      ? referenceScreenStyles.cardWarm
+      : referenceScreenStyles.card;
+  const cardStyle = [toneStyle, style];
 
   if (!onPress) {
     return (
-      <View
-        accessibilityLabel={accessibilityLabel}
-        accessibilityRole={accessibilityRole}
-        style={cardStyle}
-      >
+      <View accessibilityLabel={accessibilityLabel} accessibilityRole={accessibilityRole} style={cardStyle}>
         {children}
       </View>
     );
@@ -50,41 +47,9 @@ export function PremiumCard({
       accessibilityLabel={accessibilityLabel}
       accessibilityRole={accessibilityRole ?? 'button'}
       onPress={onPress}
-      style={({ pressed }) => [
-        ...cardStyle,
-        pressed && componentStyles.pressed,
-      ]}
+      style={({ pressed }) => [...cardStyle, pressed && referenceStyles.pressed]}
     >
       {children}
     </Pressable>
   );
 }
-
-const componentStyles = StyleSheet.create({
-  card: {
-    borderRadius: radiusTokens.hero,
-    padding: spacingTokens.xl,
-    gap: spacingTokens.sm,
-    borderWidth: 1,
-    borderColor: colorTokens.border.subtle,
-  },
-  default: {
-    backgroundColor: colorTokens.surface.primary,
-  },
-  elevated: {
-    backgroundColor: colorTokens.surface.elevated,
-    ...shadowTokens.low,
-  },
-  selected: {
-    backgroundColor: colorTokens.surface.selected,
-    borderColor: colorTokens.brand.primary,
-  },
-  forest: {
-    backgroundColor: colorTokens.brand.forest,
-    borderColor: colorTokens.brand.forest,
-  },
-  pressed: {
-    opacity: 0.88,
-    transform: [{ scale: 0.99 }],
-  },
-});

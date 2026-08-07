@@ -30,13 +30,15 @@ describe('guided Lesson Session navigation', () => {
   it('completes a lesson, returns Home, and celebrates over the updated Home', async () => {
     const view = render(<App />);
     expect(await view.findByRole('button', { name: 'Your journey so far' })).toBeTruthy();
-    fireEvent.press(view.getByText('Academy'));
-    expect(await view.findByText('Lesson Library')).toBeTruthy();
+    fireEvent.press(view.getByRole('tab', { name: 'Categories tab' }));
+    expect(await view.findByRole('header', { name: 'Categories' })).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: /^Recall\. 6 lessons\./ }));
+    expect(await view.findByRole('header', { name: 'Recall' })).toBeTruthy();
 
     fireEvent.press(view.getByRole('button', {
       name: 'Name Response. Recall. Level 1. 6 minutes. Available.',
     }));
-    expect(await view.findByText('GET READY')).toBeTruthy();
+    expect(await view.findByText(/GET READY/)).toBeTruthy();
     fireEvent.press(view.getByRole('button', { name: 'Next' }));
 
     expect(await view.findByRole('header', { name: 'Before You Begin' })).toBeTruthy();
@@ -64,8 +66,10 @@ describe('guided Lesson Session navigation', () => {
     expect(await view.findByRole('button', { name: 'Your journey so far' })).toBeTruthy();
 
     // The library reflects the completion.
-    fireEvent.press(view.getByText('Academy'));
-    expect(await view.findByText('Lesson Library')).toBeTruthy();
+    fireEvent.press(view.getByRole('tab', { name: 'Categories tab' }));
+    expect(await view.findByRole('header', { name: 'Categories' })).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: /^Recall\. 6 lessons\./ }));
+    expect(await view.findByRole('header', { name: 'Recall' })).toBeTruthy();
     expect(view.getByRole('button', {
       name: 'Name Response. Recall. Level 1. 6 minutes. Completed.',
     })).toBeTruthy();
@@ -74,12 +78,14 @@ describe('guided Lesson Session navigation', () => {
   it('leaves an active session without creating persistent records', async () => {
     const view = render(<App />);
     expect(await view.findByRole('button', { name: 'Your journey so far' })).toBeTruthy();
-    fireEvent.press(view.getByText('Academy'));
-    expect(await view.findByText('Lesson Library')).toBeTruthy();
+    fireEvent.press(view.getByRole('tab', { name: 'Categories tab' }));
+    expect(await view.findByRole('header', { name: 'Categories' })).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: /^Recall\. 6 lessons\./ }));
+    expect(await view.findByRole('header', { name: 'Recall' })).toBeTruthy();
     fireEvent.press(view.getByRole('button', {
       name: 'Name Response. Recall. Level 1. 6 minutes. Available.',
     }));
-    expect(await view.findByText('GET READY')).toBeTruthy();
+    expect(await view.findByText(/GET READY/)).toBeTruthy();
     fireEvent.press(view.getByRole('button', { name: 'Next' }));
     expect(await view.findByRole('header', { name: 'Before You Begin' })).toBeTruthy();
     fireEvent.press(view.getByRole('button', { name: 'Start Lesson' }));
@@ -87,7 +93,7 @@ describe('guided Lesson Session navigation', () => {
     // The bottom Back control leaves the active session without saving.
     fireEvent.press(view.getByRole('button', { name: 'Back' }));
 
-    expect(await view.findByText('GET READY')).toBeTruthy();
+    expect(await view.findByText(/GET READY/)).toBeTruthy();
     const repositories = createDomainRepositories(appStorage);
     await expect(repositories.trainingSessions.findAll()).resolves.toEqual([]);
     await expect(repositories.lessonProgress.findAll()).resolves.toEqual(
@@ -106,7 +112,7 @@ describe('guided Lesson Session navigation', () => {
     ).toEqual({ disabled: false }));
 
     fireEvent.press(view.getByRole('button', { name: 'Start next lesson' }));
-    expect(await view.findByText('GET READY')).toBeTruthy();
+    expect(await view.findByText(/GET READY/)).toBeTruthy();
     fireEvent.press(view.getByRole('button', { name: 'Next' }));
 
     expect(await view.findByRole('header', { name: 'Before You Begin' })).toBeTruthy();

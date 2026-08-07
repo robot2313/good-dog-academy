@@ -28,20 +28,18 @@ describe('TodayScreen (Home)', () => {
     mockUseLibrary.mockReturnValue(libraryValue());
   });
 
-  it('renders identity, a personalised welcome message, and two matching actions', () => {
+  it('renders the reference home identity, daily plan, and journey actions', () => {
     mockUseTodayPlan.mockReturnValue(result());
     mockUseLibrary.mockReturnValue(libraryValue({
       progressRecords: [progress({ status: 'completed', attempts: 3, successfulCompletions: 3 })],
     }));
     const { view, navigate } = renderHome();
 
-    expect(view.getByText('M', { includeHiddenElements: true })).toBeTruthy();
-    expect(view.getAllByLabelText('Milo')).toHaveLength(1);
-
-    // Real-data welcome message (returning dog).
-    expect(view.getByText('Welcome back, Milo')).toBeTruthy();
-    expect(view.getByText('Milo has completed 1 lesson so far.')).toBeTruthy();
-    expect(view.getByText("For the complete report, open Milo's profile from the Dog section below.")).toBeTruthy();
+    expect(view.getByRole('header', { name: 'Milo & You' })).toBeTruthy();
+    expect(view.getByText(/Good (morning|afternoon|evening),/)).toBeTruthy();
+    expect(view.getByText('Today’s Plan')).toBeTruthy();
+    expect(view.getByText('Recommended For You')).toBeTruthy();
+    expect(view.getByText('Browse by Category')).toBeTruthy();
 
     fireEvent.press(view.getByRole('button', { name: 'Start next lesson' }));
     expect(navigate).toHaveBeenCalledWith('LessonSummary', {
@@ -52,36 +50,36 @@ describe('TodayScreen (Home)', () => {
     expect(navigate).toHaveBeenCalledWith('Journey');
   });
 
-  it('opens category and dog-stage lesson browsing without changing the Journey', () => {
+  it('opens category browsing without changing the recommended Journey', () => {
     mockUseTodayPlan.mockReturnValue(result());
     const { view, navigate } = renderHome();
 
-    fireEvent.press(view.getByRole('button', { name: /^House Training\./ }));
+    fireEvent.press(view.getByRole('button', { name: 'House Training' }));
     expect(navigate).toHaveBeenCalledWith('LessonBrowse', { skill: 'house-training' });
 
-    fireEvent.press(view.getByRole('button', { name: /^Puppy\./ }));
-    expect(navigate).toHaveBeenCalledWith('LessonBrowse', { collectionId: 'puppy' });
+    fireEvent.press(view.getByRole('button', { name: 'More categories' }));
+    expect(navigate).toHaveBeenCalledWith('Academy');
 
     fireEvent.press(view.getByRole('button', { name: 'Your journey so far' }));
     expect(navigate).toHaveBeenCalledWith('Journey');
   });
 
-  it('shows the new-user welcome when the dog has no sessions yet', () => {
+  it('keeps the same clean home layout when the dog has no sessions yet', () => {
     mockUseTodayPlan.mockReturnValue(result());
     mockUseLibrary.mockReturnValue(libraryValue({ progressRecords: [] }));
     const view = renderHome().view;
 
-    expect(view.getByText('Welcome to Good Dog Academy')).toBeTruthy();
-    expect(view.getByText(/You and Milo are about to begin building great habits/)).toBeTruthy();
+    expect(view.getByRole('header', { name: 'Milo & You' })).toBeTruthy();
+    expect(view.getByText('Today’s Plan')).toBeTruthy();
   });
 
-  it('shows the add-a-dog welcome when no dog profile exists', () => {
+  it('shows a safe identity fallback when no dog profile exists', () => {
     mockUseTodayPlan.mockReturnValue(result({ selectedDogName: null, plan: null }));
     mockUseLibrary.mockReturnValue(libraryValue({ selectedDog: null, progressRecords: [] }));
     const view = renderHome().view;
 
-    expect(view.getByText('Welcome to Good Dog Academy')).toBeTruthy();
-    expect(view.getByText(/Add your dog to begin a personalised training journey/)).toBeTruthy();
+    expect(view.getByRole('header', { name: 'Your dog & You' })).toBeTruthy();
+    expect(view.getByText('Your next lesson')).toBeTruthy();
   });
 
   it('does not render the old dashboard content', () => {
