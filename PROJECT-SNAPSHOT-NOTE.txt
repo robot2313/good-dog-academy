@@ -1,0 +1,3 @@
+This is a complete source snapshot prepared for the Claude UI-design pass.
+It contains the verified six-screen V6 application state, the approved reference image,
+and a design brief. node_modules and Git metadata are intentionally excluded.

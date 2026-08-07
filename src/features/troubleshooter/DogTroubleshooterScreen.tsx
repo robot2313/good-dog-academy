@@ -8,6 +8,7 @@ import { LessonActionBar } from '../../components/LessonActionBar';
 import { LessonScaffold } from '../../components/LessonScaffold';
 import { LoadingState } from '../../components/LoadingState';
 import { PremiumCard } from '../../components/PremiumCard';
+import { ReferenceIcon } from '../../components/ReferenceIcon';
 import type { TroubleshooterAttempt, TroubleshooterOutcome, TroubleshooterTopicId } from '../../domain/models';
 import { colorTokens, radiusTokens, spacingTokens, typographyTokens } from '../../theme/tokens';
 import type { RootStackParamList } from '../../types/navigation';
@@ -270,9 +271,13 @@ export function DogTroubleshooterScreen({ navigation, route }: DogTroubleshooter
 function ChoiceCard({ title, description, onPress }: { readonly title: string; readonly description?: string; readonly onPress: () => void }): React.JSX.Element {
   return (
     <PremiumCard accessibilityLabel={description ? `${title}. ${description}` : title} onPress={onPress} style={styles.choiceCard}>
-      <Text style={styles.choiceTitle}>{title}</Text>
-      {description ? <Text style={styles.choiceDescription}>{description}</Text> : null}
-      <Text accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.choose}>Choose {'>'}</Text>
+      <View style={styles.choiceRow}>
+        <View style={styles.choiceCopy}>
+          <Text style={styles.choiceTitle}>{title}</Text>
+          {description ? <Text style={styles.choiceDescription}>{description}</Text> : null}
+        </View>
+        <ReferenceIcon name="chevron" size={16} color={colorTokens.text.secondary} />
+      </View>
     </PremiumCard>
   );
 }
@@ -312,10 +317,11 @@ const styles = StyleSheet.create({
   title: { ...typographyTokens.pageTitle, color: colorTokens.text.primary, letterSpacing: -0.5 },
   intro: { ...typographyTokens.supporting, color: colorTokens.text.secondary },
   list: { gap: spacingTokens.xs },
-  choiceCard: { borderRadius: radiusTokens.lg, padding: spacingTokens.sm, gap: 2 },
+  choiceCard: { borderRadius: radiusTokens.lg, paddingVertical: spacingTokens.sm, paddingHorizontal: spacingTokens.sm, gap: 0 },
+  choiceRow: { flexDirection: 'row', alignItems: 'center', gap: spacingTokens.sm },
+  choiceCopy: { flex: 1, minWidth: 0, gap: 2 },
   choiceTitle: { ...typographyTokens.cardTitle, color: colorTokens.text.primary },
   choiceDescription: { ...typographyTokens.supporting, color: colorTokens.text.secondary },
-  choose: { ...typographyTokens.label, color: colorTokens.text.accent, marginTop: spacingTokens.xxs },
   environmentGroup: { gap: spacingTokens.xs },
   helper: { ...typographyTokens.supporting, color: colorTokens.text.secondary },
 });

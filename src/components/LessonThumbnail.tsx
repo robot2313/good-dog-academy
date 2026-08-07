@@ -32,15 +32,7 @@ export function LessonThumbnail({
       style={componentStyles.badge}
     >
       {imageSource ? (
-        <>
-          <Image accessible={false} resizeMode="cover" source={imageSource} style={componentStyles.image} />
-          <View pointerEvents="none" style={componentStyles.tone} />
-          <View pointerEvents="none" style={componentStyles.skillPill}>
-            <Text accessibilityElementsHidden style={componentStyles.skillMark}>
-              {skillMark}
-            </Text>
-          </View>
-        </>
+        <Image accessible={false} resizeMode="cover" source={imageSource} style={componentStyles.image} />
       ) : (
         <Text accessibilityElementsHidden style={componentStyles.fallbackMark}>
           {skillMark}
@@ -52,8 +44,8 @@ export function LessonThumbnail({
 
 const componentStyles = StyleSheet.create({
   badge: {
-    width: 88,
-    height: 88,
+    width: 64,
+    height: 64,
     borderRadius: radiusTokens.lg,
     alignItems: 'center',
     justifyContent: 'center',
@@ -65,30 +57,6 @@ const componentStyles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
-  },
-  tone: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(38,28,10,0.12)',
-  },
-  skillPill: {
-    position: 'absolute',
-    left: 7,
-    bottom: 7,
-    minWidth: 26,
-    height: 22,
-    paddingHorizontal: 7,
-    borderRadius: radiusTokens.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(8,8,8,0.82)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.24)',
-  },
-  skillMark: {
-    ...typographyTokens.caption,
-    color: colorTokens.brand.primary,
-    fontWeight: '900',
-    fontSize: 10,
   },
   fallbackMark: {
     ...typographyTokens.sectionTitle,

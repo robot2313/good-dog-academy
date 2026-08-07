@@ -1,0 +1,1 @@
+This package supersedes earlier Fable design packages. It requires the exact six-screen match, the same style across every app route, and a photo-led step-by-step lesson experience.

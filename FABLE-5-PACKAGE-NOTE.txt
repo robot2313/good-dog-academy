@@ -1,0 +1,1 @@
+This package contains the complete Good Dog Academy project supplied after the Claude design pass, plus the user's two approved reference images and a stricter Fable 5 visual-redesign brief. The current design is a starting point, not the approved result.

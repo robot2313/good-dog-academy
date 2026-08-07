@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: spacingTokens.lg,
     paddingHorizontal: spacingTokens.lg,
-    borderRadius: radiusTokens.pill,
+    borderRadius: 9,
     backgroundColor: colorTokens.brand.primary,
   },
   buttonPressed: {

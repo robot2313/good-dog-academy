@@ -40,7 +40,7 @@ function DogStagesContent({ onBack, onOpenCollection }: { readonly onBack?: () =
       <View style={referenceStyles.lifeStageList}>{lessonCollections.map((collection) => {
         const copy = stageCopy[collection.id];
         return <Pressable key={collection.id} accessibilityRole="button" accessibilityLabel={`${collection.label}. ${copy.age}. ${collection.lessonIds.length} lessons. ${copy.summary}`} onPress={() => onOpenCollection(collection.id)} style={({ pressed }) => [referenceStyles.lifeStageCard, pressed && referenceStyles.pressed]}>
-          <Image accessible={false} resizeMode="cover" source={getLessonImageSource(collection.anchorLessonId)} style={referenceStyles.lifeStageImage} />
+          <View style={referenceStyles.lifeStageImage}><Image accessible={false} resizeMode="cover" source={getLessonImageSource(collection.anchorLessonId)} style={referenceStyles.cardSideImageFill} /></View>
           <View style={referenceStyles.lifeStageCopy}><Text style={referenceStyles.lifeStageTitle}>{collection.label}</Text><Text style={referenceStyles.lifeStageAge}>{copy.age}</Text><Text numberOfLines={3} style={referenceStyles.lifeStageDescription}>{copy.summary}</Text></View>
           <View style={referenceStyles.lifeStageChevron}><ReferenceIcon name="chevron" size={18} color={referencePalette.muted} /></View>
         </Pressable>;
