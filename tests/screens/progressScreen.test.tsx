@@ -1,0 +1,120 @@
+import type { ComponentProps } from 'react';
+import { fireEvent, render } from '@testing-library/react-native';
+
+import { sampleBehaviourProfile, sampleDog, sampleOwner } from '../../src/development/seed/sampleData';
+import { DogLearningPassportError } from '../../src/features/progress/passport/DogLearningPassportError';
+import type { DogLearningPassport } from '../../src/features/progress/passport/DogLearningPassportTypes';
+import { useDogLearningPassport } from '../../src/features/progress/passport/useDogLearningPassport';
+import { useOnboarding } from '../../src/features/onboarding/OnboardingContext';
+import { ProgressScreen } from '../../src/screens/ProgressScreen';
+
+jest.mock('../../src/features/onboarding/OnboardingContext', () => ({ useOnboarding: jest.fn() }));
+jest.mock('../../src/features/progress/passport/useDogLearningPassport', () => ({ useDogLearningPassport: jest.fn() }));
+
+const mockUseOnboarding = jest.mocked(useOnboarding);
+const mockUseDogLearningPassport = jest.mocked(useDogLearningPassport);
+
+describe('ProgressScreen Learning Passport', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseOnboarding.mockReturnValue({
+      status: {
+        state: 'complete', hasSavedData: true, owner: sampleOwner,
+        dog: { ...sampleDog, name: 'Pepper' }, behaviourProfile: sampleBehaviourProfile,
+      },
+    } as ReturnType<typeof useOnboarding>);
+    mockUseDogLearningPassport.mockReturnValue({
+      passport: passport(), loading: false, error: null, retry: jest.fn(),
+    });
+  });
+
+  it('shows dog-specific evidence and preserves lesson, session, and history navigation', () => {
+    const navigate = jest.fn();
+    const view = render(<ProgressScreen {...props(navigate)} />);
+
+    expect(view.getByRole('header', { name: 'Learning Passport' })).toBeTruthy();
+    expect(view.getByRole('header', { name: "Pepper's evidence" })).toBeTruthy();
+    expect(view.getByLabelText('Lessons: 1')).toBeTruthy();
+    expect(view.getByLabelText('Sessions: 3')).toBeTruthy();
+    expect(view.getByLabelText('Minutes: 24')).toBeTruthy();
+    expect(view.getByLabelText(/Focus\. Reliable here.*Reliable in quiet park/)).toBeTruthy();
+
+    fireEvent.press(view.getByRole('button', { name: 'Continue Name Response' }));
+    expect(navigate).toHaveBeenCalledWith('LessonSummary', { lessonId: 'focus-name-response' });
+
+    fireEvent.press(view.getByRole('button', { name: /Name Response.*Successful session/ }));
+    expect(navigate).toHaveBeenCalledWith('SessionDetail', { sessionId: 'session-1' });
+
+    fireEvent.press(view.getByRole('button', { name: 'View session history' }));
+    expect(navigate).toHaveBeenCalledWith('SessionHistory');
+  });
+
+  it('shows accessible loading and safe error states with retry', () => {
+    mockUseDogLearningPassport.mockReturnValue({ passport: null, loading: true, error: null, retry: jest.fn() });
+    const loadingView = render(<ProgressScreen {...props(jest.fn())} />);
+    expect(loadingView.getByRole('progressbar', { name: "Building Pepper's Learning Passport..." })).toBeTruthy();
+    loadingView.unmount();
+
+    const retry = jest.fn();
+    mockUseDogLearningPassport.mockReturnValue({
+      passport: null, loading: false, error: new DogLearningPassportError('CORRUPT_STORED_DATA'), retry,
+    });
+    const errorView = render(<ProgressScreen {...props(jest.fn())} />);
+    expect(errorView.UNSAFE_getByProps({ accessibilityRole: 'alert' })).toBeTruthy();
+    expect(errorView.getByText(/No training data was changed/)).toBeTruthy();
+    fireEvent.press(errorView.getByRole('button', { name: 'Try again' }));
+    expect(retry).toHaveBeenCalledTimes(1);
+  });
+
+  it('gives a useful first step when no evidence has been recorded', () => {
+    mockUseDogLearningPassport.mockReturnValue({
+      passport: passport({
+        snapshot: {
+          completedLessons: 0, activeLessons: 0, completedSessions: 0,
+          successfulSessions: 0, trainingMinutes: 0, recordedEnvironments: 0,
+        },
+        skills: [], timeline: [],
+        nextStep: { kind: 'academy', title: 'Browse the Academy', reason: 'Choose an appropriate first skill.', lessonId: null },
+      }),
+      loading: false, error: null, retry: jest.fn(),
+    });
+    const navigate = jest.fn();
+    const view = render(<ProgressScreen {...props(navigate)} />);
+
+    expect(view.getByRole('header', { name: 'No evidence recorded yet' })).toBeTruthy();
+    fireEvent.press(view.getAllByRole('button', { name: 'Browse the Academy' })[0]);
+    expect(navigate).toHaveBeenCalledWith('Academy');
+  });
+});
+
+function passport(overrides: Partial<DogLearningPassport> = {}): DogLearningPassport {
+  return {
+    dogId: sampleDog.id,
+    snapshot: {
+      completedLessons: 1, activeLessons: 1, completedSessions: 3,
+      successfulSessions: 2, trainingMinutes: 24, recordedEnvironments: 1,
+    },
+    skills: [{
+      skill: 'focus', title: 'Focus', evidenceLevel: 'reliable', completedLessons: 1,
+      activeLessons: 1, completedSessions: 3, successfulSessions: 2, helpAttempts: 1,
+      improvingEnvironments: ['quiet park'], reliableEnvironments: ['quiet park'],
+      latestHelpOutcome: 'reliable', latestActivityAt: '2026-08-04T01:00:00.000Z',
+    }],
+    timeline: [{
+      id: 'session:session-1', kind: 'training-session', title: 'Name Response',
+      detail: 'Successful session · 5 min', occurredAt: '2026-08-04T01:00:00.000Z',
+      localDate: '2026-08-04', tone: 'positive', sessionId: 'session-1',
+    }],
+    nextStep: {
+      kind: 'lesson', title: 'Continue Name Response', reason: 'Continue the skill already in progress.',
+      lessonId: 'focus-name-response',
+    },
+    ...overrides,
+  };
+}
+
+function props(navigate: jest.Mock) {
+  return {
+    navigation: { navigate }, route: { key: 'progress', name: 'Progress' },
+  } as unknown as ComponentProps<typeof ProgressScreen>;
+}

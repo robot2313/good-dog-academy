@@ -37,7 +37,7 @@ Every `LessonDefinition` must contain:
 
 ## Difficulty and duration
 
-The initial catalogue maps Foundation to difficulty 1 and approximately 5–8 minutes, Developing to difficulty 2 and 7–12 minutes, and Advanced to difficulty 3 and 10–15 minutes. Levels 4 and 5 remain available for future reviewed progressions.
+The catalogue maps Foundation to difficulty 1 and approximately 5–8 minutes, Developing and support lessons to difficulty 2 and 7–12 minutes, Advanced and applied-practice lessons to difficulty 3 and 10–15 minutes, and reviewed maintenance lessons to difficulty 4 and approximately 13–16 minutes. Level 5 remains available for future specialist progressions.
 
 Higher difficulty must reflect a fair increase in duration, distance, distraction, complexity, generalisation, or environmental challenge. It must never mean harsher handling, corrections, intimidation, or forced exposure.
 
@@ -55,6 +55,9 @@ Higher difficulty must reflect a fair increase in duration, distance, distractio
 - Foundation lessons normally have no lesson prerequisite.
 - Developing lessons require the matching Foundation lesson.
 - Advanced lessons require the matching Developing lesson.
+- Support lessons normally require the matching Foundation lesson.
+- Applied-practice lessons may require both the matching Developing lesson and its support lesson.
+- Maintenance lessons may require both the matching Advanced lesson and its applied-practice lesson.
 - Do not create unrelated cross-skill chains without an explicit product and training rationale.
 - Every referenced ID must exist in the catalogue.
 - Circular and self-referential chains are prohibited and rejected during catalogue loading.
@@ -103,7 +106,17 @@ Begin at a safe below-threshold distance. Avoid forced greetings and uncontrolle
 
 The loader validates definitions during normal application initialization. It rejects malformed content, duplicate IDs, unsupported skills, missing prerequisites, and circular chains. Automated production audits also enforce lesson counts, IDs, versions, content depth, stage progression, durations, and force-free policy.
 
-## Future videos and illustrations
+## Visual media policy — locked
+
+- Lesson and skill imagery must be **photorealistic photography only**.
+- Cartoons, illustrations, animation stills, vector art, paintings, sketches, emoji, CGI, and 3D renders are prohibited in the app.
+- Every active production lesson must have its own committed, approved realistic photograph before release. Same-skill fallback images exist only as a defensive guard for unknown IDs and are not an acceptable media-completion state.
+- Legacy category illustrations under `assets/lesson-images/<skill>.jpg` must never be wired into runtime manifests or components.
+- Every generation prompt must explicitly request a photorealistic documentary-style colour photograph and explicitly reject cartoon, illustration, CGI, render, and related styles.
+- Automated tests must fail if a runtime fallback points to a legacy category illustration.
+- A generated image is not approved merely because it exists. It must be visually reviewed for realism, canine anatomy, humane handling, lesson accuracy, and absence of text or branding.
+
+## Future videos and photographs
 
 Future media manifests must reference the permanent lesson ID plus their own media version or locale. Media changes do not rename the lesson, change its competency, or reset LessonProgress. Do not couple media to a title, list index, or mutable display order.
 
@@ -119,5 +132,7 @@ Future media manifests must reference the permanent lesson ID plus their own med
 - [ ] Language is friendly, non-judgmental, and uses Australian/British spelling.
 - [ ] Methods are reward-based, force-free, choice-aware, and humane.
 - [ ] Safety notes address the actual risks and appropriate professional support.
+- [ ] A unique realistic photograph is committed and wired into `uniqueLessonImageSources`.
+- [ ] Puppy, adult, senior, or rescue collection membership is reviewed where relevant.
 - [ ] Inactive and content-version effects on existing progress have been reviewed.
 - [ ] Catalogue, policy, TypeScript, Expo Doctor, and Android export checks pass.

@@ -1,6 +1,6 @@
 # Good Dog Academy
 
-Good Dog Academy is an Expo React Native dog-training application focused on personalised, adaptive training. The current build includes production onboarding, a dog profile, deterministic behaviour assessment, and a validated 30-lesson immutable training catalogue.
+Good Dog Academy is an Expo React Native dog-training application focused on personalised, adaptive training. The current build includes production onboarding, a dog profile, deterministic behaviour assessment, and a validated 60-lesson immutable training catalogue.
 
 ## Current status
 
@@ -16,14 +16,22 @@ Completed milestones:
 - **Milestone 5.1 — Initial training content:** 30 production-quality force-free lessons across ten skills, three-stage prerequisite progressions, content-version and inactive-content policies, and a deterministic future Daily Plan eligibility contract.
 - **Milestone 6.1 — Personalised recommendation engine:** pure deterministic ranking of eligible new-learning and reinforcement lessons using assessment scores, progress state, practice need, recency, age, prerequisites, time limits, and skill diversity.
 - **Milestone 6 — Deterministic Daily Plan Engine:** production typed plans, supported time budgets, latest-assessment and ownership integrity, recent-plan rotation, local-day idempotency, transactional persistence, schema migration 4→5, and a default 15-minute application entry point.
+- **Milestone 7.1 — Lesson Library Foundation:** a read-only, selected-dog-aware service exposes immutable lesson metadata, deterministic skill groups, derived progress states, prerequisite explanations, case-insensitive search, combinable filters, and typed errors for the future library UI. See [Milestone 7.1 documentation](docs/milestone-7-1-lesson-library-foundation.md).
+- **Milestones 7.2 and 7.3 — Lesson Library UI, Search, and Filters:** the Academy tab now provides an accessible, phone-friendly lesson browser with selected-dog context, deterministic skill sections, textual progress states, prerequisite guidance, service-backed search, combinable filters, distinct recovery states, and a minimal safe summary route. See [Milestones 7.2 and 7.3 documentation](docs/milestone-7-2-7-3-lesson-library-ui-search-filters.md).
+- **Milestone 7.4 — Functional training experience:** Today plans, lesson preparation, guided sessions, completion persistence, and one-time celebration now form a complete local training loop.
+- **Milestone 8 — Training history and progress:** saved sessions can be reviewed from the Progress experience, with per-dog history and detail views.
+- **Milestone 9 — Premium personalised experience:** warm editorial visual design, selected-dog identity, optional managed profile photography, production lesson imagery, and a dog-training troubleshooter.
+- **Milestone 10 — Release-ready MVP:** permanent app identity, production icon and splash branding, EAS build profiles, in-app privacy disclosure, confirmed local-data deletion, and an expanded adaptive Training Troubleshooter.
+- **Milestone 10.1 — Release candidate preparation (in progress):** physical-device smoke testing, public privacy-policy hosting, signed preview builds, screenshots, and store metadata. See the [release-candidate checklist](docs/milestone-10-1-release-candidate-checklist.md).
+- **Milestone 11 — Curriculum expansion and flexible discovery:** the catalogue now contains 60 force-free lessons, with three additional support, applied-practice, and maintenance lessons for every behaviour skill. Every active lesson has a committed realistic photograph. Home and Academy now keep the personalised Journey separate from user-chosen categories, recommendations, and puppy/adult/senior/rescue collections. Owners may start any active age-appropriate lesson as self-directed training even when it appears later in the recommended Journey. Cartoon and illustrated runtime assets are prohibited and test-guarded. See [Milestone 11 documentation](docs/milestone-11-curriculum-expansion.md).
 
 Not implemented yet:
 
-- Lesson library and progress UI flows
 - Authentication or backend services
 - Cloud sync
 - Subscriptions or payments
 - AI APIs or hosted video
+- Hosted privacy-policy URL and final App Store / Play listing metadata
 
 The project intentionally remains on **Expo SDK 54** and is compatible with Expo Go for that SDK.
 
@@ -130,6 +138,12 @@ tests/
 └── support/          In-memory StorageAdapter
 ```
 
+## Reference-inspired navigation and visual system
+
+The main navigation is presented as **Home**, **Today**, **Library**, **Progress**, and **Profile**. Home provides direct access to the recommended Journey, personalised recommendations, category browsing, dog-stage collections, and the next Daily Plan lesson. Library begins with ten realistic-photo category rows and continues into the complete searchable catalogue. Dog-stage collections remain curated views over the same immutable lesson catalogue.
+
+The production palette uses a light cream canvas, white cards, deep forest-green actions, sage selections, and a restrained gold accent. Lesson and discovery imagery remains photorealistic-only.
+
 ## Persistence and onboarding
 
 AsyncStorage is accessed only through `StorageAdapter` and validated repositories. Startup runs the schema migration manager before the persisted domain is used.
@@ -150,7 +164,7 @@ Corrupt assessment data has a separate recoverable startup state. The app explai
 
 `LessonDefinition` records are bundled, deeply frozen application content. They are never stored in AsyncStorage and have no mutable repository. Startup loads and validates the complete catalogue, rejecting malformed definitions, unsupported skills, duplicate IDs, missing prerequisite references, and circular dependency chains with structured errors. Ordering is deterministic by difficulty and stable lesson ID.
 
-The initial catalogue contains 30 active lessons: Foundation, Developing, and Advanced lessons for Recall, Loose Lead Walking, Focus, Jumping, Barking, Chewing, Reactivity, House Training, Confidence, and Impulse Control. Definitions are organised into one module per skill under `src/features/lessons/catalogue/definitions`. All lessons use reward-based, force-free methods, practical safety notes, measurable criteria, and complete text-based instructions. Authoring rules are documented in [docs/lesson-authoring-guide.md](docs/lesson-authoring-guide.md).
+The expanded catalogue contains 60 active lessons: six lessons for each of Recall, Loose Lead Walking, Focus, Jumping, Barking, Chewing, Reactivity, House Training, Confidence, and Impulse Control. Every skill retains its Foundation, Developing, and Advanced core path and adds support, applied-practice, and maintenance content. Definitions are organised into one module per skill under `src/features/lessons/catalogue/definitions`. All lessons use reward-based, force-free methods, practical safety notes, measurable criteria, and complete text-based instructions. Authoring rules are documented in [docs/lesson-authoring-guide.md](docs/lesson-authoring-guide.md).
 
 `LessonProgress` is mutable per-Owner/per-Dog data stored through the standard repository abstraction. It tracks status, attempts, successful completions, performance, difficulty adjustment, unlock dates, and activity timestamps while referencing a stable immutable lesson ID.
 
@@ -168,10 +182,19 @@ Development seed data is opt-in under `src/development/seed`; production startup
 
 Development builds expose a confirmed **Reset App Data** action under Dog → Developer Tools. It applies Owner/Dog ownership cascades, removes managed dog photos, clears presentation state, and returns immediately to Welcome. The module is guarded by `__DEV__` and is removed from production bundles.
 
+Production builds expose **Privacy and Your Data** under Dog. It explains the app's local-only data model, provides the privacy contact, and offers a confirmed **Delete All App Data** action. Storage keys are cleared through the transaction layer; managed dog photos are also removed, and the app returns to Welcome.
+
 ## Project safeguards
+
+- **Photorealistic-only lesson imagery:** runtime manifests and skill fallbacks may reference approved real photographs only. Legacy category cartoons are prohibited and covered by automated tests.
 
 - Do not run `npm audit fix --force`; it may force an incompatible Expo upgrade.
 - Install native packages through `npx expo install` to retain SDK 54 alignment.
 - Add storage migrations whenever persisted model shapes change.
 - Keep screens independent of raw AsyncStorage.
 - Keep multi-record domain writes inside the transaction layer.
+
+
+## Reference UI
+
+The primary UI follows the approved six-screen reference: Home, Categories, Lessons in Category, Lesson Detail, Journey, and Training by Life Stage. Bottom navigation is Home, Journey, Categories, Dogs, and Progress.

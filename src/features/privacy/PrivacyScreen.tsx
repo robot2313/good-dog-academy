@@ -1,0 +1,99 @@
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useState } from 'react';
+import { Alert, StyleSheet, Text, View } from 'react-native';
+
+import { AppButton } from '../../components/AppButton';
+import { InlineValidationMessage } from '../../components/InlineValidationMessage';
+import { LessonActionBar } from '../../components/LessonActionBar';
+import { LessonScaffold } from '../../components/LessonScaffold';
+import { useOnboarding } from '../onboarding/OnboardingContext';
+import { referencePalette } from '../../theme/referenceStyles';
+import { spacingTokens } from '../../theme/tokens';
+import type { RootStackParamList } from '../../types/navigation';
+import { localDataDeletionService } from './localDataDeletionServiceInstance';
+
+export const PRIVACY_CONTACT_EMAIL = 'GoodDogAcademy1@gmail.com';
+
+type Props = NativeStackScreenProps<RootStackParamList, 'Privacy'>;
+
+export function PrivacyScreen({ navigation }: Props): React.JSX.Element {
+  const { resetAfterLocalDataClear } = useOnboarding();
+  const [deleting, setDeleting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const deleteAllData = async (): Promise<void> => {
+    setDeleting(true);
+    setErrorMessage(null);
+    try {
+      const result = await localDataDeletionService.deleteAllLocalData();
+      resetAfterLocalDataClear();
+      Alert.alert(
+        'App data deleted',
+        result.managedPhotosRemoved
+          ? 'Your saved Good Dog Academy data and managed dog photo have been removed from this device.'
+          : `Your saved training data was deleted, but a managed photo file could not be removed. Contact ${PRIVACY_CONTACT_EMAIL} if you need help.`,
+      );
+    } catch {
+      setErrorMessage('Your app data could not be deleted safely. Current app state was kept. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const confirmDeletion = (): void => {
+    Alert.alert(
+      'Delete all app data?',
+      'This permanently deletes the owner and dog profile, optional dog photo, assessment answers, lesson progress, plans, training sessions, achievements, and settings saved on this device. The app will return to Welcome.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete All App Data', style: 'destructive', onPress: () => void deleteAllData() },
+      ],
+    );
+  };
+
+  return (
+    <LessonScaffold
+      footer={<LessonActionBar back={{ label: 'Back', onPress: navigation.goBack }} />}
+    >
+      <View style={screenStyles.header}>
+        <Text accessibilityRole="header" style={screenStyles.title}>Privacy and Your Data</Text>
+        <Text style={screenStyles.intro}>Good Dog Academy is designed to keep your training data private and under your control.</Text>
+      </View>
+
+      <View style={screenStyles.card}>
+        <Text style={screenStyles.heading}>Data stored on this device</Text>
+        <Text style={screenStyles.body}>The app stores your owner name, dog profile and optional photo, behaviour assessment answers, lesson progress, plans, training sessions, achievements, and settings locally on this device.</Text>
+        <Text style={screenStyles.body}>This version has no online account or Good Dog Academy server, so that data is not uploaded to us. Your selected dog photo is copied into app-managed storage on this device.</Text>
+      </View>
+
+      <View style={screenStyles.card}>
+        <Text style={screenStyles.heading}>Questions or privacy help</Text>
+        <Text selectable style={screenStyles.email}>{PRIVACY_CONTACT_EMAIL}</Text>
+      </View>
+
+      <View style={screenStyles.dangerCard}>
+        <Text style={screenStyles.heading}>Delete all app data</Text>
+        <Text style={screenStyles.body}>This action is permanent and cannot be undone.</Text>
+        <AppButton
+          title={deleting ? 'Deleting App Data…' : 'Delete All App Data'}
+          accessibilityLabel="Delete All App Data"
+          variant="destructive"
+          loading={deleting}
+          onPress={confirmDeletion}
+        />
+        <InlineValidationMessage message={errorMessage} />
+      </View>
+    </LessonScaffold>
+  );
+}
+
+const screenStyles = StyleSheet.create({
+  header: { gap: 3 },
+  title: { color: referencePalette.navy, fontSize: 26, lineHeight: 32, fontWeight: '900', letterSpacing: -0.5 },
+  intro: { color: referencePalette.muted, fontSize: 12.5, lineHeight: 18 },
+  card: { gap: spacingTokens.xs, padding: spacingTokens.md, borderRadius: 12, borderWidth: 1, borderColor: referencePalette.line, backgroundColor: referencePalette.surface },
+  dangerCard: { gap: spacingTokens.sm, padding: spacingTokens.md, borderRadius: 12, borderWidth: 1, borderColor: '#E2C3BB', backgroundColor: '#F8E7E2' },
+  heading: { color: referencePalette.navy, fontSize: 15, lineHeight: 20, fontWeight: '900' },
+  body: { color: referencePalette.text, fontSize: 12.5, lineHeight: 18 },
+  email: { color: referencePalette.greenDark, fontSize: 14, lineHeight: 20, fontWeight: '800' },
+});

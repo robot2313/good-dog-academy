@@ -12,12 +12,22 @@ import { WelcomeScreen } from '../features/onboarding/screens/WelcomeScreen';
 import { useOnboarding } from '../features/onboarding/OnboardingContext';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { ProgressScreen } from '../screens/ProgressScreen';
+import { SessionDetailScreen } from '../screens/SessionDetailScreen';
+import { SessionHistoryScreen } from '../screens/SessionHistoryScreen';
 import { TodayScreen } from '../screens/TodayScreen';
 import type { MainTabParamList, RootStackParamList } from '../types/navigation';
 import { MainTabBar } from './MainTabBar';
 import { AssessmentIntroScreen } from '../features/assessment/screens/AssessmentIntroScreen';
 import { AssessmentResultsScreen } from '../features/assessment/screens/AssessmentResultsScreen';
 import { AssessmentSectionScreen } from '../features/assessment/screens/AssessmentSectionScreen';
+import { LessonSummaryScreen } from '../features/lessons/library/LessonSummaryScreen';
+import { LessonSessionScreen } from '../features/lessons/session/LessonSessionScreen';
+import { JourneyScreen, JourneyTabScreen } from '../features/lessons/journey/JourneyScreen';
+import { LessonBrowseScreen } from '../features/lessons/discovery/LessonBrowseScreen';
+import { DogStagesScreen, DogStagesTabScreen } from '../features/lessons/discovery/DogStagesScreen';
+import { RecommendedLessonsScreen } from '../features/lessons/discovery/RecommendedLessonsScreen';
+import { DogTroubleshooterScreen } from '../features/troubleshooter/DogTroubleshooterScreen';
+import { PrivacyScreen } from '../features/privacy/PrivacyScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -25,10 +35,11 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 function MainTabs(): React.JSX.Element {
   return (
     <Tab.Navigator screenOptions={{ headerShown: false }} tabBar={(props) => <MainTabBar {...props} />}>
-      <Tab.Screen name="Today" component={TodayScreen} />
-      <Tab.Screen name="Academy" component={AcademyScreen} />
-      <Tab.Screen name="Progress" component={ProgressScreen} />
-      <Tab.Screen name="Dog" component={ProfileScreen} />
+      <Tab.Screen name="Today" component={TodayScreen} options={{ title: 'Home' }} />
+      <Tab.Screen name="Plan" component={JourneyTabScreen} options={{ title: 'Journey' }} />
+      <Tab.Screen name="Academy" component={AcademyScreen} options={{ title: 'Categories' }} />
+      <Tab.Screen name="Dog" component={DogStagesTabScreen} options={{ title: 'Dogs' }} />
+      <Tab.Screen name="Progress" component={ProgressScreen} options={{ title: 'Progress' }} />
     </Tab.Navigator>
   );
 }
@@ -43,7 +54,20 @@ export function AppNavigator(): React.JSX.Element {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {status.state === 'complete' ? <Stack.Screen name="Main" component={MainTabs} />
+        {status.state === 'complete' ? <>
+            <Stack.Screen name="Main" component={MainTabs} />
+            <Stack.Screen name="Journey" component={JourneyScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen name="DogStages" component={DogStagesScreen} />
+            <Stack.Screen name="Recommended" component={RecommendedLessonsScreen} />
+            <Stack.Screen name="LessonBrowse" component={LessonBrowseScreen} />
+            <Stack.Screen name="Troubleshooter" component={DogTroubleshooterScreen} />
+            <Stack.Screen name="Privacy" component={PrivacyScreen} />
+            <Stack.Screen name="LessonSummary" component={LessonSummaryScreen} />
+            <Stack.Screen name="LessonSession" component={LessonSessionScreen} />
+            <Stack.Screen name="SessionHistory" component={SessionHistoryScreen} />
+            <Stack.Screen name="SessionDetail" component={SessionDetailScreen} />
+          </>
           : status.state === 'assessment-required' || status.state === 'assessment-corrupt' ? <>
               <Stack.Screen name="AssessmentIntro" component={AssessmentIntroScreen} />
               <Stack.Screen name="AssessmentEveryday">{(props) => <AssessmentSectionScreen {...props} section="everyday" />}</Stack.Screen>

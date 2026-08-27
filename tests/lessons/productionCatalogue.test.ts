@@ -2,17 +2,30 @@ import type { BehaviourSkill, LessonDefinition, LessonId } from '../../src/domai
 import { behaviourSkills } from '../../src/domain/models';
 import { LessonCatalogue, bundledLessonDefinitions } from '../../src/features/lessons/catalogue';
 
-const expectedProgressions: Record<BehaviourSkill, readonly [LessonId, LessonId, LessonId]> = {
-  recall: ['recall-name-response', 'recall-short-distance', 'recall-around-distractions'],
+const coreProgressions: Record<BehaviourSkill, readonly [LessonId, LessonId, LessonId]> = {
+  'recall': ['recall-name-response', 'recall-short-distance', 'recall-around-distractions'],
   'loose-lead-walking': ['loose-lead-reward-zone', 'loose-lead-direction-changes', 'loose-lead-real-world-distractions'],
-  focus: ['focus-check-in', 'focus-hold-attention', 'focus-around-distractions'],
-  jumping: ['jumping-four-paws-down', 'jumping-calm-greetings', 'jumping-visitors-and-excitement'],
-  barking: ['barking-identify-triggers', 'barking-quiet-reinforcement', 'barking-real-world-management'],
-  chewing: ['chewing-appropriate-items', 'chewing-redirection-routine', 'chewing-independence-and-prevention'],
-  reactivity: ['reactivity-safe-distance', 'reactivity-look-and-disengage', 'reactivity-controlled-exposure'],
+  'jumping': ['jumping-four-paws-down', 'jumping-calm-greetings', 'jumping-visitors-and-excitement'],
+  'barking': ['barking-identify-triggers', 'barking-quiet-reinforcement', 'barking-real-world-management'],
+  'chewing': ['chewing-appropriate-items', 'chewing-redirection-routine', 'chewing-independence-and-prevention'],
+  'reactivity': ['reactivity-safe-distance', 'reactivity-look-and-disengage', 'reactivity-controlled-exposure'],
   'house-training': ['house-training-routine', 'house-training-signal-and-reward', 'house-training-reliability'],
-  confidence: ['confidence-choice-and-exploration', 'confidence-new-surfaces-and-sounds', 'confidence-new-environments'],
+  'confidence': ['confidence-choice-and-exploration', 'confidence-new-surfaces-and-sounds', 'confidence-new-environments'],
   'impulse-control': ['impulse-control-wait-for-reward', 'impulse-control-doorways', 'impulse-control-real-world-distractions'],
+  'focus': ['focus-check-in', 'focus-hold-attention', 'focus-around-distractions'],
+};
+
+const expandedProgressions: Record<BehaviourSkill, readonly [LessonId, LessonId, LessonId]> = {
+  'recall': ['recall-reward-reset', 'recall-collar-touch-and-release', 'recall-real-world-maintenance'],
+  'loose-lead-walking': ['loose-lead-stop-and-reset', 'loose-lead-sniffing-rewards', 'loose-lead-longer-routes'],
+  'jumping': ['jumping-station-on-a-mat', 'jumping-greetings-with-movement', 'jumping-maintenance-in-public'],
+  'barking': ['barking-meet-needs-first', 'barking-doorbell-routine', 'barking-recovery-and-maintenance'],
+  'chewing': ['chewing-puppy-teething-plan', 'chewing-leave-and-trade', 'chewing-rotation-and-settle'],
+  'reactivity': ['reactivity-emergency-u-turn', 'reactivity-recovery-after-trigger', 'reactivity-generalisation-and-maintenance'],
+  'house-training': ['house-training-accident-reset', 'house-training-clear-outdoor-signal', 'house-training-new-places-and-weather'],
+  'confidence': ['confidence-consent-based-handling', 'confidence-recovery-after-surprise', 'confidence-generalise-brave-choices'],
+  'impulse-control': ['impulse-control-leave-it', 'impulse-control-settle-on-mat', 'impulse-control-maintenance-and-release'],
+  'focus': ['focus-disengage-and-reset', 'focus-predictable-patterns', 'focus-real-world-duration'],
 };
 
 function allContent(definition: LessonDefinition): string {
@@ -22,14 +35,15 @@ function allContent(definition: LessonDefinition): string {
 describe('production lesson catalogue audit', () => {
   const catalogue = LessonCatalogue.load(bundledLessonDefinitions);
 
-  it('contains exactly 30 active lessons, three for every required skill, and every permanent ID', () => {
-    expect(catalogue.definitions).toHaveLength(30);
+  it('contains exactly 60 active lessons, six for every required skill, and every permanent ID', () => {
+    expect(catalogue.definitions).toHaveLength(60);
     expect(catalogue.definitions.every((lesson) => lesson.isActive)).toBe(true);
     for (const skill of behaviourSkills) {
-      expect(catalogue.definitions.filter((lesson) => lesson.skill === skill)).toHaveLength(3);
-      expect(catalogue.definitions.filter((lesson) => lesson.skill === skill).map((lesson) => lesson.id).sort()).toEqual([...expectedProgressions[skill]].sort());
+      const expected = [...coreProgressions[skill], ...expandedProgressions[skill]];
+      expect(catalogue.definitions.filter((lesson) => lesson.skill === skill)).toHaveLength(6);
+      expect(catalogue.definitions.filter((lesson) => lesson.skill === skill).map((lesson) => lesson.id).sort()).toEqual(expected.sort());
     }
-    expect(new Set(catalogue.definitions.map((lesson) => lesson.id)).size).toBe(30);
+    expect(new Set(catalogue.definitions.map((lesson) => lesson.id)).size).toBe(60);
   });
 
   it('uses content version 1 and complete meaningful production content', () => {
@@ -52,20 +66,54 @@ describe('production lesson catalogue audit', () => {
     }
   });
 
-  it('uses the exact stage prerequisites, time ranges, and increasing difficulty', () => {
+  it('retains the original three-stage prerequisite paths and time ranges', () => {
     for (const skill of behaviourSkills) {
-      const [foundationId, developingId, advancedId] = expectedProgressions[skill];
+      const [foundationId, developingId, advancedId] = coreProgressions[skill];
       const foundation = catalogue.requireById(foundationId);
       const developing = catalogue.requireById(developingId);
       const advanced = catalogue.requireById(advancedId);
       expect(foundation).toMatchObject({ difficultyLevel: 1, prerequisites: [] });
       expect(developing).toMatchObject({ difficultyLevel: 2, prerequisites: [{ lessonId: foundationId, minimumSuccessfulCompletions: 1 }] });
       expect(advanced).toMatchObject({ difficultyLevel: 3, prerequisites: [{ lessonId: developingId, minimumSuccessfulCompletions: 1 }] });
-      expect(foundation.estimatedMinutes).toBeGreaterThanOrEqual(5); expect(foundation.estimatedMinutes).toBeLessThanOrEqual(8);
-      expect(developing.estimatedMinutes).toBeGreaterThanOrEqual(7); expect(developing.estimatedMinutes).toBeLessThanOrEqual(12);
-      expect(advanced.estimatedMinutes).toBeGreaterThanOrEqual(10); expect(advanced.estimatedMinutes).toBeLessThanOrEqual(15);
+      expect(foundation.estimatedMinutes).toBeGreaterThanOrEqual(5);
+      expect(foundation.estimatedMinutes).toBeLessThanOrEqual(8);
+      expect(developing.estimatedMinutes).toBeGreaterThanOrEqual(7);
+      expect(developing.estimatedMinutes).toBeLessThanOrEqual(12);
+      expect(advanced.estimatedMinutes).toBeGreaterThanOrEqual(10);
+      expect(advanced.estimatedMinutes).toBeLessThanOrEqual(15);
       expect(foundation.estimatedMinutes).toBeLessThan(developing.estimatedMinutes);
       expect(developing.estimatedMinutes).toBeLessThan(advanced.estimatedMinutes);
+    }
+  });
+
+  it('adds a support, applied, and maintenance path to every skill', () => {
+    for (const skill of behaviourSkills) {
+      const [foundationId, developingId, advancedId] = coreProgressions[skill];
+      const [supportId, appliedId, maintenanceId] = expandedProgressions[skill];
+      const support = catalogue.requireById(supportId);
+      const applied = catalogue.requireById(appliedId);
+      const maintenance = catalogue.requireById(maintenanceId);
+
+      expect(support).toMatchObject({
+        difficultyLevel: 2,
+        prerequisites: [{ lessonId: foundationId, minimumSuccessfulCompletions: 1 }],
+      });
+      expect(applied).toMatchObject({
+        difficultyLevel: 3,
+        prerequisites: [
+          { lessonId: developingId, minimumSuccessfulCompletions: 1 },
+          { lessonId: supportId, minimumSuccessfulCompletions: 1 },
+        ],
+      });
+      expect(maintenance).toMatchObject({
+        difficultyLevel: 4,
+        prerequisites: [
+          { lessonId: advancedId, minimumSuccessfulCompletions: 1 },
+          { lessonId: appliedId, minimumSuccessfulCompletions: 1 },
+        ],
+      });
+      expect(support.estimatedMinutes).toBeLessThan(applied.estimatedMinutes);
+      expect(applied.estimatedMinutes).toBeLessThan(maintenance.estimatedMinutes);
     }
   });
 

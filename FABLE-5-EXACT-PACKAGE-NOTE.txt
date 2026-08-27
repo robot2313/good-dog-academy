@@ -1,0 +1,1 @@
+This package supersedes earlier Fable design packages. Its exact primary reference is docs/REFERENCE-PRIMARY-EXACT.png. Use START-HERE-FABLE-5.md and docs/FABLE-EXACT-MATCH-CONTRACT.md.

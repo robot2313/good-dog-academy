@@ -10,8 +10,15 @@ import type {
   Owner,
   Progress,
   TrainingSession,
+  TroubleshooterAttempt,
 } from '../models';
-import { behaviourSkills, dailyPlanTargetMinutes } from '../models';
+import {
+  behaviourSkills,
+  dailyPlanTargetMinutes,
+  troubleshooterFailureCategories,
+  troubleshooterOutcomes,
+  troubleshooterTopicIds,
+} from '../models';
 import {
   finishValidation,
   isDateOnly,
@@ -243,6 +250,19 @@ export function validateTrainingSession(value: unknown): ValidationResult<Traini
   if (record.outcome !== null && !isOneOf(record.outcome, ['success', 'partial-success', 'unsuccessful'] as const)) errors.push('outcome is invalid');
   if (typeof record.notes !== 'string') errors.push('notes must be a string');
   return finishValidation<TrainingSession>(value, errors);
+}
+
+export function validateTroubleshooterAttempt(value: unknown): ValidationResult<TroubleshooterAttempt> {
+  const { record, errors } = recordOrError(value);
+  if (!record) return { valid: false, errors };
+  ['id', 'ownerId', 'dogId', 'scenarioId', 'protocolId', 'environment'].forEach((key) => requireString(record, key, errors));
+  if (!isOneOf(record.topicId, troubleshooterTopicIds)) errors.push('topicId is invalid');
+  if (!isOneOf(record.failureCategory, troubleshooterFailureCategories)) errors.push('failureCategory is invalid');
+  if (!isOneOf(record.outcome, troubleshooterOutcomes)) errors.push('outcome is invalid');
+  if (!isOneOf(record.fallbackLevel, [1, 2, 3] as const)) errors.push('fallbackLevel is invalid');
+  if (!isNonNegativeInteger(record.protocolVersion) || record.protocolVersion === 0) errors.push('protocolVersion must be a positive integer');
+  requireIsoDate(record, 'createdAt', errors);
+  return finishValidation<TroubleshooterAttempt>(value, errors);
 }
 
 export function validateAchievement(value: unknown): ValidationResult<Achievement> {

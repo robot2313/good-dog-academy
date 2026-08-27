@@ -1,12 +1,14 @@
+import { colorTokens } from './tokens';
+
 export const colors = {
-  background: '#F3F0E8',
-  card: '#FFFEFB',
-  forest: '#173F31',
-  green: '#2F7056',
-  mint: '#DDEBE3',
-  gold: '#D8B46A',
-  text: '#17241D',
-  muted: '#6D786F',
-  line: '#E4DFD4',
+  background: colorTokens.background.canvas,
+  card: colorTokens.surface.primary,
+  forest: colorTokens.brand.forest,
+  green: colorTokens.brand.primary,
+  mint: colorTokens.surface.selected,
+  gold: colorTokens.brand.gold,
+  text: colorTokens.text.primary,
+  muted: colorTokens.text.secondary,
+  line: colorTokens.border.subtle,
   white: '#FFFFFF',
 } as const;

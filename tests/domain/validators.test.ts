@@ -20,8 +20,10 @@ import {
   validateOwner,
   validateProgress,
   validateTrainingSession,
+  validateTroubleshooterAttempt,
 } from '../../src/domain/validation';
 import { lessonProgress } from '../support/lessonFixtures';
+import { troubleshooterAttempt } from '../support/troubleshooterFixtures';
 
 type Case = {
   name: string;
@@ -43,6 +45,7 @@ const cases: Case[] = [
   { name: 'Achievement', valid: sampleAchievement, validate: validateAchievement, requiredField: 'code', invalid: { ...sampleAchievement, earnedAt: 'not-a-date' }, boundary: { ...sampleAchievement, title: 'A', description: 'A' } },
   { name: 'Progress', valid: sampleProgress, validate: validateProgress, requiredField: 'dogId', invalid: { ...sampleProgress, sessionsCompleted: -1 }, boundary: { ...sampleProgress, completedLessonIds: [], sessionsCompleted: 0, currentStreakDays: 0, bestStreakDays: 0, totalTrainingMinutes: 0 } },
   { name: 'NotificationSettings', valid: sampleNotificationSettings, validate: validateNotificationSettings, requiredField: 'ownerId', invalid: { ...sampleNotificationSettings, dailyReminderTime: '25:00' }, boundary: { ...sampleNotificationSettings, dailyReminderTime: '00:00' } },
+  { name: 'TroubleshooterAttempt', valid: troubleshooterAttempt(), validate: validateTroubleshooterAttempt, requiredField: 'dogId', invalid: { ...troubleshooterAttempt(), fallbackLevel: 4 }, boundary: { ...troubleshooterAttempt(), fallbackLevel: 3, outcome: 'reliable' } },
 ];
 
 describe.each(cases)('$name validator', ({ valid, validate, requiredField, invalid, boundary }) => {

@@ -9,6 +9,7 @@ import type {
   Owner,
   Progress,
   TrainingSession,
+  TroubleshooterAttempt,
 } from '../models';
 import type { Repository } from './Repository';
 
@@ -22,6 +23,7 @@ export interface TrainingSessionRepository extends Repository<TrainingSession> {
 export interface AchievementRepository extends Repository<Achievement> {}
 export interface ProgressRepository extends Repository<Progress> {}
 export interface NotificationSettingsRepository extends Repository<NotificationSettings> {}
+export interface TroubleshooterAttemptRepository extends Repository<TroubleshooterAttempt> {}
 
 export type DomainRepositories = {
   owners: OwnerRepository;
@@ -34,6 +36,7 @@ export type DomainRepositories = {
   achievements: AchievementRepository;
   progress: ProgressRepository;
   notificationSettings: NotificationSettingsRepository;
+  troubleshooterAttempts: TroubleshooterAttemptRepository;
 };
 
 export type { Repository } from './Repository';

@@ -12,7 +12,7 @@ export function FormTextInput({ label, error, ...props }: FormTextInputProps): R
   return (
     <View style={styles.fieldGroup}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput {...props} accessibilityLabel={props.accessibilityLabel ?? label} style={[styles.input, error && styles.inputError, props.style]} placeholderTextColor="#929A94" />
+      <TextInput {...props} accessibilityLabel={props.accessibilityLabel ?? label} style={[styles.input, error && styles.inputError, props.style]} placeholderTextColor="#7C827D" />
       <InlineValidationMessage message={error} />
     </View>
   );

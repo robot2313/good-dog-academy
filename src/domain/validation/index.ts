@@ -11,4 +11,5 @@ export {
   validateOwner,
   validateProgress,
   validateTrainingSession,
+  validateTroubleshooterAttempt,
 } from './validators';

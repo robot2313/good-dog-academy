@@ -3,19 +3,35 @@ import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
-import { styles } from '../theme/styles';
+import { referenceStyles } from '../theme/referenceStyles';
 
 type AppScreenProps = PropsWithChildren<{
   scroll?: boolean;
+  /** Use the tighter gutters from the reference lesson-browse layout. */
+  compact?: boolean;
 }>;
 
-export function AppScreen({ children, scroll = true }: AppScreenProps): React.JSX.Element {
+/**
+ * The single screen shell. Every screen sits on the reference canvas with the
+ * same gutters, scroll padding and vertical rhythm as the approved six-screen
+ * reference, so nothing in the app reads as a different design.
+ */
+export function AppScreen({ children, scroll = true, compact = false }: AppScreenProps): React.JSX.Element {
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={referenceStyles.screen}>
       <StatusBar style="dark" />
       {scroll
-        ? <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>{children}</ScrollView>
-        : <View style={styles.app}>{children}</View>}
+        ? (
+          <ScrollView
+            contentContainerStyle={compact ? referenceStyles.compactScroll : referenceStyles.scroll}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            automaticallyAdjustKeyboardInsets
+          >
+            {children}
+          </ScrollView>
+        )
+        : <View style={{ flex: 1 }}>{children}</View>}
     </SafeAreaView>
   );
 }

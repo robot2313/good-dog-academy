@@ -61,7 +61,7 @@ describe('onboarding navigation', () => {
     await repositories.behaviourAssessments.save(sampleBehaviourAssessment);
 
     const view = await render(<App />);
-    expect(await view.findByText('One focused session today.')).toBeTruthy();
+    expect(await view.findByRole('button', { name: 'Your journey so far' })).toBeTruthy();
     await waitFor(() => expect(view.queryByText('Raise an amazing dog.')).toBeNull());
   });
 

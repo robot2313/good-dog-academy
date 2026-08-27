@@ -1,6 +1,4 @@
-import { Pressable, Text } from 'react-native';
-
-import { styles } from '../theme/styles';
+import { AppButton } from './AppButton';
 
 type PrimaryButtonProps = {
   title: string;
@@ -10,9 +8,10 @@ type PrimaryButtonProps = {
 };
 
 export function PrimaryButton({ title, onPress, disabled = false, accessibilityLabel }: PrimaryButtonProps): React.JSX.Element {
-  return (
-    <Pressable accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? title} accessibilityState={{ disabled }} disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.primaryButton, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
-      <Text style={styles.primaryButtonText}>{title}</Text>
-    </Pressable>
-  );
+  return <AppButton
+    title={title}
+    onPress={onPress}
+    disabled={disabled}
+    accessibilityLabel={accessibilityLabel}
+  />;
 }

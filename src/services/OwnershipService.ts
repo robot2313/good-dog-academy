@@ -11,6 +11,7 @@ const dogOwnedKeys = [
   storageKeys.trainingSessions,
   storageKeys.dailyPlans,
   storageKeys.achievements,
+  storageKeys.troubleshooterAttempts,
 ] as const;
 
 const ownerOwnedKeys = [
@@ -54,6 +55,7 @@ export class OwnershipService {
       repositories.trainingSessions,
       repositories.dailyPlans,
       repositories.achievements,
+      repositories.troubleshooterAttempts,
     ] as const;
 
     for (const repository of childRepositories) {
