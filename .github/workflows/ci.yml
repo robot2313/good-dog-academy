@@ -10,6 +10,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -27,12 +30,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Preview Expo-supported dependency repair
+      - name: Align Expo-supported dependencies
+        run: npx expo install --fix
+
+      - name: Commit aligned package metadata on feature push
+        if: github.event_name == 'push'
         run: |
-          npx expo install --fix
-          echo '---EXPO-LOCK-REPAIR-DIFF---'
-          git diff -- package.json package-lock.json
-          echo '---END-EXPO-LOCK-REPAIR-DIFF---'
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          if git diff --cached --quiet; then
+            echo "Package metadata already aligned."
+            exit 0
+          fi
+          git commit -m "chore(deps): align Expo SDK 54 patch versions"
+          git push origin HEAD:${GITHUB_REF_NAME}
 
       - name: TypeScript
         run: npm run typecheck
