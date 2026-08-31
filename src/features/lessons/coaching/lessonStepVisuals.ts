@@ -1,6 +1,7 @@
 import type { ImageSourcePropType } from 'react-native';
 
 import type { LessonId } from '../../../domain/models';
+import { getLessonImageManifestEntry } from './lessonImageManifest';
 
 /**
  * Visual-first lesson instruction model (Fable 5 lesson experience contract).
@@ -10,12 +11,12 @@ import type { LessonId } from '../../../domain/models';
  * exact hand / lead / body placement, a correct-versus-avoid comparison,
  * overlay annotations, and optional demonstration video or spoken instruction.
  *
- * The registry below ships empty on purpose. The production photo library
- * currently contains one approved realistic photograph per lesson (61 assets);
- * per-step close-up, correct/avoid, and demonstration assets have not been
- * produced yet. Screens must treat every field as optional and fall back to the
- * lesson's primary photograph, and the missing assets are listed candidly in
- * docs/fable-visual-proof/COMPARISON.md rather than papered over here.
+ * The registry remains available for true step-specific media overrides. When
+ * a step does not yet have a dedicated override, the runtime now uses that
+ * lesson's verified, lesson-specific photograph as the step image. This keeps
+ * all 60 lessons photo-led at every step without falling back to cartoons or a
+ * different lesson's image, while allowing exact close-up/correct/avoid media
+ * to be added incrementally without changing the screen contract.
  */
 export type StepOverlayAnnotation = {
   /** Short instruction rendered as a labelled callout over the image. */
@@ -44,14 +45,31 @@ export type LessonStepVisual = {
   readonly caption?: string;
 };
 
-/** Per-lesson, per-step (zero-based) visual assets. */
+/**
+ * Per-lesson, per-step (zero-based) exact-media overrides.
+ *
+ * Add entries here only when a dedicated step asset genuinely depicts that
+ * exact instruction. Generic visual coverage is supplied by
+ * `fallbackStepVisual` from the verified per-lesson photo manifest.
+ */
 const stepVisualRegistry: Partial<Record<LessonId, Readonly<Record<number, LessonStepVisual>>>> = {};
 
+function fallbackStepVisual(lessonId: LessonId, stepIndex: number): LessonStepVisual | null {
+  const lessonImage = getLessonImageManifestEntry(lessonId);
+  if (!lessonImage) return null;
+
+  return {
+    setupImage: lessonImage.source,
+    caption: `${lessonImage.title} — step ${stepIndex + 1}`,
+  };
+}
+
 export function getLessonStepVisual(lessonId: LessonId, stepIndex: number): LessonStepVisual | null {
-  return stepVisualRegistry[lessonId]?.[stepIndex] ?? null;
+  return stepVisualRegistry[lessonId]?.[stepIndex] ?? fallbackStepVisual(lessonId, stepIndex);
 }
 
 export function lessonHasStepVisuals(lessonId: LessonId): boolean {
-  const entry = stepVisualRegistry[lessonId];
-  return entry !== undefined && Object.keys(entry).length > 0;
+  const exactEntry = stepVisualRegistry[lessonId];
+  if (exactEntry !== undefined && Object.keys(exactEntry).length > 0) return true;
+  return getLessonImageManifestEntry(lessonId) !== null;
 }
