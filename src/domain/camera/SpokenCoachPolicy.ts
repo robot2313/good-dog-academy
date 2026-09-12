@@ -6,6 +6,8 @@ export type SpokenCoachEvent =
   | { type: 'rep_started'; repNumber: number }
   | { type: 'owner_confirmation'; pending: CameraCoachPendingConfirmation }
   | { type: 'director_decision'; decision: SessionDirectorDecision }
+  | { type: 'session_paused' }
+  | { type: 'session_resumed' }
   | { type: 'session_finished' };
 
 export type SpokenCoachMessage = {
@@ -45,6 +47,18 @@ export function spokenCoachMessage(event: SpokenCoachEvent): SpokenCoachMessage 
         interrupt: safety || decision.action === 'finish',
       };
     }
+    case 'session_paused':
+      return {
+        text: 'Training paused. No rep will be scored while paused. Say resume when you are ready.',
+        priority: 'normal',
+        interrupt: true,
+      };
+    case 'session_resumed':
+      return {
+        text: 'Training resumed. We will continue from the same session.',
+        priority: 'normal',
+        interrupt: true,
+      };
     case 'session_finished':
       return {
         text: 'Session complete. Finish on a calm note and let your dog reset.',
