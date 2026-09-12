@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -11,12 +11,17 @@ import { ErrorState } from '../../../components/ErrorState';
 import { LoadingState } from '../../../components/LoadingState';
 import { IdentityHeader } from '../../../components/IdentityHeader';
 import { ReferenceIcon } from '../../../components/ReferenceIcon';
+import { loadAdaptiveSessionHistory, loadAdaptiveTrainingMemory } from '../../../services/AdaptiveTrainingPersistenceService';
 import { referencePalette, referenceStyles } from '../../../theme/referenceStyles';
 import type { MainTabParamList, RootStackParamList } from '../../../types/navigation';
 import { useLessonLibraryData } from '../library/LessonLibraryContext';
 import { lessonLibraryErrorMessage } from '../library/lessonLibraryPresentation';
 import { LessonLibraryService } from '../library/LessonLibraryService';
 import type { LessonLibraryItem } from '../library/lessonLibraryTypes';
+import {
+  buildAdaptiveJourneyRecommendation,
+  type AdaptiveJourneyRecommendation,
+} from './AdaptiveJourneyRecommendation';
 
 type StackProps = NativeStackScreenProps<RootStackParamList, 'Journey'>;
 type TabProps = CompositeScreenProps<BottomTabScreenProps<MainTabParamList, 'Plan'>, NativeStackScreenProps<RootStackParamList, 'Main'>>;
@@ -34,6 +39,7 @@ export function JourneyTabScreen({ navigation }: TabProps): React.JSX.Element {
 function JourneyContent({ onBack, onOpenLesson }: { readonly onBack?: () => void; readonly onOpenLesson: (lessonId: string) => void }): React.JSX.Element {
   const { catalogue, selectedDog, progressRecords, loading, error, retry } = useLessonLibraryData();
   const [expandedStage, setExpandedStage] = useState<JourneyStageId | 'all'>('foundation');
+  const [adaptiveRecommendation, setAdaptiveRecommendation] = useState<AdaptiveJourneyRecommendation | null>(null);
   const service = useMemo(() => new LessonLibraryService(catalogue, selectedDog?.id ?? null, progressRecords), [catalogue, progressRecords, selectedDog?.id]);
 
   let lessons: readonly LessonLibraryItem[] | null = null;
@@ -41,6 +47,28 @@ function JourneyContent({ onBack, onOpenLesson }: { readonly onBack?: () => void
   if (!loading && !derivedError) {
     try { lessons = service.getAllLessons(); } catch (cause) { derivedError = cause; }
   }
+
+  useEffect(() => {
+    if (loading || error || !selectedDog) {
+      setAdaptiveRecommendation(null);
+      return;
+    }
+
+    let active = true;
+    void Promise.all([
+      loadAdaptiveTrainingMemory(selectedDog.id),
+      loadAdaptiveSessionHistory(selectedDog.id),
+    ]).then(([memory, history]) => {
+      if (!active) return;
+      const currentLessons = service.getAllLessons();
+      setAdaptiveRecommendation(buildAdaptiveJourneyRecommendation({ lessons: currentLessons, memory, history }));
+    }).catch(() => {
+      if (active) setAdaptiveRecommendation(null);
+    });
+
+    return () => { active = false; };
+  }, [error, loading, selectedDog, service]);
+
   if (loading) return <AppScreen scroll={false}><LoadingState message="Building your training journey…" /></AppScreen>;
   if (derivedError || !lessons) return <AppScreen><ErrorState message={lessonLibraryErrorMessage(derivedError)} onRetry={retry} /></AppScreen>;
 
@@ -55,6 +83,17 @@ function JourneyContent({ onBack, onOpenLesson }: { readonly onBack?: () => void
       <IdentityHeader />
       <View style={referenceStyles.header}><Text accessibilityRole="header" style={referenceStyles.title}>Your Journey</Text><Text style={referenceStyles.subtitle}>Your personalised path to success</Text></View>
       <Text style={referenceStyles.journeyIntro}>This is the recommended order. You can still choose any lesson from Categories whenever your dog needs something different.</Text>
+
+      {adaptiveRecommendation?.action === 'switch' ? <View style={referenceStyles.cardSelected}>
+        <Text style={referenceStyles.eyebrow}>PLAN ADJUSTED</Text>
+        <Text style={referenceStyles.blockTitle}>{adaptiveRecommendation.recommendedLessonTitle}</Text>
+        <Text style={referenceStyles.blockIntro}>{adaptiveRecommendation.explanation}</Text>
+        <Text style={referenceStyles.meta}>Instead of {adaptiveRecommendation.currentLessonTitle}</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel={`Open recommended lesson ${adaptiveRecommendation.recommendedLessonTitle}`} onPress={() => onOpenLesson(adaptiveRecommendation.lessonId)} style={({ pressed }) => [referenceStyles.largeGreenButton, pressed && referenceStyles.pressed]}>
+          <Text style={referenceStyles.largeGreenButtonText}>Open Recommended Lesson</Text>
+        </Pressable>
+      </View> : null}
+
       <View style={referenceStyles.stageList}>
         {stages.map((stage) => {
           const complete = stage.lessons.filter((lesson) => lesson.state === 'COMPLETED').length;
