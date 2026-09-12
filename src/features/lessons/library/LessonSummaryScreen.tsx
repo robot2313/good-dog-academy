@@ -29,5 +29,9 @@ export function LessonSummaryScreen({ navigation, route }: Props): React.JSX.Ele
       ...(route.params.dailyPlanId ? { dailyPlanId: route.params.dailyPlanId } : {}),
       ...(route.params.selfDirected ? { selfDirected: true } : {}),
     })}
+    onCameraCoach={() => navigation.navigate('CameraCoach', {
+      lessonId: route.params.lessonId,
+      ...(route.params.dailyPlanId ? { dailyPlanId: route.params.dailyPlanId } : {}),
+    })}
   />;
 }
