@@ -43,12 +43,14 @@ export class ExpoTrainingSpeechRecognizer implements TrainingSpeechRecognizer {
       this.nativeSubscriptions = [
         this.module.addListener('result', (event) => {
           const best = event.results?.[0];
-          const transcript = best?.transcript?.trim();
+          if (!best) return;
+          const transcript = best.transcript?.trim();
           if (!transcript) return;
+          const confidence = best.confidence;
           const result: SpeechRecognitionResult = {
             transcript,
-            confidence: typeof best.confidence === 'number' && Number.isFinite(best.confidence)
-              ? Math.max(0, Math.min(1, best.confidence))
+            confidence: typeof confidence === 'number' && Number.isFinite(confidence)
+              ? Math.max(0, Math.min(1, confidence))
               : null,
             isFinal: event.isFinal !== false,
             receivedAt: new Date().toISOString(),
