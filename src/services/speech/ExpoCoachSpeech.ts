@@ -11,10 +11,22 @@ export class ExpoCoachSpeech implements CoachSpeech {
       await Speech.stop();
     }
 
-    Speech.speak(trimmed, {
-      language: 'en-AU',
-      rate: options.rate ?? 0.92,
-      pitch: 1,
+    await new Promise<void>((resolve) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        resolve();
+      };
+
+      Speech.speak(trimmed, {
+        language: 'en-AU',
+        rate: options.rate ?? 0.92,
+        pitch: 1,
+        onDone: finish,
+        onStopped: finish,
+        onError: finish,
+      });
     });
   }
 
