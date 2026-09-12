@@ -154,6 +154,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
       void runtime.orchestrator.processFrame(frame, {
         outcome: 'partial-success',
         expectedPosture: expectedCue?.expectedPosture ?? null,
+        responseWindowMs: expectedCue?.responseWindowMs ?? null,
         observedAt: frame.capturedAt,
         cueAt: activeCueAt,
         responseAt: frame.capturedAt,
