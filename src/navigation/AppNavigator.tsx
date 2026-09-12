@@ -16,6 +16,7 @@ import { SessionDetailScreen } from '../screens/SessionDetailScreen';
 import { SessionHistoryScreen } from '../screens/SessionHistoryScreen';
 import { TodayScreen } from '../screens/TodayScreen';
 import { TrainingIntelligenceScreen } from '../screens/TrainingIntelligenceScreen';
+import { CameraCoachScreen } from '../screens/CameraCoachScreen';
 import type { MainTabParamList, RootStackParamList } from '../types/navigation';
 import { MainTabBar } from './MainTabBar';
 import { AssessmentIntroScreen } from '../features/assessment/screens/AssessmentIntroScreen';
@@ -66,6 +67,7 @@ export function AppNavigator(): React.JSX.Element {
             <Stack.Screen name="Privacy" component={PrivacyScreen} />
             <Stack.Screen name="LessonSummary" component={LessonSummaryScreen} />
             <Stack.Screen name="LessonSession" component={LessonSessionScreen} />
+            <Stack.Screen name="CameraCoach" component={CameraCoachScreen} />
             <Stack.Screen name="SessionHistory" component={SessionHistoryScreen} />
             <Stack.Screen name="SessionDetail" component={SessionDetailScreen} />
             <Stack.Screen name="TrainingIntelligence" component={TrainingIntelligenceScreen} />
