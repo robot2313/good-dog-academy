@@ -10,6 +10,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -22,10 +25,22 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
-      - name: Refresh lockfile for Expo patch alignment
-        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Regenerate Expo lockfile
+        run: |
+          rm -f package-lock.json
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Commit regenerated lockfile
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Refresh Expo SDK 54 dependency lockfile"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
 
       - name: Install dependencies
         run: npm ci
@@ -38,9 +53,3 @@ jobs:
 
       - name: Expo Doctor
         run: npx expo-doctor@latest
-
-      - name: Upload refreshed lockfile
-        uses: actions/upload-artifact@v4
-        with:
-          name: refreshed-package-lock
-          path: package-lock.json
