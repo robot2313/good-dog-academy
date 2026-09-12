@@ -97,6 +97,7 @@ export function ProgressScreen({ navigation }: Props): React.JSX.Element {
                 <Metric value={adaptiveIntel.warnings.length} label="Warnings" />
               </View>
               <AppButton title="Open Training Intelligence" onPress={() => navigation.navigate('TrainingIntelligence')} />
+              <AppButton variant="secondary" title="Open Behaviour Timeline" onPress={() => navigation.navigate('BehaviourTimeline')} />
             </View>
           ) : null}
 
@@ -140,6 +141,7 @@ export function ProgressScreen({ navigation }: Props): React.JSX.Element {
                 supportingText="Complete coached sessions to compare recent reps with earlier sessions, spot regression, cue repetition, correction rates and stress-tagged evidence."
               />
               <AppButton title="Open Training Intelligence" onPress={() => navigation.navigate('TrainingIntelligence')} />
+              <AppButton variant="secondary" title="Open Behaviour Timeline" onPress={() => navigation.navigate('BehaviourTimeline')} />
             </View>
           ) : null}
 
