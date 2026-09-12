@@ -1,14 +1,20 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AppButton } from '../components/AppButton';
 import { AppScreen } from '../components/AppScreen';
-import { createLiveCoachSession, type SessionDirectorDecision } from '../domain/behaviour/LiveCoachEngine';
+import {
+  createLiveCoachSession,
+  type LiveCoachSession,
+  type SessionDirectorDecision,
+} from '../domain/behaviour/LiveCoachEngine';
 import { CameraCoachOrchestrator, type CameraCoachPendingConfirmation } from '../domain/camera/CameraCoachOrchestrator';
 import type { TrainingOutcome } from '../domain/models/TrainingSession';
+import { loadBundledLessonCatalogue } from '../features/lessons/catalogue';
 import { useOnboarding } from '../features/onboarding/OnboardingContext';
+import { persistCompletedLiveCoachSession } from '../services/AdaptiveTrainingPersistenceService';
 import { ExpoCameraFrameSource } from '../services/camera/ExpoCameraFrameSource';
 import { ExpoCoachSpeech } from '../services/speech/ExpoCoachSpeech';
 import { SpokenCoachController } from '../services/speech/SpokenCoachController';
@@ -24,12 +30,16 @@ type Diagnostics = {
   lastResult: string;
 };
 
+type SaveState = 'idle' | 'saving' | 'saved' | 'error';
+
 export function CameraCoachScreen({ route }: Props): React.JSX.Element {
   const { status } = useOnboarding();
   const dog = status?.state === 'complete' ? status.dog : null;
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView | null>(null);
   const cueAtRef = useRef<string | null>(null);
+  const sessionStartedAtRef = useRef<string | null>(null);
+  const persistedSessionIdRef = useRef<string | null>(null);
   const spokenCoach = useMemo(() => new SpokenCoachController(new ExpoCoachSpeech()), []);
   const [cameraReady, setCameraReady] = useState(false);
   const [running, setRunning] = useState(false);
@@ -37,6 +47,7 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
   const [cueAt, setCueAt] = useState<string | null>(null);
   const [pending, setPending] = useState<CameraCoachPendingConfirmation | null>(null);
   const [lastDecision, setLastDecision] = useState<SessionDirectorDecision | null>(null);
+  const [saveState, setSaveState] = useState<SaveState>('idle');
   const [diagnostics, setDiagnostics] = useState<Diagnostics>({
     framesCaptured: 0,
     framesAnalysed: 0,
@@ -81,6 +92,39 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
 
     return { source, orchestrator };
   }, [cameraReady, dog, route.params.lessonId]);
+
+  const persistIfComplete = useCallback(async (session: LiveCoachSession): Promise<void> => {
+    if (session.status !== 'complete' || persistedSessionIdRef.current === session.id) return;
+
+    const startedAt = sessionStartedAtRef.current;
+    if (!startedAt) return;
+
+    const lesson = loadBundledLessonCatalogue().findById(route.params.lessonId);
+    if (!lesson) {
+      setSaveState('error');
+      setDiagnostics((current) => ({ ...current, lastResult: 'Could not map this lesson to the curriculum for saving.' }));
+      return;
+    }
+
+    persistedSessionIdRef.current = session.id;
+    setSaveState('saving');
+    try {
+      await persistCompletedLiveCoachSession({
+        session,
+        skillId: lesson.skill,
+        dailyPlanId: route.params.dailyPlanId ?? null,
+        startedAt,
+        notes: 'Completed with Camera Coach.',
+      });
+      setSaveState('saved');
+      setDiagnostics((current) => ({ ...current, lastResult: 'Session saved to training memory and history.' }));
+      void spokenCoach.announce({ type: 'session_finished' });
+    } catch {
+      persistedSessionIdRef.current = null;
+      setSaveState('error');
+      setDiagnostics((current) => ({ ...current, lastResult: 'Session finished but could not be saved safely.' }));
+    }
+  }, [route.params.dailyPlanId, route.params.lessonId, spokenCoach]);
 
   useEffect(() => {
     if (!runtime || !running) return;
@@ -127,6 +171,7 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
             framesAnalysed: current.framesAnalysed + 1,
             lastResult: `Rep ${result.rep.repNumber} recorded`,
           }));
+          void persistIfComplete(result.session);
         }
       });
     });
@@ -143,10 +188,13 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
       void runtime.orchestrator.dispose();
       void spokenCoach.stop();
     };
-  }, [running, runtime, spokenCoach]);
+  }, [persistIfComplete, running, runtime, spokenCoach]);
 
   const startCoach = () => {
+    const startedAt = new Date().toISOString();
+    sessionStartedAtRef.current = startedAt;
     setRunning(true);
+    setSaveState('idle');
     void spokenCoach.announce({ type: 'session_started', dogName: dog?.name ?? 'your dog' });
   };
 
@@ -168,6 +216,7 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
       setLastDecision(result.decision);
       void spokenCoach.announce({ type: 'director_decision', decision: result.decision });
       setDiagnostics((current) => ({ ...current, lastResult: `Rep ${result.rep.repNumber} owner-confirmed` }));
+      void persistIfComplete(result.session);
     }
   };
 
@@ -212,6 +261,7 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
         <Text style={styles.sectionTitle}>Live diagnostics</Text>
         <Text style={styles.body}>Camera: {cameraReady ? 'ready' : 'starting'}</Text>
         <Text style={styles.body}>Voice coach: {voiceEnabled ? 'on' : 'off'}</Text>
+        <Text style={styles.body}>Session memory: {saveState === 'saved' ? 'saved' : saveState === 'saving' ? 'saving' : saveState === 'error' ? 'save error' : 'waiting for completion'}</Text>
         <Text style={styles.body}>Frames sampled: {diagnostics.framesCaptured}</Text>
         <Text style={styles.body}>Frames analysed: {diagnostics.framesAnalysed}</Text>
         <Text style={styles.body}>Last result: {diagnostics.lastResult}</Text>
@@ -220,7 +270,7 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
 
       {!running ? (
         <AppButton title="Start Camera Coach" onPress={startCoach} disabled={!cameraReady || !runtime} />
-      ) : !cueAt && !pending ? (
+      ) : !cueAt && !pending && saveState !== 'saved' ? (
         <AppButton title="Start next rep" onPress={startNextRep} />
       ) : null}
 
