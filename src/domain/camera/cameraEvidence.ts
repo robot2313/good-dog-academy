@@ -16,7 +16,8 @@ export type CameraEvidenceUncertainty =
   | 'unknown_posture'
   | 'low_posture_confidence'
   | 'stress_signal'
-  | 'outcome_not_supported';
+  | 'expected_posture_not_configured'
+  | 'posture_mismatch';
 
 export type CameraEvidencePolicy = {
   minDetectionConfidence: number;
@@ -30,6 +31,7 @@ export const DEFAULT_CAMERA_EVIDENCE_POLICY: CameraEvidencePolicy = {
 
 export type CameraRepObservation = {
   outcome: TrainingOutcome;
+  expectedPosture: DogPostureEvidence | null;
   observedAt: string;
   cueAt: string | null;
   responseAt: string | null;
@@ -39,12 +41,6 @@ export type CameraRepObservation = {
   signal: string | null;
   notes?: string | null;
 };
-
-function supportsOutcome(posture: DogPostureEvidence, outcome: TrainingOutcome): boolean {
-  if (outcome === 'partial-success') return posture !== 'unknown';
-  if (outcome === 'unsuccessful') return true;
-  return posture !== 'unknown';
-}
 
 export function decideCameraRepEvidence(
   vision: DogVisionResult,
@@ -74,8 +70,12 @@ export function decideCameraRepEvidence(
     return { kind: 'ask_owner', reason: 'low_posture_confidence' };
   }
 
-  if (!supportsOutcome(vision.posture, observation.outcome)) {
-    return { kind: 'ask_owner', reason: 'outcome_not_supported' };
+  if (observation.expectedPosture === null || observation.expectedPosture === 'unknown') {
+    return { kind: 'ask_owner', reason: 'expected_posture_not_configured' };
+  }
+
+  if (vision.posture !== observation.expectedPosture) {
+    return { kind: 'ask_owner', reason: 'posture_mismatch' };
   }
 
   return {
@@ -83,7 +83,7 @@ export function decideCameraRepEvidence(
     evidence: {
       source: 'camera_auto',
       confidence: Math.min(detectionConfidence, postureConfidence),
-      observedOutcome: observation.outcome,
+      observedOutcome: 'success',
       observedAt: observation.observedAt,
       cueAt: observation.cueAt,
       responseAt: observation.responseAt,
