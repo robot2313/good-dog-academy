@@ -14,6 +14,7 @@ const baseVision: DogVisionResult = {
 
 const baseObservation = {
   outcome: 'success' as const,
+  expectedPosture: 'sit_like' as const,
   observedAt: '2026-09-12T10:00:01.000Z',
   cueAt: '2026-09-12T10:00:00.000Z',
   responseAt: '2026-09-12T10:00:00.800Z',
@@ -25,7 +26,7 @@ const baseObservation = {
 };
 
 describe('camera evidence gating', () => {
-  it('accepts high-confidence camera evidence', () => {
+  it('accepts high-confidence evidence only when the observed posture matches the expected cue posture', () => {
     const decision = decideCameraRepEvidence(baseVision, baseObservation);
 
     expect(decision.kind).toBe('accept');
@@ -75,5 +76,20 @@ describe('camera evidence gating', () => {
     );
 
     expect(decision).toEqual({ kind: 'ask_owner', reason: 'unknown_posture' });
+  });
+
+  it('requires owner confirmation when the lesson has no expected posture mapping', () => {
+    const decision = decideCameraRepEvidence(baseVision, { ...baseObservation, expectedPosture: null });
+
+    expect(decision).toEqual({ kind: 'ask_owner', reason: 'expected_posture_not_configured' });
+  });
+
+  it('does not infer failure from a confident but mismatched posture', () => {
+    const decision = decideCameraRepEvidence(
+      { ...baseVision, posture: 'stand_like', postureConfidence: 0.95 },
+      baseObservation,
+    );
+
+    expect(decision).toEqual({ kind: 'ask_owner', reason: 'posture_mismatch' });
   });
 });
