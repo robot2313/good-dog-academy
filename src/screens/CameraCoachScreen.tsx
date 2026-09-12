@@ -39,6 +39,7 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
   const cameraRef = useRef<CameraView | null>(null);
   const cueAtRef = useRef<string | null>(null);
   const sessionStartedAtRef = useRef<string | null>(null);
+  const completedSessionRef = useRef<LiveCoachSession | null>(null);
   const persistedSessionIdRef = useRef<string | null>(null);
   const spokenCoach = useMemo(() => new SpokenCoachController(new ExpoCoachSpeech()), []);
   const [cameraReady, setCameraReady] = useState(false);
@@ -94,7 +95,9 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
   }, [cameraReady, dog, route.params.lessonId]);
 
   const persistIfComplete = useCallback(async (session: LiveCoachSession): Promise<void> => {
-    if (session.status !== 'complete' || persistedSessionIdRef.current === session.id) return;
+    if (session.status !== 'complete') return;
+    completedSessionRef.current = session;
+    if (persistedSessionIdRef.current === session.id) return;
 
     const startedAt = sessionStartedAtRef.current;
     if (!startedAt) return;
@@ -193,6 +196,8 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
   const startCoach = () => {
     const startedAt = new Date().toISOString();
     sessionStartedAtRef.current = startedAt;
+    completedSessionRef.current = null;
+    persistedSessionIdRef.current = null;
     setRunning(true);
     setSaveState('idle');
     void spokenCoach.announce({ type: 'session_started', dogName: dog?.name ?? 'your dog' });
@@ -220,11 +225,17 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
     }
   };
 
+  const retrySave = () => {
+    if (completedSessionRef.current) void persistIfComplete(completedSessionRef.current);
+  };
+
   const toggleVoice = () => {
     const next = !voiceEnabled;
     setVoiceEnabled(next);
     void spokenCoach.setEnabled(next);
   };
+
+  const sessionComplete = runtime?.orchestrator.getSession().status === 'complete';
 
   if (!permission) {
     return <AppScreen><Text style={styles.body}>Checking camera permission…</Text></AppScreen>;
@@ -270,7 +281,7 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
 
       {!running ? (
         <AppButton title="Start Camera Coach" onPress={startCoach} disabled={!cameraReady || !runtime} />
-      ) : !cueAt && !pending && saveState !== 'saved' ? (
+      ) : !cueAt && !pending && !sessionComplete && saveState !== 'saving' ? (
         <AppButton title="Start next rep" onPress={startNextRep} />
       ) : null}
 
@@ -288,6 +299,14 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
           <AppButton title="Success" onPress={() => confirm('success')} />
           <AppButton title="Partial success" onPress={() => confirm('partial-success')} />
           <AppButton title="Not successful" onPress={() => confirm('unsuccessful')} />
+        </View>
+      ) : null}
+
+      {saveState === 'error' ? (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Session save needs retry</Text>
+          <Text style={styles.body}>The completed session is still held in memory. Retrying will use the same session ID, so it will not create a duplicate.</Text>
+          <AppButton title="Retry saving session" onPress={retrySave} />
         </View>
       ) : null}
 
