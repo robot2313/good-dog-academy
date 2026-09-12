@@ -142,4 +142,26 @@ describe('CameraCoachOrchestrator', () => {
     expect(confirmed.decision.action).toBe('break');
     expect(confirmed.session.difficulty.distraction).toBe(1);
   });
+
+  it('lets the owner stop immediately and clears pending automatic evidence', async () => {
+    const engine = new FakeVisionEngine(vision({ postureConfidence: 0.2 }));
+    const orchestrator = new CameraCoachOrchestrator(
+      createLiveCoachSession({ id: 'session-stop', dogId: 'dog-1', lessonId: 'sit' }),
+      engine,
+    );
+
+    const automatic = await orchestrator.processFrame(
+      frame('pending-frame', '2026-09-12T10:00:01.000Z'),
+      observation(),
+    );
+    expect(automatic.kind).toBe('owner_confirmation');
+    expect(orchestrator.getPendingConfirmation()).not.toBeNull();
+
+    const stopped = orchestrator.stopByOwner();
+
+    expect(stopped.status).toBe('complete');
+    expect(stopped.endedEarly).toBe(true);
+    expect(stopped.endReason).toBe('owner_stopped');
+    expect(orchestrator.getPendingConfirmation()).toBeNull();
+  });
 });
