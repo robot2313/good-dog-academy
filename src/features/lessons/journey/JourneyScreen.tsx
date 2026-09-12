@@ -12,7 +12,7 @@ import { LoadingState } from '../../../components/LoadingState';
 import { IdentityHeader } from '../../../components/IdentityHeader';
 import { ReferenceIcon } from '../../../components/ReferenceIcon';
 import { loadAdaptiveSessionHistory, loadAdaptiveTrainingMemory } from '../../../services/AdaptiveTrainingPersistenceService';
-import { referencePalette, referenceStyles } from '../../../theme/referenceStyles';
+import { referencePalette, referenceScreenStyles, referenceStyles } from '../../../theme/referenceStyles';
 import type { MainTabParamList, RootStackParamList } from '../../../types/navigation';
 import { useLessonLibraryData } from '../library/LessonLibraryContext';
 import { lessonLibraryErrorMessage } from '../library/lessonLibraryPresentation';
@@ -84,11 +84,11 @@ function JourneyContent({ onBack, onOpenLesson }: { readonly onBack?: () => void
       <View style={referenceStyles.header}><Text accessibilityRole="header" style={referenceStyles.title}>Your Journey</Text><Text style={referenceStyles.subtitle}>Your personalised path to success</Text></View>
       <Text style={referenceStyles.journeyIntro}>This is the recommended order. You can still choose any lesson from Categories whenever your dog needs something different.</Text>
 
-      {adaptiveRecommendation?.action === 'switch' ? <View style={referenceStyles.cardSelected}>
-        <Text style={referenceStyles.eyebrow}>PLAN ADJUSTED</Text>
-        <Text style={referenceStyles.blockTitle}>{adaptiveRecommendation.recommendedLessonTitle}</Text>
-        <Text style={referenceStyles.blockIntro}>{adaptiveRecommendation.explanation}</Text>
-        <Text style={referenceStyles.meta}>Instead of {adaptiveRecommendation.currentLessonTitle}</Text>
+      {adaptiveRecommendation?.action === 'switch' ? <View style={referenceScreenStyles.cardSelected}>
+        <Text style={referenceScreenStyles.meta}>PLAN ADJUSTED</Text>
+        <Text style={referenceScreenStyles.blockTitle}>{adaptiveRecommendation.recommendedLessonTitle}</Text>
+        <Text style={referenceScreenStyles.blockIntro}>{adaptiveRecommendation.explanation}</Text>
+        <Text style={referenceScreenStyles.meta}>Instead of {adaptiveRecommendation.currentLessonTitle}</Text>
         <Pressable accessibilityRole="button" accessibilityLabel={`Open recommended lesson ${adaptiveRecommendation.recommendedLessonTitle}`} onPress={() => onOpenLesson(adaptiveRecommendation.lessonId)} style={({ pressed }) => [referenceStyles.largeGreenButton, pressed && referenceStyles.pressed]}>
           <Text style={referenceStyles.largeGreenButtonText}>Open Recommended Lesson</Text>
         </Pressable>
