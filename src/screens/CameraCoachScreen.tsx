@@ -11,6 +11,7 @@ import {
   type SessionDirectorDecision,
 } from '../domain/behaviour/LiveCoachEngine';
 import { CameraCoachOrchestrator, type CameraCoachPendingConfirmation } from '../domain/camera/CameraCoachOrchestrator';
+import { expectedCueResponseForLesson } from '../domain/camera/ExpectedCueResponse';
 import type { TrainingOutcome } from '../domain/models/TrainingSession';
 import { loadBundledLessonCatalogue } from '../features/lessons/catalogue';
 import { useOnboarding } from '../features/onboarding/OnboardingContext';
@@ -42,6 +43,10 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
   const completedSessionRef = useRef<LiveCoachSession | null>(null);
   const persistedSessionIdRef = useRef<string | null>(null);
   const spokenCoach = useMemo(() => new SpokenCoachController(new ExpoCoachSpeech()), []);
+  const expectedCue = useMemo(
+    () => expectedCueResponseForLesson(route.params.lessonId),
+    [route.params.lessonId],
+  );
   const [cameraReady, setCameraReady] = useState(false);
   const [running, setRunning] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
@@ -148,6 +153,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
 
       void runtime.orchestrator.processFrame(frame, {
         outcome: 'partial-success',
+        expectedPosture: expectedCue?.expectedPosture ?? null,
         observedAt: frame.capturedAt,
         cueAt: activeCueAt,
         responseAt: frame.capturedAt,
@@ -155,7 +161,9 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         rewardAt: null,
         cueCount: 1,
         signal: null,
-        notes: 'Camera Coach native preview observation.',
+        notes: expectedCue
+          ? `Camera Coach cue ${expectedCue.cueLabel}; response window ${expectedCue.responseWindowMs}ms.`
+          : 'Camera Coach observation requires owner confirmation because this lesson has no certified posture-only success criterion.',
       }).then((result) => {
         if (!active) return;
         if (result.kind === 'owner_confirmation') {
@@ -193,7 +201,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
       void runtime.orchestrator.dispose();
       void spokenCoach.stop();
     };
-  }, [persistIfComplete, running, runtime, spokenCoach]);
+  }, [expectedCue, persistIfComplete, running, runtime, spokenCoach]);
 
   useEffect(() => {
     if (sessionComplete && runtime) void runtime.source.stop();
@@ -276,6 +284,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         <Text style={styles.sectionTitle}>Live diagnostics</Text>
         <Text style={styles.body}>Camera: {cameraReady ? 'ready' : 'starting'}</Text>
         <Text style={styles.body}>Voice coach: {voiceEnabled ? 'on' : 'off'}</Text>
+        <Text style={styles.body}>Automatic posture scoring: {expectedCue ? `eligible (${expectedCue.cueLabel})` : 'owner-confirmed for this lesson'}</Text>
         <Text style={styles.body}>Session memory: {saveState === 'saved' ? 'saved' : saveState === 'saving' ? 'saving' : saveState === 'error' ? 'save error' : 'waiting for completion'}</Text>
         <Text style={styles.body}>Frames sampled: {diagnostics.framesCaptured}</Text>
         <Text style={styles.body}>Frames analysed: {diagnostics.framesAnalysed}</Text>
