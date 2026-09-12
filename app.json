@@ -32,6 +32,13 @@
     "plugins": [
       "@react-native-community/datetimepicker",
       [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Good Dog Academy to use the camera for optional live training feedback.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "Allow Good Dog Academy to choose an optional profile photo for your dog."
