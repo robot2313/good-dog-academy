@@ -10,6 +10,8 @@ import { CameraCoachOrchestrator, type CameraCoachPendingConfirmation } from '..
 import type { TrainingOutcome } from '../domain/models/TrainingSession';
 import { useOnboarding } from '../features/onboarding/OnboardingContext';
 import { ExpoCameraFrameSource } from '../services/camera/ExpoCameraFrameSource';
+import { ExpoCoachSpeech } from '../services/speech/ExpoCoachSpeech';
+import { SpokenCoachController } from '../services/speech/SpokenCoachController';
 import { OwnerFallbackVisionEngine } from '../services/vision/OwnerFallbackVisionEngine';
 import type { RootStackParamList } from '../types/navigation';
 
@@ -28,8 +30,10 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView | null>(null);
   const cueAtRef = useRef<string | null>(null);
+  const spokenCoach = useMemo(() => new SpokenCoachController(new ExpoCoachSpeech()), []);
   const [cameraReady, setCameraReady] = useState(false);
   const [running, setRunning] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [cueAt, setCueAt] = useState<string | null>(null);
   const [pending, setPending] = useState<CameraCoachPendingConfirmation | null>(null);
   const [lastDecision, setLastDecision] = useState<SessionDirectorDecision | null>(null);
@@ -43,6 +47,10 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
   useEffect(() => {
     cueAtRef.current = cueAt;
   }, [cueAt]);
+
+  useEffect(() => () => {
+    void spokenCoach.stop();
+  }, [spokenCoach]);
 
   const runtime = useMemo(() => {
     if (!dog) return null;
@@ -103,6 +111,7 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
         if (!active) return;
         if (result.kind === 'owner_confirmation') {
           setPending(result.pending);
+          void spokenCoach.announce({ type: 'owner_confirmation', pending: result.pending });
           setDiagnostics((current) => ({
             ...current,
             framesAnalysed: current.framesAnalysed + 1,
@@ -110,6 +119,8 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
           }));
         } else if (result.kind === 'rep_recorded') {
           setLastDecision(result.decision);
+          void spokenCoach.announce({ type: 'director_decision', decision: result.decision });
+          cueAtRef.current = null;
           setCueAt(null);
           setDiagnostics((current) => ({
             ...current,
@@ -130,13 +141,21 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
       unsubscribe();
       void runtime.source.stop();
       void runtime.orchestrator.dispose();
+      void spokenCoach.stop();
     };
-  }, [running, runtime]);
+  }, [running, runtime, spokenCoach]);
+
+  const startCoach = () => {
+    setRunning(true);
+    void spokenCoach.announce({ type: 'session_started', dogName: dog?.name ?? 'your dog' });
+  };
 
   const startNextRep = () => {
     const startedAt = new Date().toISOString();
+    const repNumber = (runtime?.orchestrator.getSession().reps.length ?? 0) + 1;
     cueAtRef.current = startedAt;
     setCueAt(startedAt);
+    void spokenCoach.announce({ type: 'rep_started', repNumber });
   };
 
   const confirm = (outcome: TrainingOutcome) => {
@@ -147,8 +166,15 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
     setCueAt(null);
     if (result.kind === 'rep_recorded') {
       setLastDecision(result.decision);
+      void spokenCoach.announce({ type: 'director_decision', decision: result.decision });
       setDiagnostics((current) => ({ ...current, lastResult: `Rep ${result.rep.repNumber} owner-confirmed` }));
     }
+  };
+
+  const toggleVoice = () => {
+    const next = !voiceEnabled;
+    setVoiceEnabled(next);
+    void spokenCoach.setEnabled(next);
   };
 
   if (!permission) {
@@ -185,13 +211,15 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Live diagnostics</Text>
         <Text style={styles.body}>Camera: {cameraReady ? 'ready' : 'starting'}</Text>
+        <Text style={styles.body}>Voice coach: {voiceEnabled ? 'on' : 'off'}</Text>
         <Text style={styles.body}>Frames sampled: {diagnostics.framesCaptured}</Text>
         <Text style={styles.body}>Frames analysed: {diagnostics.framesAnalysed}</Text>
         <Text style={styles.body}>Last result: {diagnostics.lastResult}</Text>
+        <AppButton title={voiceEnabled ? 'Turn voice coaching off' : 'Turn voice coaching on'} onPress={toggleVoice} />
       </View>
 
       {!running ? (
-        <AppButton title="Start Camera Coach" onPress={() => setRunning(true)} disabled={!cameraReady || !runtime} />
+        <AppButton title="Start Camera Coach" onPress={startCoach} disabled={!cameraReady || !runtime} />
       ) : !cueAt && !pending ? (
         <AppButton title="Start next rep" onPress={startNextRep} />
       ) : null}
