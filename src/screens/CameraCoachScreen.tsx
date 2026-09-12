@@ -27,6 +27,7 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
   const dog = status?.state === 'complete' ? status.dog : null;
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView | null>(null);
+  const cueAtRef = useRef<string | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
   const [running, setRunning] = useState(false);
   const [cueAt, setCueAt] = useState<string | null>(null);
@@ -38,6 +39,10 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
     lastFrameAt: null,
     lastResult: 'Idle',
   });
+
+  useEffect(() => {
+    cueAtRef.current = cueAt;
+  }, [cueAt]);
 
   const runtime = useMemo(() => {
     if (!dog) return null;
@@ -81,12 +86,13 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
         lastFrameAt: frame.capturedAt,
       }));
 
-      if (!cueAt || runtime.orchestrator.getPendingConfirmation()) return;
+      const activeCueAt = cueAtRef.current;
+      if (!activeCueAt || runtime.orchestrator.getPendingConfirmation()) return;
 
       void runtime.orchestrator.processFrame(frame, {
         outcome: 'partial-success',
         observedAt: frame.capturedAt,
-        cueAt,
+        cueAt: activeCueAt,
         responseAt: frame.capturedAt,
         markerAt: null,
         rewardAt: null,
@@ -114,7 +120,10 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
       });
     });
 
-    void runtime.orchestrator.warmup().then(() => runtime.source.start());
+    void runtime.orchestrator.warmup().then(() => {
+      if (active) return runtime.source.start();
+      return undefined;
+    });
 
     return () => {
       active = false;
@@ -122,12 +131,19 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
       void runtime.source.stop();
       void runtime.orchestrator.dispose();
     };
-  }, [cueAt, running, runtime]);
+  }, [running, runtime]);
+
+  const startNextRep = () => {
+    const startedAt = new Date().toISOString();
+    cueAtRef.current = startedAt;
+    setCueAt(startedAt);
+  };
 
   const confirm = (outcome: TrainingOutcome) => {
     if (!runtime || !pending) return;
     const result = runtime.orchestrator.confirmPendingByOwner(outcome, new Date().toISOString());
     setPending(null);
+    cueAtRef.current = null;
     setCueAt(null);
     if (result.kind === 'rep_recorded') {
       setLastDecision(result.decision);
@@ -177,7 +193,7 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
       {!running ? (
         <AppButton title="Start Camera Coach" onPress={() => setRunning(true)} disabled={!cameraReady || !runtime} />
       ) : !cueAt && !pending ? (
-        <AppButton title="Start next rep" onPress={() => setCueAt(new Date().toISOString())} />
+        <AppButton title="Start next rep" onPress={startNextRep} />
       ) : null}
 
       {cueAt && !pending ? (
