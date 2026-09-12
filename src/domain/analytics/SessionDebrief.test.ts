@@ -1,16 +1,21 @@
 import { createLiveCoachSession, applyRepToLiveSession } from '../behaviour/LiveCoachEngine';
+import type { TrainingOutcome } from '../models/TrainingSession';
 import type { TrainingRep } from '../models/TrainingEvidence';
 import { buildSessionDebrief } from './SessionDebrief';
 
-function rep(input: Partial<TrainingRep> & Pick<TrainingRep, 'id' | 'repNumber'>): TrainingRep {
+type RepInput = Partial<TrainingRep> & Pick<TrainingRep, 'id' | 'repNumber'> & {
+  observedOutcome?: TrainingOutcome;
+};
+
+function rep(input: RepInput): TrainingRep {
+  const observedOutcome = input.observedOutcome ?? input.evidence?.observedOutcome ?? 'success';
   return {
     id: input.id,
     repNumber: input.repNumber,
-    outcome: input.outcome ?? 'success',
     evidence: input.evidence ?? {
       source: 'owner_confirmed',
       confidence: 1,
-      observedOutcome: input.outcome ?? 'success',
+      observedOutcome,
       observedAt: `2026-09-12T10:00:0${input.repNumber}.000Z`,
       cueAt: `2026-09-12T10:00:0${input.repNumber}.000Z`,
       responseAt: `2026-09-12T10:00:0${input.repNumber}.800Z`,
@@ -68,7 +73,7 @@ describe('SessionDebrief', () => {
 
   it('coaches the owner when cue repetition is the main breakdown', () => {
     const repeated = rep({
-      id: 'r2', repNumber: 2, outcome: 'partial-success',
+      id: 'r2', repNumber: 2, observedOutcome: 'partial-success',
       evidence: {
         source: 'owner_confirmed', confidence: 1, observedOutcome: 'partial-success',
         observedAt: '2026-09-12T10:00:02.000Z', cueAt: null, responseAt: null,
@@ -90,8 +95,9 @@ describe('SessionDebrief', () => {
       repNumber,
       correction: {
         correctedAt: `2026-09-12T10:01:0${repNumber}.000Z`,
-        outcome: 'success',
+        correctedOutcome: 'success',
         reason: 'Owner corrected automatic score',
+        source: 'owner',
       },
     });
     const debrief = buildSessionDebrief(sessionWith([
