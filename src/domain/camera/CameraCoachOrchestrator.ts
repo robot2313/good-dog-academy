@@ -4,6 +4,7 @@ import type { TrainingOutcome } from '../models/TrainingSession';
 import type { TrainingRep } from '../models/TrainingEvidence';
 import {
   applyRepToLiveSession,
+  stopLiveCoachSession,
   type LiveCoachSession,
   type SessionDirectorDecision,
 } from '../behaviour/LiveCoachEngine';
@@ -81,6 +82,12 @@ export class CameraCoachOrchestrator {
 
   getPendingConfirmation(): CameraCoachPendingConfirmation | null {
     return this.pending;
+  }
+
+  stopByOwner(): LiveCoachSession {
+    this.pending = null;
+    this.session = stopLiveCoachSession(this.session);
+    return this.session;
   }
 
   async warmup(): Promise<void> {
