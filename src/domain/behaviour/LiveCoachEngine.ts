@@ -190,16 +190,17 @@ export function autonomousSessionDirector(session: LiveCoachSession): SessionDir
   const current = normaliseDifficulty(session.difficulty);
   const total = session.reps.length;
 
-  if (session.status === 'complete' || total >= session.targetReps) {
+  if (session.status === 'complete') {
     return {
       action: 'finish',
       headline: 'Session complete',
-      reason: 'The planned rep target has been reached.',
-      instruction: 'Finish on a calm note and save the session evidence.',
+      reason: 'This session has already been closed.',
+      instruction: 'Save the session evidence and finish on a calm note.',
       nextDifficulty: current,
     };
   }
 
+  // Safety/comfort outranks progression and even normal target completion.
   if (recentStressCount(session) >= 1) {
     return {
       action: 'break',
@@ -207,6 +208,16 @@ export function autonomousSessionDirector(session: LiveCoachSession): SessionDir
       reason: 'A recent rep contains possible stress or discomfort evidence.',
       instruction: 'Pause, give the dog more space, and only continue if the dog settles comfortably.',
       nextDifficulty: easier(current),
+    };
+  }
+
+  if (total >= session.targetReps) {
+    return {
+      action: 'finish',
+      headline: 'Session complete',
+      reason: 'The planned rep target has been reached.',
+      instruction: 'Finish on a calm note and save the session evidence.',
+      nextDifficulty: current,
     };
   }
 
