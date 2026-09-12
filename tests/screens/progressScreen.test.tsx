@@ -59,7 +59,7 @@ describe('ProgressScreen Learning Passport', () => {
     expect(navigate).toHaveBeenCalledWith('SessionHistory');
   });
 
-  it('surfaces coached adaptive evidence without replacing the existing passport record', async () => {
+  it('surfaces coached adaptive evidence and its intelligence views without replacing the passport', async () => {
     mockLoadAdaptiveTrainingMemory.mockResolvedValue({
       schemaVersion: 1,
       dogId: sampleDog.id,
@@ -87,6 +87,8 @@ describe('ProgressScreen Learning Passport', () => {
     expect(view.getByText(/Strongest current coached evidence: Focus/)).toBeTruthy();
     fireEvent.press(view.getByRole('button', { name: 'Open Training Intelligence' }));
     expect(navigate).toHaveBeenCalledWith('TrainingIntelligence');
+    fireEvent.press(view.getByRole('button', { name: 'Open Behaviour Timeline' }));
+    expect(navigate).toHaveBeenCalledWith('BehaviourTimeline');
   });
 
   it('shows accessible loading and safe error states with retry', () => {
