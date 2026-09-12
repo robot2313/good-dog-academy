@@ -35,6 +35,7 @@ type Diagnostics = {
 };
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
+type HandsFreeListenMode = 'confirmation' | 'next-rep';
 
 export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Element {
   const { status } = useOnboarding();
@@ -81,7 +82,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
       if (!active) return;
       setHandsFreeAvailable(availability.available);
       setHandsFreeMessage(availability.available
-        ? 'Ready. Voice answers can be used when confirmation is needed.'
+        ? 'Ready. Voice control can confirm reps and start the next rep.'
         : 'Button fallback active. Native listening requires a development or production build.');
     });
 
@@ -126,14 +127,16 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
 
   const sessionComplete = runtime?.orchestrator.getSession().status === 'complete';
 
-  const startHandsFreeListening = useCallback(async (): Promise<void> => {
+  const startHandsFreeListening = useCallback(async (mode: HandsFreeListenMode): Promise<void> => {
     if (handsFreeListening) return;
     setHandsFreeMessage('Starting microphone…');
     try {
       const started = await handsFreeCoach.start();
       setHandsFreeListening(started);
       setHandsFreeMessage(started
-        ? 'Listening… say yes, partial, no, repeat, or stop.'
+        ? mode === 'confirmation'
+          ? 'Listening… say yes, partial, no, repeat, or stop.'
+          : 'Listening… say ready, next rep, repeat, or stop.'
         : 'Speech recognition is unavailable or microphone permission was not granted.');
     } catch {
       setHandsFreeListening(false);
@@ -177,6 +180,20 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
     }
   }, [route.params.dailyPlanId, route.params.lessonId, spokenCoach]);
 
+  const startNextRep = useCallback(() => {
+    if (!runtime) return;
+    if (runtime.orchestrator.getSession().status === 'complete') return;
+    if (runtime.orchestrator.getPendingConfirmation()) return;
+    if (cueAtRef.current) return;
+
+    const startedAt = new Date().toISOString();
+    const repNumber = runtime.orchestrator.getSession().reps.length + 1;
+    cueAtRef.current = startedAt;
+    setCueAt(startedAt);
+    setHandsFreeMessage(`Rep ${repNumber} started. Give the cue once.`);
+    void spokenCoach.announce({ type: 'rep_started', repNumber });
+  }, [runtime, spokenCoach]);
+
   useEffect(() => {
     if (!runtime || !running) return;
 
@@ -216,11 +233,10 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
             lastResult: `Owner confirmation: ${result.pending.reason}`,
           }));
           void spokenCoach.announce({ type: 'owner_confirmation', pending: result.pending }).then(() => {
-            if (handsFreeAvailable) void startHandsFreeListening();
+            if (handsFreeAvailable) void startHandsFreeListening('confirmation');
           });
         } else if (result.kind === 'rep_recorded') {
           setLastDecision(result.decision);
-          void spokenCoach.announce({ type: 'director_decision', decision: result.decision });
           cueAtRef.current = null;
           setCueAt(null);
           setDiagnostics((current) => ({
@@ -228,6 +244,15 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
             framesAnalysed: current.framesAnalysed + 1,
             lastResult: `Rep ${result.rep.repNumber} recorded`,
           }));
+          void spokenCoach.announce({ type: 'director_decision', decision: result.decision }).then(() => {
+            if (
+              handsFreeAvailable &&
+              result.session.status === 'active' &&
+              result.decision.action !== 'break'
+            ) {
+              void startHandsFreeListening('next-rep');
+            }
+          });
           void persistIfComplete(result.session);
         }
       });
@@ -262,15 +287,9 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
     setLastTranscript(null);
     setRunning(true);
     setSaveState('idle');
-    void spokenCoach.announce({ type: 'session_started', dogName: dog?.name ?? 'your dog' });
-  };
-
-  const startNextRep = () => {
-    const startedAt = new Date().toISOString();
-    const repNumber = (runtime?.orchestrator.getSession().reps.length ?? 0) + 1;
-    cueAtRef.current = startedAt;
-    setCueAt(startedAt);
-    void spokenCoach.announce({ type: 'rep_started', repNumber });
+    void spokenCoach.announce({ type: 'session_started', dogName: dog?.name ?? 'your dog' }).then(() => {
+      if (handsFreeAvailable) void startHandsFreeListening('next-rep');
+    });
   };
 
   const confirm = useCallback((outcome: TrainingOutcome) => {
@@ -283,11 +302,19 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
     setCueAt(null);
     if (result.kind === 'rep_recorded') {
       setLastDecision(result.decision);
-      void spokenCoach.announce({ type: 'director_decision', decision: result.decision });
       setDiagnostics((current) => ({ ...current, lastResult: `Rep ${result.rep.repNumber} owner-confirmed` }));
+      void spokenCoach.announce({ type: 'director_decision', decision: result.decision }).then(() => {
+        if (
+          handsFreeAvailable &&
+          result.session.status === 'active' &&
+          result.decision.action !== 'break'
+        ) {
+          void startHandsFreeListening('next-rep');
+        }
+      });
       void persistIfComplete(result.session);
     }
-  }, [handsFreeCoach, pending, persistIfComplete, runtime, spokenCoach]);
+  }, [handsFreeAvailable, handsFreeCoach, pending, persistIfComplete, runtime, spokenCoach, startHandsFreeListening]);
 
   useEffect(() => handsFreeCoach.onEvent((event) => {
     if (event.type === 'error') {
@@ -301,14 +328,15 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
     void handsFreeCoach.stop();
 
     if (event.type === 'unclear') {
-      setHandsFreeMessage(`I heard “${event.transcript}” but did not treat it as a training result.`);
+      setHandsFreeMessage(`I heard “${event.transcript}” but did not treat it as a training command.`);
       return;
     }
 
     if (event.intent === 'repeat') {
       setHandsFreeMessage('Repeating the last coaching instruction.');
       void spokenCoach.repeatLast().then(() => {
-        if (pending && handsFreeAvailable) void startHandsFreeListening();
+        if (pending && handsFreeAvailable) void startHandsFreeListening('confirmation');
+        else if (running && !cueAtRef.current && !sessionComplete && handsFreeAvailable) void startHandsFreeListening('next-rep');
       });
       return;
     }
@@ -326,6 +354,28 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
       return;
     }
 
+    if (event.intent === 'next-rep') {
+      if (!runtime || !running) {
+        setHandsFreeMessage('The coach is not running, so “next rep” did not change anything.');
+        return;
+      }
+      if (pending) {
+        setHandsFreeMessage('Confirm the current rep before starting another one.');
+        return;
+      }
+      if (cueAtRef.current) {
+        setHandsFreeMessage('A rep is already being watched.');
+        return;
+      }
+      if (runtime.orchestrator.getSession().status === 'complete') {
+        setHandsFreeMessage('This session is already complete.');
+        return;
+      }
+      setHandsFreeMessage('Starting the next rep.');
+      startNextRep();
+      return;
+    }
+
     if (!pending) {
       setHandsFreeMessage('I heard a score, but no rep is waiting for confirmation, so nothing changed.');
       return;
@@ -334,7 +384,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
     if (event.intent === 'success') confirm('success');
     else if (event.intent === 'partial-success') confirm('partial-success');
     else if (event.intent === 'unsuccessful') confirm('unsuccessful');
-  }), [confirm, handsFreeAvailable, handsFreeCoach, pending, persistIfComplete, runtime, spokenCoach, startHandsFreeListening]);
+  }), [confirm, handsFreeAvailable, handsFreeCoach, pending, persistIfComplete, running, runtime, sessionComplete, spokenCoach, startHandsFreeListening, startNextRep]);
 
   const retrySave = () => {
     if (completedSessionRef.current) void persistIfComplete(completedSessionRef.current);
@@ -381,7 +431,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         <Text style={styles.sectionTitle}>Live diagnostics</Text>
         <Text style={styles.body}>Camera: {cameraReady ? 'ready' : 'starting'}</Text>
         <Text style={styles.body}>Spoken coach: {voiceEnabled ? 'on' : 'off'}</Text>
-        <Text style={styles.body}>Hands-free answers: {handsFreeAvailable === null ? 'checking' : handsFreeAvailable ? (handsFreeListening ? 'listening' : 'available') : 'button fallback'}</Text>
+        <Text style={styles.body}>Hands-free control: {handsFreeAvailable === null ? 'checking' : handsFreeAvailable ? (handsFreeListening ? 'listening' : 'available') : 'button fallback'}</Text>
         <Text style={styles.body}>Automatic posture scoring: {expectedCue ? `eligible (${expectedCue.cueLabel})` : 'owner-confirmed for this lesson'}</Text>
         <Text style={styles.body}>Session memory: {saveState === 'saved' ? 'saved' : saveState === 'saving' ? 'saving' : saveState === 'error' ? 'save error' : 'waiting for completion'}</Text>
         <Text style={styles.body}>Frames sampled: {diagnostics.framesCaptured}</Text>
@@ -391,11 +441,14 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Hands-free owner responses</Text>
+        <Text style={styles.sectionTitle}>Hands-free owner control</Text>
         <Text style={styles.body}>{handsFreeMessage}</Text>
         {lastTranscript ? <Text style={styles.body}>Last heard: “{lastTranscript}”</Text> : null}
         {pending && handsFreeAvailable && !handsFreeListening ? (
-          <AppButton title="Listen for my answer" onPress={() => void startHandsFreeListening()} />
+          <AppButton title="Listen for my answer" onPress={() => void startHandsFreeListening('confirmation')} />
+        ) : null}
+        {running && !pending && !cueAt && !sessionComplete && handsFreeAvailable && !handsFreeListening ? (
+          <AppButton title="Listen for next rep" onPress={() => void startHandsFreeListening('next-rep')} />
         ) : null}
       </View>
 
