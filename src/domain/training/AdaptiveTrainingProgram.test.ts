@@ -1,5 +1,5 @@
 import type { AdaptiveTrainingMemory, SessionHistoryRecord } from '../models/AdaptiveTrainingMemory';
-import { buildAdaptiveTrainingProgram, deriveDogTwinState } from './AdaptiveTrainingProgram';
+import { buildAdaptiveTrainingProgram, deriveDogTwinState, regenerateRemainingAdaptiveProgram } from './AdaptiveTrainingProgram';
 
 function memory(overrides: Partial<AdaptiveTrainingMemory> = {}): AdaptiveTrainingMemory {
   return {
@@ -115,5 +115,23 @@ describe('AdaptiveTrainingProgram', () => {
 
     const program = buildAdaptiveTrainingProgram(mixed, [history()], '2026-09-12T12:00:00.000Z');
     expect(program.focusSkillId).toBe('recall');
+  });
+
+  it('regenerates only future days when new safety evidence arrives', () => {
+    const previous = buildAdaptiveTrainingProgram(memory(), [history()], '2026-09-12T08:00:00.000Z');
+    const stressedHistory = [history({ id: 'stress', completedAt: '2026-09-12T13:00:00.000Z', stressSignalRate: 0.5, endReason: 'stress', endedEarly: true })];
+
+    const regenerated = regenerateRemainingAdaptiveProgram({
+      previous,
+      completedThroughDay: 2,
+      memory: memory(),
+      history: stressedHistory,
+      generatedAt: '2026-09-12T13:05:00.000Z',
+    });
+
+    expect(regenerated.state).toBe('recover');
+    expect(regenerated.days.slice(0, 2)).toEqual(previous.days.slice(0, 2));
+    expect(regenerated.days[2].mode).toBe('recovery');
+    expect(regenerated.days[3].mode).toBe('rest');
   });
 });
