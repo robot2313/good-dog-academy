@@ -60,6 +60,11 @@ export type SessionDirectorDecision = {
   nextDifficulty: DifficultyVector;
 };
 
+export type AppliedRepResult = {
+  session: LiveCoachSession;
+  decision: SessionDirectorDecision;
+};
+
 const clamp = (value: number) => Math.max(1, Math.min(5, Math.round(value)));
 
 export function normaliseDifficulty(value: DifficultyVector): DifficultyVector {
@@ -262,8 +267,10 @@ export function autonomousSessionDirector(session: LiveCoachSession): SessionDir
   };
 }
 
-export function addRepToLiveSession(session: LiveCoachSession, rep: TrainingRep): LiveCoachSession {
-  if (session.status === 'complete') return session;
+export function applyRepToLiveSession(session: LiveCoachSession, rep: TrainingRep): AppliedRepResult {
+  if (session.status === 'complete') {
+    return { session, decision: autonomousSessionDirector(session) };
+  }
 
   const reps = [...session.reps, rep];
   const outcome: TrainingOutcome = effectiveRepOutcome(rep);
@@ -282,12 +289,19 @@ export function addRepToLiveSession(session: LiveCoachSession, rep: TrainingRep)
   const repeatedStress = recentStressCount(provisional) >= 2;
 
   return {
-    ...provisional,
-    difficulty: decision.nextDifficulty,
-    status: reachedTarget || repeatedStress ? 'complete' : 'active',
-    endedEarly: repeatedStress && !reachedTarget,
-    endReason: repeatedStress ? 'stress' : reachedTarget ? 'target_reached' : null,
+    decision,
+    session: {
+      ...provisional,
+      difficulty: decision.nextDifficulty,
+      status: reachedTarget || repeatedStress ? 'complete' : 'active',
+      endedEarly: repeatedStress && !reachedTarget,
+      endReason: repeatedStress ? 'stress' : reachedTarget ? 'target_reached' : null,
+    },
   };
+}
+
+export function addRepToLiveSession(session: LiveCoachSession, rep: TrainingRep): LiveCoachSession {
+  return applyRepToLiveSession(session, rep).session;
 }
 
 export function stopLiveCoachSession(session: LiveCoachSession): LiveCoachSession {
