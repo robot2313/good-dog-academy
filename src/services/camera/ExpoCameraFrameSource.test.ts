@@ -40,7 +40,7 @@ describe('ExpoCameraFrameSource', () => {
   });
 
   it('does not overlap captures and stops scheduling after stop', async () => {
-    let resolveCapture: ((value: { uri: string; width: number; height: number }) => void) | null = null;
+    let resolveCapture!: (value: { uri: string; width: number; height: number }) => void;
     const capture = jest.fn(() => new Promise<{ uri: string; width: number; height: number }>((resolve) => {
       resolveCapture = resolve;
     }));
@@ -53,7 +53,7 @@ describe('ExpoCameraFrameSource', () => {
     await jest.advanceTimersByTimeAsync(1000);
     expect(capture).toHaveBeenCalledTimes(1);
 
-    resolveCapture?.({ uri: 'file:///frame.jpg', width: 640, height: 480 });
+    resolveCapture({ uri: 'file:///frame.jpg', width: 640, height: 480 });
     await Promise.resolve();
     await Promise.resolve();
     await source.stop();
