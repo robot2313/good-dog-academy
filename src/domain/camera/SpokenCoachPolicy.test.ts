@@ -58,6 +58,18 @@ describe('SpokenCoachPolicy', () => {
     });
   });
 
+  it('explains pause without ending the session', () => {
+    expect(spokenCoachMessage({ type: 'session_paused' })).toEqual({
+      text: 'Training paused. No rep will be scored while paused. Say resume when you are ready.',
+      priority: 'normal',
+      interrupt: true,
+    });
+  });
+
+  it('confirms the existing session resumes', () => {
+    expect(spokenCoachMessage({ type: 'session_resumed' }).text).toContain('same session');
+  });
+
   it('keeps ordinary progression coaching non-safety priority', () => {
     const message = spokenCoachMessage({ type: 'director_decision', decision: decision('progress') });
     expect(message.priority).toBe('normal');
