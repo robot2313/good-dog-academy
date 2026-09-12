@@ -47,22 +47,36 @@ function isDifficulty(value: unknown): boolean {
   );
 }
 
+function isEndReason(value: unknown): boolean {
+  return value === null || ['target_reached', 'stress', 'fatigue', 'owner_stopped'].includes(String(value));
+}
+
 function isSessionHistoryRecord(value: unknown, dogId: string): value is SessionHistoryRecord {
   if (!isRecord(value) || value.dogId !== dogId) return false;
   if (typeof value.id !== 'string' || typeof value.lessonId !== 'string' || typeof value.skillId !== 'string') return false;
   if (typeof value.completedAt !== 'string' || !Number.isFinite(new Date(value.completedAt).getTime())) return false;
   if (typeof value.totalReps !== 'number' || !Number.isInteger(value.totalReps) || value.totalReps < 0) return false;
   if (!['cleanRepRate', 'repeatedCueRate', 'slowResponseRate', 'stressSignalRate', 'correctedRepRate'].every((key) => isFiniteRate(value[key]))) return false;
-  if (typeof value.endedEarly !== 'boolean') return false;
-  if (value.endReason !== null && !['target_reached', 'stress', 'fatigue', 'owner_stopped'].includes(String(value.endReason))) return false;
+  if (typeof value.endedEarly !== 'boolean' || !isEndReason(value.endReason)) return false;
   return isDifficulty(value.startingDifficulty) && isDifficulty(value.endingDifficulty);
+}
+
+function isSkillTrainingMemory(value: unknown, skillId: string): boolean {
+  if (!isRecord(value) || value.skillId !== skillId) return false;
+  if (typeof value.sessionsCompleted !== 'number' || !Number.isInteger(value.sessionsCompleted) || value.sessionsCompleted < 0) return false;
+  if (typeof value.totalReps !== 'number' || !Number.isInteger(value.totalReps) || value.totalReps < 0) return false;
+  if (!['cleanRepRate', 'repeatedCueRate', 'slowResponseRate', 'stressSignalRate', 'correctedRepRate'].every((key) => isFiniteRate(value[key]))) return false;
+  if (typeof value.lastTrainedAt !== 'string' || !Number.isFinite(new Date(value.lastTrainedAt).getTime())) return false;
+  if (typeof value.lastEndedEarly !== 'boolean' || !isEndReason(value.lastEndReason)) return false;
+  return isDifficulty(value.recommendedDifficulty);
 }
 
 function isAdaptiveTrainingMemory(value: unknown, dogId: string): value is AdaptiveTrainingMemory {
   if (!isRecord(value) || value.schemaVersion !== 1 || value.dogId !== dogId) return false;
   if (typeof value.totalSessions !== 'number' || !Number.isInteger(value.totalSessions) || value.totalSessions < 0) return false;
   if (typeof value.updatedAt !== 'string' || !Number.isFinite(new Date(value.updatedAt).getTime())) return false;
-  return isRecord(value.skills);
+  if (!isRecord(value.skills)) return false;
+  return Object.entries(value.skills).every(([skillId, skill]) => isSkillTrainingMemory(skill, skillId));
 }
 
 async function readRecordMap(storage: StorageAdapter, key: string): Promise<Record<string, unknown>> {
