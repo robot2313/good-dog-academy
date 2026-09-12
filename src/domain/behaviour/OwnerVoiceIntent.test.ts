@@ -8,14 +8,23 @@ describe('parseOwnerVoiceIntent', () => {
     ["no, he didn't do it", 'unsuccessful'],
     ['ready for the next rep', 'next-rep'],
     ['next', 'next-rep'],
+    ['pause the session', 'pause'],
+    ['take a break', 'pause'],
+    ['resume session', 'resume'],
+    ['continue', 'resume'],
     ['repeat that please', 'repeat'],
     ['stop the session', 'stop'],
   ])('maps %s to %s', (transcript, expected) => {
     expect(parseOwnerVoiceIntent(transcript)).toBe(expected);
   });
 
-  it('prioritises a stop request over scoring language', () => {
+  it('prioritises a full stop request over scoring language', () => {
     expect(parseOwnerVoiceIntent('yes good, but stop the session')).toBe('stop');
+  });
+
+  it('keeps temporary pause distinct from ending the session', () => {
+    expect(parseOwnerVoiceIntent('take a break')).toBe('pause');
+    expect(parseOwnerVoiceIntent('end session')).toBe('stop');
   });
 
   it('keeps repeat distinct from moving to the next rep', () => {
