@@ -8,11 +8,19 @@ import {
 } from '../domain/models/AdaptiveTrainingMemory';
 import type { TrainingSession, TrainingOutcome } from '../domain/models/TrainingSession';
 import { effectiveRepOutcome } from '../domain/models/TrainingEvidence';
+import { StorageTransactionManager } from '../storage/StorageTransactionManager';
+import type { StorageAdapter } from '../storage/StorageAdapter';
 import { storageKeys } from '../storage/storageKeys';
 import { appStorage } from './appStorage';
-import { domainRepositories } from './domainRepositories';
+import { createDomainRepositories } from './createDomainRepositories';
 
 const MAX_HISTORY = 100;
+const adaptiveCommitKeys = [
+  storageKeys.trainingSessions,
+  storageKeys.adaptiveTrainingMemory,
+  storageKeys.adaptiveSessionHistory,
+] as const;
+const transactions = new StorageTransactionManager(appStorage);
 
 function overallOutcome(session: LiveCoachSession): TrainingOutcome | null {
   if (!session.reps.length) return null;
@@ -24,17 +32,65 @@ function overallOutcome(session: LiveCoachSession): TrainingOutcome | null {
   return 'unsuccessful';
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isFiniteRate(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1;
+}
+
+function isDifficulty(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return ['distance', 'duration', 'distraction'].every((key) =>
+    typeof value[key] === 'number' && Number.isFinite(value[key]) && (value[key] as number) >= 1 && (value[key] as number) <= 5,
+  );
+}
+
+function isSessionHistoryRecord(value: unknown, dogId: string): value is SessionHistoryRecord {
+  if (!isRecord(value) || value.dogId !== dogId) return false;
+  if (typeof value.id !== 'string' || typeof value.lessonId !== 'string' || typeof value.skillId !== 'string') return false;
+  if (typeof value.completedAt !== 'string' || !Number.isFinite(new Date(value.completedAt).getTime())) return false;
+  if (typeof value.totalReps !== 'number' || !Number.isInteger(value.totalReps) || value.totalReps < 0) return false;
+  if (!['cleanRepRate', 'repeatedCueRate', 'slowResponseRate', 'stressSignalRate', 'correctedRepRate'].every((key) => isFiniteRate(value[key]))) return false;
+  if (typeof value.endedEarly !== 'boolean') return false;
+  if (value.endReason !== null && !['target_reached', 'stress', 'fatigue', 'owner_stopped'].includes(String(value.endReason))) return false;
+  return isDifficulty(value.startingDifficulty) && isDifficulty(value.endingDifficulty);
+}
+
+function isAdaptiveTrainingMemory(value: unknown, dogId: string): value is AdaptiveTrainingMemory {
+  if (!isRecord(value) || value.schemaVersion !== 1 || value.dogId !== dogId) return false;
+  if (typeof value.totalSessions !== 'number' || !Number.isInteger(value.totalSessions) || value.totalSessions < 0) return false;
+  if (typeof value.updatedAt !== 'string' || !Number.isFinite(new Date(value.updatedAt).getTime())) return false;
+  return isRecord(value.skills);
+}
+
+async function readRecordMap(storage: StorageAdapter, key: string): Promise<Record<string, unknown>> {
+  const value = await storage.getItem<unknown>(key);
+  return isRecord(value) ? value : {};
+}
+
+async function loadMemoryFrom(storage: StorageAdapter, dogId: string): Promise<AdaptiveTrainingMemory> {
+  const all = await readRecordMap(storage, storageKeys.adaptiveTrainingMemory);
+  const memory = all[dogId];
+  return isAdaptiveTrainingMemory(memory, dogId) ? memory : emptyAdaptiveTrainingMemory(dogId);
+}
+
+async function loadHistoryFrom(storage: StorageAdapter, dogId: string): Promise<SessionHistoryRecord[]> {
+  const all = await readRecordMap(storage, storageKeys.adaptiveSessionHistory);
+  const history = all[dogId];
+  if (!Array.isArray(history)) return [];
+  return history
+    .filter((item): item is SessionHistoryRecord => isSessionHistoryRecord(item, dogId))
+    .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
+}
+
 export async function loadAdaptiveTrainingMemory(dogId: string): Promise<AdaptiveTrainingMemory> {
-  const all = await appStorage.getItem<Record<string, AdaptiveTrainingMemory>>(storageKeys.adaptiveTrainingMemory);
-  const memory = all?.[dogId];
-  if (!memory || memory.schemaVersion !== 1 || memory.dogId !== dogId) return emptyAdaptiveTrainingMemory(dogId);
-  return memory;
+  return loadMemoryFrom(appStorage, dogId);
 }
 
 export async function loadAdaptiveSessionHistory(dogId: string): Promise<SessionHistoryRecord[]> {
-  const all = await appStorage.getItem<Record<string, SessionHistoryRecord[]>>(storageKeys.adaptiveSessionHistory);
-  const history = all?.[dogId];
-  return Array.isArray(history) ? [...history].sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()) : [];
+  return loadHistoryFrom(appStorage, dogId);
 }
 
 export async function persistCompletedLiveCoachSession(input: {
@@ -64,19 +120,23 @@ export async function persistCompletedLiveCoachSession(input: {
   };
 
   const record = summariseLiveCoachSession(session, skillId, completedAt);
-  const currentMemory = await loadAdaptiveTrainingMemory(session.dogId);
-  const nextMemory = updateAdaptiveTrainingMemory(currentMemory, record);
-  const existingHistory = await loadAdaptiveSessionHistory(session.dogId);
-  const nextHistory = [record, ...existingHistory.filter((item) => item.id !== record.id)]
-    .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
-    .slice(0, MAX_HISTORY);
 
-  const allMemory = (await appStorage.getItem<Record<string, AdaptiveTrainingMemory>>(storageKeys.adaptiveTrainingMemory)) ?? {};
-  const allHistory = (await appStorage.getItem<Record<string, SessionHistoryRecord[]>>(storageKeys.adaptiveSessionHistory)) ?? {};
+  return transactions.run(adaptiveCommitKeys, async (storage) => {
+    const repositories = createDomainRepositories(storage);
+    const currentMemory = await loadMemoryFrom(storage, session.dogId);
+    const existingHistory = await loadHistoryFrom(storage, session.dogId);
+    const nextMemory = updateAdaptiveTrainingMemory(currentMemory, record);
+    const nextHistory = [record, ...existingHistory.filter((item) => item.id !== record.id)]
+      .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
+      .slice(0, MAX_HISTORY);
 
-  await domainRepositories.trainingSessions.save(trainingSession);
-  await appStorage.setItem(storageKeys.adaptiveTrainingMemory, { ...allMemory, [session.dogId]: nextMemory });
-  await appStorage.setItem(storageKeys.adaptiveSessionHistory, { ...allHistory, [session.dogId]: nextHistory });
+    const allMemory = await readRecordMap(storage, storageKeys.adaptiveTrainingMemory);
+    const allHistory = await readRecordMap(storage, storageKeys.adaptiveSessionHistory);
 
-  return { trainingSession, memory: nextMemory, history: nextHistory };
+    await repositories.trainingSessions.save(trainingSession);
+    await storage.setItem(storageKeys.adaptiveTrainingMemory, { ...allMemory, [session.dogId]: nextMemory });
+    await storage.setItem(storageKeys.adaptiveSessionHistory, { ...allHistory, [session.dogId]: nextHistory });
+
+    return { trainingSession, memory: nextMemory, history: nextHistory };
+  });
 }
