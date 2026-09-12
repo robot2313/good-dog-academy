@@ -8,6 +8,8 @@ export const storageKeys = {
   lessonProgress: '@good-dog-academy/domain/lesson-progress',
   dailyPlans: '@good-dog-academy/domain/daily-plans',
   trainingSessions: '@good-dog-academy/domain/training-sessions',
+  adaptiveTrainingMemory: '@good-dog-academy/adaptive/training-memory-v1',
+  adaptiveSessionHistory: '@good-dog-academy/adaptive/session-history-v1',
   achievements: '@good-dog-academy/domain/achievements',
   progress: '@good-dog-academy/domain/progress',
   notificationSettings: '@good-dog-academy/domain/notification-settings',
