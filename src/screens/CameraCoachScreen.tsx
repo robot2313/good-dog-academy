@@ -19,6 +19,8 @@ import { useOnboarding } from '../features/onboarding/OnboardingContext';
 import { persistCompletedLiveCoachSession } from '../services/AdaptiveTrainingPersistenceService';
 import { ExpoCameraFrameSource } from '../services/camera/ExpoCameraFrameSource';
 import { ExpoCoachSpeech } from '../services/speech/ExpoCoachSpeech';
+import { ExpoTrainingSpeechRecognizer } from '../services/speech/ExpoTrainingSpeechRecognizer';
+import { HandsFreeCoachController } from '../services/speech/HandsFreeCoachController';
 import { SpokenCoachController } from '../services/speech/SpokenCoachController';
 import { OwnerFallbackVisionEngine } from '../services/vision/OwnerFallbackVisionEngine';
 import type { RootStackParamList } from '../types/navigation';
@@ -44,6 +46,8 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
   const completedSessionRef = useRef<LiveCoachSession | null>(null);
   const persistedSessionIdRef = useRef<string | null>(null);
   const spokenCoach = useMemo(() => new SpokenCoachController(new ExpoCoachSpeech()), []);
+  const speechRecognizer = useMemo(() => new ExpoTrainingSpeechRecognizer(), []);
+  const handsFreeCoach = useMemo(() => new HandsFreeCoachController(speechRecognizer), [speechRecognizer]);
   const expectedCue = useMemo(
     () => expectedCueResponseForLesson(route.params.lessonId),
     [route.params.lessonId],
@@ -51,6 +55,10 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
   const [cameraReady, setCameraReady] = useState(false);
   const [running, setRunning] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [handsFreeAvailable, setHandsFreeAvailable] = useState<boolean | null>(null);
+  const [handsFreeListening, setHandsFreeListening] = useState(false);
+  const [handsFreeMessage, setHandsFreeMessage] = useState('Checking speech recognition…');
+  const [lastTranscript, setLastTranscript] = useState<string | null>(null);
   const [cueAt, setCueAt] = useState<string | null>(null);
   const [pending, setPending] = useState<CameraCoachPendingConfirmation | null>(null);
   const [lastDecision, setLastDecision] = useState<SessionDirectorDecision | null>(null);
@@ -67,9 +75,24 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
     cueAtRef.current = cueAt;
   }, [cueAt]);
 
-  useEffect(() => () => {
-    void spokenCoach.stop();
-  }, [spokenCoach]);
+  useEffect(() => {
+    let active = true;
+    void handsFreeCoach.getAvailability().then((availability) => {
+      if (!active) return;
+      setHandsFreeAvailable(availability.available);
+      setHandsFreeMessage(availability.available
+        ? 'Ready. Voice answers can be used when confirmation is needed.'
+        : 'Button fallback active. Native listening requires a development or production build.');
+    });
+
+    return () => {
+      active = false;
+      void handsFreeCoach.abort();
+      handsFreeCoach.dispose();
+      speechRecognizer.dispose();
+      void spokenCoach.stop();
+    };
+  }, [handsFreeCoach, speechRecognizer, spokenCoach]);
 
   const runtime = useMemo(() => {
     if (!dog) return null;
@@ -103,6 +126,21 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
 
   const sessionComplete = runtime?.orchestrator.getSession().status === 'complete';
 
+  const startHandsFreeListening = useCallback(async (): Promise<void> => {
+    if (handsFreeListening) return;
+    setHandsFreeMessage('Starting microphone…');
+    try {
+      const started = await handsFreeCoach.start();
+      setHandsFreeListening(started);
+      setHandsFreeMessage(started
+        ? 'Listening… say yes, partial, no, repeat, or stop.'
+        : 'Speech recognition is unavailable or microphone permission was not granted.');
+    } catch {
+      setHandsFreeListening(false);
+      setHandsFreeMessage('Could not start speech recognition. Use the buttons instead.');
+    }
+  }, [handsFreeCoach, handsFreeListening]);
+
   const persistIfComplete = useCallback(async (session: LiveCoachSession): Promise<void> => {
     if (session.status !== 'complete') return;
     completedSessionRef.current = session;
@@ -131,7 +169,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
       setDebrief(buildSessionDebrief(session));
       setSaveState('saved');
       setDiagnostics((current) => ({ ...current, lastResult: 'Session saved to training memory and history.' }));
-      void spokenCoach.announce({ type: 'session_finished' });
+      await spokenCoach.announce({ type: 'session_finished' });
     } catch {
       persistedSessionIdRef.current = null;
       setSaveState('error');
@@ -172,12 +210,14 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         if (!active) return;
         if (result.kind === 'owner_confirmation') {
           setPending(result.pending);
-          void spokenCoach.announce({ type: 'owner_confirmation', pending: result.pending });
           setDiagnostics((current) => ({
             ...current,
             framesAnalysed: current.framesAnalysed + 1,
             lastResult: `Owner confirmation: ${result.pending.reason}`,
           }));
+          void spokenCoach.announce({ type: 'owner_confirmation', pending: result.pending }).then(() => {
+            if (handsFreeAvailable) void startHandsFreeListening();
+          });
         } else if (result.kind === 'rep_recorded') {
           setLastDecision(result.decision);
           void spokenCoach.announce({ type: 'director_decision', decision: result.decision });
@@ -203,9 +243,11 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
       unsubscribe();
       void runtime.source.stop();
       void runtime.orchestrator.dispose();
+      void handsFreeCoach.abort();
+      setHandsFreeListening(false);
       void spokenCoach.stop();
     };
-  }, [expectedCue, persistIfComplete, running, runtime, spokenCoach]);
+  }, [expectedCue, handsFreeAvailable, handsFreeCoach, persistIfComplete, running, runtime, spokenCoach, startHandsFreeListening]);
 
   useEffect(() => {
     if (sessionComplete && runtime) void runtime.source.stop();
@@ -217,6 +259,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
     completedSessionRef.current = null;
     persistedSessionIdRef.current = null;
     setDebrief(null);
+    setLastTranscript(null);
     setRunning(true);
     setSaveState('idle');
     void spokenCoach.announce({ type: 'session_started', dogName: dog?.name ?? 'your dog' });
@@ -230,8 +273,10 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
     void spokenCoach.announce({ type: 'rep_started', repNumber });
   };
 
-  const confirm = (outcome: TrainingOutcome) => {
+  const confirm = useCallback((outcome: TrainingOutcome) => {
     if (!runtime || !pending) return;
+    void handsFreeCoach.abort();
+    setHandsFreeListening(false);
     const result = runtime.orchestrator.confirmPendingByOwner(outcome, new Date().toISOString());
     setPending(null);
     cueAtRef.current = null;
@@ -242,7 +287,54 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
       setDiagnostics((current) => ({ ...current, lastResult: `Rep ${result.rep.repNumber} owner-confirmed` }));
       void persistIfComplete(result.session);
     }
-  };
+  }, [handsFreeCoach, pending, persistIfComplete, runtime, spokenCoach]);
+
+  useEffect(() => handsFreeCoach.onEvent((event) => {
+    if (event.type === 'error') {
+      setHandsFreeListening(false);
+      setHandsFreeMessage(`Listening error: ${event.message}. Use the buttons if needed.`);
+      return;
+    }
+
+    setLastTranscript(event.transcript);
+    setHandsFreeListening(false);
+    void handsFreeCoach.stop();
+
+    if (event.type === 'unclear') {
+      setHandsFreeMessage(`I heard “${event.transcript}” but did not treat it as a training result.`);
+      return;
+    }
+
+    if (event.intent === 'repeat') {
+      setHandsFreeMessage('Repeating the last coaching instruction.');
+      void spokenCoach.repeatLast().then(() => {
+        if (pending && handsFreeAvailable) void startHandsFreeListening();
+      });
+      return;
+    }
+
+    if (event.intent === 'stop') {
+      if (!runtime) return;
+      const stopped = runtime.orchestrator.stopByOwner();
+      setPending(null);
+      cueAtRef.current = null;
+      setCueAt(null);
+      setRunning(false);
+      setHandsFreeMessage('Session stopped by owner voice command.');
+      setDiagnostics((current) => ({ ...current, lastResult: 'Session stopped by owner.' }));
+      if (stopped.reps.length > 0) void persistIfComplete(stopped);
+      return;
+    }
+
+    if (!pending) {
+      setHandsFreeMessage('I heard a score, but no rep is waiting for confirmation, so nothing changed.');
+      return;
+    }
+
+    if (event.intent === 'success') confirm('success');
+    else if (event.intent === 'partial-success') confirm('partial-success');
+    else if (event.intent === 'unsuccessful') confirm('unsuccessful');
+  }), [confirm, handsFreeAvailable, handsFreeCoach, pending, persistIfComplete, runtime, spokenCoach, startHandsFreeListening]);
 
   const retrySave = () => {
     if (completedSessionRef.current) void persistIfComplete(completedSessionRef.current);
@@ -288,13 +380,23 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Live diagnostics</Text>
         <Text style={styles.body}>Camera: {cameraReady ? 'ready' : 'starting'}</Text>
-        <Text style={styles.body}>Voice coach: {voiceEnabled ? 'on' : 'off'}</Text>
+        <Text style={styles.body}>Spoken coach: {voiceEnabled ? 'on' : 'off'}</Text>
+        <Text style={styles.body}>Hands-free answers: {handsFreeAvailable === null ? 'checking' : handsFreeAvailable ? (handsFreeListening ? 'listening' : 'available') : 'button fallback'}</Text>
         <Text style={styles.body}>Automatic posture scoring: {expectedCue ? `eligible (${expectedCue.cueLabel})` : 'owner-confirmed for this lesson'}</Text>
         <Text style={styles.body}>Session memory: {saveState === 'saved' ? 'saved' : saveState === 'saving' ? 'saving' : saveState === 'error' ? 'save error' : 'waiting for completion'}</Text>
         <Text style={styles.body}>Frames sampled: {diagnostics.framesCaptured}</Text>
         <Text style={styles.body}>Frames analysed: {diagnostics.framesAnalysed}</Text>
         <Text style={styles.body}>Last result: {diagnostics.lastResult}</Text>
-        <AppButton title={voiceEnabled ? 'Turn voice coaching off' : 'Turn voice coaching on'} onPress={toggleVoice} />
+        <AppButton title={voiceEnabled ? 'Turn spoken coaching off' : 'Turn spoken coaching on'} onPress={toggleVoice} />
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Hands-free owner responses</Text>
+        <Text style={styles.body}>{handsFreeMessage}</Text>
+        {lastTranscript ? <Text style={styles.body}>Last heard: “{lastTranscript}”</Text> : null}
+        {pending && handsFreeAvailable && !handsFreeListening ? (
+          <AppButton title="Listen for my answer" onPress={() => void startHandsFreeListening()} />
+        ) : null}
       </View>
 
       {!running ? (
@@ -314,6 +416,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Confirm what happened</Text>
           <Text style={styles.body}>Automatic evidence is not confident enough yet ({pending.reason}). Your answer becomes the authoritative score.</Text>
+          <Text style={styles.body}>Say “yes”, “partial”, “no”, “repeat”, or “stop” when hands-free listening is available.</Text>
           <AppButton title="Success" onPress={() => confirm('success')} />
           <AppButton title="Partial success" onPress={() => confirm('partial-success')} />
           <AppButton title="Not successful" onPress={() => confirm('unsuccessful')} />
