@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { AppButton } from '../components/AppButton';
 import { AppScreen } from '../components/AppScreen';
+import { buildSessionDebrief, type SessionDebrief } from '../domain/analytics/SessionDebrief';
 import {
   createLiveCoachSession,
   type LiveCoachSession,
@@ -54,6 +55,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
   const [pending, setPending] = useState<CameraCoachPendingConfirmation | null>(null);
   const [lastDecision, setLastDecision] = useState<SessionDirectorDecision | null>(null);
   const [saveState, setSaveState] = useState<SaveState>('idle');
+  const [debrief, setDebrief] = useState<SessionDebrief | null>(null);
   const [diagnostics, setDiagnostics] = useState<Diagnostics>({
     framesCaptured: 0,
     framesAnalysed: 0,
@@ -126,6 +128,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         startedAt,
         notes: 'Completed with Camera Coach.',
       });
+      setDebrief(buildSessionDebrief(session));
       setSaveState('saved');
       setDiagnostics((current) => ({ ...current, lastResult: 'Session saved to training memory and history.' }));
       void spokenCoach.announce({ type: 'session_finished' });
@@ -213,6 +216,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
     sessionStartedAtRef.current = startedAt;
     completedSessionRef.current = null;
     persistedSessionIdRef.current = null;
+    setDebrief(null);
     setRunning(true);
     setSaveState('idle');
     void spokenCoach.announce({ type: 'session_started', dogName: dog?.name ?? 'your dog' });
@@ -324,6 +328,25 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         </View>
       ) : null}
 
+      {saveState === 'saved' && debrief ? (
+        <View style={debrief.safetyNote ? styles.safetyCard : styles.debriefCard}>
+          <Text style={styles.eyebrow}>TRAINER DEBRIEF</Text>
+          <Text style={styles.sectionTitle}>{debrief.headline}</Text>
+          <Text style={styles.body}>{debrief.summary}</Text>
+          <Text style={styles.debriefLabel}>What mattered most</Text>
+          <Text style={styles.body}>{debrief.strongestSignal}</Text>
+          {debrief.mainBreakdown ? <>
+            <Text style={styles.debriefLabel}>Why it may have broken down</Text>
+            <Text style={styles.body}>{debrief.mainBreakdown}</Text>
+          </> : null}
+          <Text style={styles.debriefLabel}>Coach tip for you</Text>
+          <Text style={styles.body}>{debrief.ownerCoachingTip}</Text>
+          <Text style={styles.debriefLabel}>Next session</Text>
+          <Text style={styles.body}>{debrief.nextSessionRecommendation}</Text>
+          {debrief.safetyNote ? <Text style={styles.safetyText}>{debrief.safetyNote}</Text> : null}
+        </View>
+      ) : null}
+
       {saveState === 'saved' ? (
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Training memory updated</Text>
@@ -347,8 +370,13 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
 const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: '800', color: '#18212E' },
   sectionTitle: { fontSize: 18, fontWeight: '700', color: '#18212E' },
+  eyebrow: { fontSize: 10, lineHeight: 14, fontWeight: '900', letterSpacing: 1, color: '#2F8148' },
+  debriefLabel: { fontSize: 12, lineHeight: 17, fontWeight: '800', color: '#0B2545', marginTop: 4 },
   body: { fontSize: 15, lineHeight: 21, color: '#66707C' },
+  safetyText: { fontSize: 13, lineHeight: 19, fontWeight: '700', color: '#984B3E' },
   previewShell: { overflow: 'hidden', borderRadius: 20, minHeight: 360, backgroundColor: '#0B2545' },
   preview: { flex: 1, minHeight: 360 },
   card: { gap: 10, padding: 16, borderRadius: 18, backgroundColor: '#FFFFFF' },
+  debriefCard: { gap: 8, padding: 16, borderRadius: 18, backgroundColor: '#EDF5E9', borderWidth: 1, borderColor: '#CFE2C8' },
+  safetyCard: { gap: 8, padding: 16, borderRadius: 18, backgroundColor: '#F8E7E2', borderWidth: 1, borderColor: '#E2C3BB' },
 });
