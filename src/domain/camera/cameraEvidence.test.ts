@@ -15,6 +15,7 @@ const baseVision: DogVisionResult = {
 const baseObservation = {
   outcome: 'success' as const,
   expectedPosture: 'sit_like' as const,
+  responseWindowMs: 2500,
   observedAt: '2026-09-12T10:00:01.000Z',
   cueAt: '2026-09-12T10:00:00.000Z',
   responseAt: '2026-09-12T10:00:00.800Z',
@@ -91,5 +92,23 @@ describe('camera evidence gating', () => {
     );
 
     expect(decision).toEqual({ kind: 'ask_owner', reason: 'posture_mismatch' });
+  });
+
+  it('requires owner confirmation when the matching posture occurs outside the cue response window', () => {
+    const decision = decideCameraRepEvidence(baseVision, {
+      ...baseObservation,
+      responseAt: '2026-09-12T10:00:03.500Z',
+    });
+
+    expect(decision).toEqual({ kind: 'ask_owner', reason: 'response_window_exceeded' });
+  });
+
+  it('requires owner confirmation when a configured response window has incomplete timing evidence', () => {
+    const decision = decideCameraRepEvidence(baseVision, {
+      ...baseObservation,
+      responseAt: null,
+    });
+
+    expect(decision).toEqual({ kind: 'ask_owner', reason: 'response_window_exceeded' });
   });
 });
