@@ -21,11 +21,20 @@ describe('SpokenCoachPolicy', () => {
     const message = spokenCoachMessage({
       type: 'owner_confirmation',
       pending: {
-        reason: 'low_confidence',
-        evidence: {
-          source: 'camera_auto',
+        reason: 'low_detection_confidence',
+        vision: {
+          frameId: 'frame-1',
+          analysedAt: '2026-09-12T10:00:00.000Z',
+          dogDetected: true,
+          detectionConfidence: 0.4,
+          posture: 'unknown',
+          postureConfidence: null,
+          stressSignal: 'none',
+          stressConfidence: null,
+        },
+        observation: {
+          outcome: 'partial-success',
           observedAt: '2026-09-12T10:00:00.000Z',
-          confidence: 0.4,
           cueAt: null,
           responseAt: null,
           markerAt: null,
@@ -33,9 +42,7 @@ describe('SpokenCoachPolicy', () => {
           cueCount: 1,
           signal: null,
           notes: null,
-          posture: null,
         },
-        proposedOutcome: 'partial-success',
       },
     });
 
