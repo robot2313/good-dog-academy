@@ -90,6 +90,15 @@ export function ProgressScreen({ navigation }: Props): React.JSX.Element {
             />
           </View>
 
+          <View style={referenceScreenStyles.cardSelected}>
+            <SectionHeader
+              eyebrow="ADAPTIVE INTELLIGENCE"
+              title="See what is changing over time"
+              supportingText="Compare recent coached reps with earlier sessions, spot regression, correction rates, cue repetition and stress-tagged evidence."
+            />
+            <AppButton title="Open Training Intelligence" onPress={() => navigation.navigate('TrainingIntelligence')} />
+          </View>
+
           <View style={referenceScreenStyles.card}>
             <SectionHeader
               eyebrow="FULL JOURNAL"
