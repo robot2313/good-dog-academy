@@ -23,6 +23,7 @@ export type RootStackParamList = {
   LessonSession: { lessonId: string; dailyPlanId?: string; selfDirected?: boolean };
   SessionHistory: undefined;
   SessionDetail: { sessionId: string };
+  TrainingIntelligence: undefined;
 };
 
 export type MainTabParamList = {
