@@ -45,6 +45,20 @@ describe('SpokenCoachController', () => {
     expect(speech.calls).toHaveLength(1);
   });
 
+  it('repeats the last instruction only when explicitly requested', async () => {
+    const speech = new FakeCoachSpeech();
+    const controller = new SpokenCoachController(speech);
+
+    await expect(controller.repeatLast()).resolves.toBe(false);
+    await controller.announce({ type: 'rep_started', repNumber: 2 });
+    await expect(controller.repeatLast()).resolves.toBe(true);
+
+    expect(speech.calls).toEqual([
+      { text: 'Rep 2. Give the cue once, then wait.', options: { interrupt: false, rate: 0.92 } },
+      { text: 'Rep 2. Give the cue once, then wait.', options: { interrupt: true, rate: 0.92 } },
+    ]);
+  });
+
   it('marks safety coaching for interruption and a calmer rate', async () => {
     const speech = new FakeCoachSpeech();
     const controller = new SpokenCoachController(speech);
