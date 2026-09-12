@@ -2,6 +2,7 @@ export type OwnerVoiceIntent =
   | 'success'
   | 'partial-success'
   | 'unsuccessful'
+  | 'next-rep'
   | 'repeat'
   | 'stop'
   | 'unknown';
@@ -14,9 +15,10 @@ export function parseOwnerVoiceIntent(transcript: string): OwnerVoiceIntent {
   const text = normalise(transcript);
   if (!text) return 'unknown';
 
-  // Safety/stop commands outrank scoring words if an utterance contains both.
+  // Safety/stop commands outrank every other command if an utterance contains both.
   if (containsAny(` ${text} `, ['stop', 'stop session', 'finish', 'end session', 'take a break', 'break'])) return 'stop';
   if (containsAny(` ${text} `, ['repeat', 'again', 'say that again', 'repeat that'])) return 'repeat';
+  if (containsAny(` ${text} `, ['next', 'next rep', 'ready', 'ready for next', 'ready for the next rep'])) return 'next-rep';
 
   if (containsAny(` ${text} `, ['partial', 'partly', 'almost', 'sort of', 'kind of'])) return 'partial-success';
   if (containsAny(` ${text} `, ['not successful', 'failed', 'fail', 'no', 'nope', "didn't do it", 'did not do it', 'missed it'])) return 'unsuccessful';
