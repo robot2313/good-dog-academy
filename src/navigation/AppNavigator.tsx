@@ -18,6 +18,7 @@ import { TodayScreen } from '../screens/TodayScreen';
 import { TrainingIntelligenceScreen } from '../screens/TrainingIntelligenceScreen';
 import { AdaptiveProgramScreen } from '../screens/AdaptiveProgramScreen';
 import { BehaviourTimelineScreen } from '../screens/BehaviourTimelineScreen';
+import { WeeklyTrainerReviewScreen } from '../screens/WeeklyTrainerReviewScreen';
 import { CameraCoachScreen } from '../screens/CameraCoachScreen';
 import type { MainTabParamList, RootStackParamList } from '../types/navigation';
 import { MainTabBar } from './MainTabBar';
@@ -75,6 +76,7 @@ export function AppNavigator(): React.JSX.Element {
             <Stack.Screen name="TrainingIntelligence" component={TrainingIntelligenceScreen} />
             <Stack.Screen name="AdaptiveProgram" component={AdaptiveProgramScreen} />
             <Stack.Screen name="BehaviourTimeline" component={BehaviourTimelineScreen} />
+            <Stack.Screen name="WeeklyTrainerReview" component={WeeklyTrainerReviewScreen} />
           </>
           : status.state === 'assessment-required' || status.state === 'assessment-corrupt' ? <>
               <Stack.Screen name="AssessmentIntro" component={AssessmentIntroScreen} />
