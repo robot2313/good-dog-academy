@@ -27,6 +27,7 @@ export type RootStackParamList = {
   TrainingIntelligence: undefined;
   AdaptiveProgram: undefined;
   BehaviourTimeline: undefined;
+  WeeklyTrainerReview: undefined;
 };
 
 export type MainTabParamList = {
