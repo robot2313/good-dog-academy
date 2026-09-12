@@ -18,6 +18,7 @@ function frame(id: string, capturedAt: string): CameraFrame {
 function observation(overrides: Partial<CameraRepObservation> = {}): CameraRepObservation {
   return {
     outcome: 'success',
+    expectedPosture: 'sit_like',
     observedAt: '2026-09-12T10:00:01.000Z',
     cueAt: '2026-09-12T10:00:00.000Z',
     responseAt: '2026-09-12T10:00:01.000Z',
