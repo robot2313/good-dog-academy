@@ -31,7 +31,7 @@ export const DEFAULT_CAMERA_EVIDENCE_POLICY: CameraEvidencePolicy = {
 
 export type CameraRepObservation = {
   outcome: TrainingOutcome;
-  expectedPosture: DogPostureEvidence | null;
+  expectedPosture?: DogPostureEvidence | null;
   observedAt: string;
   cueAt: string | null;
   responseAt: string | null;
@@ -70,7 +70,7 @@ export function decideCameraRepEvidence(
     return { kind: 'ask_owner', reason: 'low_posture_confidence' };
   }
 
-  if (observation.expectedPosture === null || observation.expectedPosture === 'unknown') {
+  if (!observation.expectedPosture || observation.expectedPosture === 'unknown') {
     return { kind: 'ask_owner', reason: 'expected_posture_not_configured' };
   }
 
