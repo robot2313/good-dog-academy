@@ -17,7 +17,8 @@ export type CameraEvidenceUncertainty =
   | 'low_posture_confidence'
   | 'stress_signal'
   | 'expected_posture_not_configured'
-  | 'posture_mismatch';
+  | 'posture_mismatch'
+  | 'response_window_exceeded';
 
 export type CameraEvidencePolicy = {
   minDetectionConfidence: number;
@@ -32,6 +33,7 @@ export const DEFAULT_CAMERA_EVIDENCE_POLICY: CameraEvidencePolicy = {
 export type CameraRepObservation = {
   outcome: TrainingOutcome;
   expectedPosture?: DogPostureEvidence | null;
+  responseWindowMs?: number | null;
   observedAt: string;
   cueAt: string | null;
   responseAt: string | null;
@@ -41,6 +43,18 @@ export type CameraRepObservation = {
   signal: string | null;
   notes?: string | null;
 };
+
+function responseFallsInsideWindow(observation: CameraRepObservation): boolean {
+  if (observation.responseWindowMs === null || observation.responseWindowMs === undefined) return true;
+  if (!observation.cueAt || !observation.responseAt) return false;
+
+  const cueAt = Date.parse(observation.cueAt);
+  const responseAt = Date.parse(observation.responseAt);
+  if (!Number.isFinite(cueAt) || !Number.isFinite(responseAt)) return false;
+
+  const elapsed = responseAt - cueAt;
+  return elapsed >= 0 && elapsed <= Math.max(0, observation.responseWindowMs);
+}
 
 export function decideCameraRepEvidence(
   vision: DogVisionResult,
@@ -72,6 +86,10 @@ export function decideCameraRepEvidence(
 
   if (!observation.expectedPosture || observation.expectedPosture === 'unknown') {
     return { kind: 'ask_owner', reason: 'expected_posture_not_configured' };
+  }
+
+  if (!responseFallsInsideWindow(observation)) {
+    return { kind: 'ask_owner', reason: 'response_window_exceeded' };
   }
 
   if (vision.posture !== observation.expectedPosture) {
