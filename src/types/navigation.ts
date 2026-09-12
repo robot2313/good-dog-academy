@@ -26,6 +26,7 @@ export type RootStackParamList = {
   SessionDetail: { sessionId: string };
   TrainingIntelligence: undefined;
   AdaptiveProgram: undefined;
+  BehaviourTimeline: undefined;
 };
 
 export type MainTabParamList = {
