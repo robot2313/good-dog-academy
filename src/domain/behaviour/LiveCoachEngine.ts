@@ -287,15 +287,17 @@ export function applyRepToLiveSession(session: LiveCoachSession, rep: TrainingRe
   const decision = autonomousSessionDirector(provisional);
   const reachedTarget = reps.length >= session.targetReps;
   const repeatedStress = recentStressCount(provisional) >= 2;
+  const safetyBreak = decision.action === 'break';
+  const normalTargetReached = reachedTarget && !safetyBreak;
 
   return {
     decision,
     session: {
       ...provisional,
       difficulty: decision.nextDifficulty,
-      status: reachedTarget || repeatedStress ? 'complete' : 'active',
-      endedEarly: repeatedStress && !reachedTarget,
-      endReason: repeatedStress ? 'stress' : reachedTarget ? 'target_reached' : null,
+      status: repeatedStress || normalTargetReached ? 'complete' : 'active',
+      endedEarly: repeatedStress,
+      endReason: repeatedStress ? 'stress' : normalTargetReached ? 'target_reached' : null,
     },
   };
 }
