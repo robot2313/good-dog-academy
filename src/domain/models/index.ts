@@ -11,6 +11,10 @@ export type { NotificationSettings } from './NotificationSettings';
 export type { Owner, PrimaryGoal, TrainingExperience } from './Owner';
 export type { Progress } from './Progress';
 export type { TrainingOutcome, TrainingSession } from './TrainingSession';
+export type { EvidenceCorrection, EvidenceSource, DogPostureEvidence, RepEvidence, TrainingRep } from './TrainingEvidence';
+export { effectiveRepOutcome, clampEvidenceConfidence, correctTrainingRep } from './TrainingEvidence';
+export type { AdaptiveTrainingMemory, SessionHistoryRecord, SkillTrainingMemory } from './AdaptiveTrainingMemory';
+export { emptyAdaptiveTrainingMemory, summariseLiveCoachSession, updateAdaptiveTrainingMemory } from './AdaptiveTrainingMemory';
 export {
   troubleshooterFailureCategories,
   troubleshooterOutcomes,
