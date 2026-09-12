@@ -72,7 +72,8 @@ export function TrainingIntelligenceScreen({ navigation }: Props): React.JSX.Ele
             <Metric value={intel.skills.filter((skill) => skill.direction === 'improving').length} label="Improving" />
             <Metric value={intel.warnings.length} label="Warnings" />
           </View>
-          <AppButton title="Open Adaptive 7-Day Program" onPress={() => navigation.navigate('AdaptiveProgram')} />
+          <AppButton title="Open Weekly Trainer Review" onPress={() => navigation.navigate('WeeklyTrainerReview')} />
+          <AppButton variant="secondary" title="Open Adaptive 7-Day Program" onPress={() => navigation.navigate('AdaptiveProgram')} />
           <AppButton variant="secondary" title="Open Behaviour Timeline" onPress={() => navigation.navigate('BehaviourTimeline')} />
         </View>
 
