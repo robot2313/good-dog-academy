@@ -30,6 +30,12 @@ export class SpokenCoachController {
     });
   }
 
+  async repeatLast(): Promise<boolean> {
+    if (!this.enabled || !this.lastText) return false;
+    await this.speech.speak(this.lastText, { interrupt: true, rate: 0.92 });
+    return true;
+  }
+
   async stop(): Promise<void> {
     this.lastText = null;
     await this.speech.stop();
