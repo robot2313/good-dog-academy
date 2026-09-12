@@ -1,21 +1,21 @@
-const nativeListeners: Record<string, ((event: unknown) => void) | undefined> = {};
-const remove = jest.fn();
-const start = jest.fn();
-const stop = jest.fn();
-const abort = jest.fn();
-const requestPermissionsAsync = jest.fn(async () => ({ granted: true }));
-const isRecognitionAvailable = jest.fn(() => true);
+const mockNativeListeners: Record<string, ((event: unknown) => void) | undefined> = {};
+const mockRemove = jest.fn();
+const mockStart = jest.fn();
+const mockStop = jest.fn();
+const mockAbort = jest.fn();
+const mockRequestPermissionsAsync = jest.fn(async () => ({ granted: true }));
+const mockIsRecognitionAvailable = jest.fn(() => true);
 
 jest.mock('expo-speech-recognition', () => ({
   ExpoSpeechRecognitionModule: {
-    isRecognitionAvailable,
-    requestPermissionsAsync,
-    start,
-    stop,
-    abort,
+    isRecognitionAvailable: mockIsRecognitionAvailable,
+    requestPermissionsAsync: mockRequestPermissionsAsync,
+    start: mockStart,
+    stop: mockStop,
+    abort: mockAbort,
     addListener: jest.fn((event: string, listener: (event: unknown) => void) => {
-      nativeListeners[event] = listener;
-      return { remove };
+      mockNativeListeners[event] = listener;
+      return { remove: mockRemove };
     }),
   },
 }));
@@ -25,9 +25,9 @@ import { ExpoTrainingSpeechRecognizer } from '../../src/services/speech/ExpoTrai
 describe('ExpoTrainingSpeechRecognizer', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Object.keys(nativeListeners).forEach((key) => delete nativeListeners[key]);
-    isRecognitionAvailable.mockReturnValue(true);
-    requestPermissionsAsync.mockResolvedValue({ granted: true });
+    Object.keys(mockNativeListeners).forEach((key) => delete mockNativeListeners[key]);
+    mockIsRecognitionAvailable.mockReturnValue(true);
+    mockRequestPermissionsAsync.mockResolvedValue({ granted: true });
   });
 
   it('reports native availability and requests permission', async () => {
@@ -42,7 +42,7 @@ describe('ExpoTrainingSpeechRecognizer', () => {
 
     await recognizer.start();
 
-    expect(start).toHaveBeenCalledWith({ lang: 'en-AU', interimResults: false, continuous: false });
+    expect(mockStart).toHaveBeenCalledWith({ lang: 'en-AU', interimResults: false, continuous: false });
   });
 
   it('normalises a final native result and clamps confidence', async () => {
@@ -51,7 +51,7 @@ describe('ExpoTrainingSpeechRecognizer', () => {
     recognizer.onResult(listener);
     await recognizer.getAvailability();
 
-    nativeListeners.result?.({
+    mockNativeListeners.result?.({
       isFinal: true,
       results: [{ transcript: '  yes  ', confidence: 1.4 }],
     });
@@ -70,10 +70,10 @@ describe('ExpoTrainingSpeechRecognizer', () => {
     recognizer.onError(listener);
     await recognizer.getAvailability();
 
-    nativeListeners.error?.({ error: 'network', message: 'Recognition unavailable.' });
+    mockNativeListeners.error?.({ error: 'network', message: 'Recognition unavailable.' });
     recognizer.dispose();
 
     expect(listener).toHaveBeenCalledWith('Recognition unavailable.');
-    expect(remove).toHaveBeenCalledTimes(2);
+    expect(mockRemove).toHaveBeenCalledTimes(2);
   });
 });
