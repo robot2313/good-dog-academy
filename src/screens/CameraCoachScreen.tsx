@@ -32,7 +32,7 @@ type Diagnostics = {
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
-export function CameraCoachScreen({ route }: Props): React.JSX.Element {
+export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Element {
   const { status } = useOnboarding();
   const dog = status?.state === 'complete' ? status.dog : null;
   const [permission, requestPermission] = useCameraPermissions();
@@ -93,6 +93,8 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
 
     return { source, orchestrator };
   }, [cameraReady, dog, route.params.lessonId]);
+
+  const sessionComplete = runtime?.orchestrator.getSession().status === 'complete';
 
   const persistIfComplete = useCallback(async (session: LiveCoachSession): Promise<void> => {
     if (session.status !== 'complete') return;
@@ -193,6 +195,10 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
     };
   }, [persistIfComplete, running, runtime, spokenCoach]);
 
+  useEffect(() => {
+    if (sessionComplete && runtime) void runtime.source.stop();
+  }, [runtime, sessionComplete]);
+
   const startCoach = () => {
     const startedAt = new Date().toISOString();
     sessionStartedAtRef.current = startedAt;
@@ -234,8 +240,6 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
     setVoiceEnabled(next);
     void spokenCoach.setEnabled(next);
   };
-
-  const sessionComplete = runtime?.orchestrator.getSession().status === 'complete';
 
   if (!permission) {
     return <AppScreen><Text style={styles.body}>Checking camera permission…</Text></AppScreen>;
@@ -307,6 +311,15 @@ export function CameraCoachScreen({ route }: Props): React.JSX.Element {
           <Text style={styles.sectionTitle}>Session save needs retry</Text>
           <Text style={styles.body}>The completed session is still held in memory. Retrying will use the same session ID, so it will not create a duplicate.</Text>
           <AppButton title="Retry saving session" onPress={retrySave} />
+        </View>
+      ) : null}
+
+      {saveState === 'saved' ? (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Training memory updated</Text>
+          <Text style={styles.body}>This session is now part of the evidence Good Dog Academy uses to adapt the next lessons and the remaining training week.</Text>
+          <AppButton title="See updated 7-day program" onPress={() => navigation.navigate('AdaptiveProgram')} />
+          <AppButton title="View training intelligence" onPress={() => navigation.navigate('TrainingIntelligence')} />
         </View>
       ) : null}
 
