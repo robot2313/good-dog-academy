@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useState } from 'react';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -10,12 +11,14 @@ import { IdentityHeader } from '../components/IdentityHeader';
 import { LoadingState } from '../components/LoadingState';
 import { Metric } from '../components/Metric';
 import { SectionHeader } from '../components/SectionHeader';
+import { buildTrainingIntelligence, type TrainingIntelligence } from '../domain/behaviour/TrainingIntelligence';
 import { DogLearningPassportError } from '../features/progress/passport/DogLearningPassportError';
 import type { DogLearningPassport } from '../features/progress/passport/DogLearningPassportTypes';
 import { PassportSkillCard } from '../features/progress/passport/PassportSkillCard';
 import { PassportTimeline } from '../features/progress/passport/PassportTimeline';
 import { useDogLearningPassport } from '../features/progress/passport/useDogLearningPassport';
 import { useOnboarding } from '../features/onboarding/OnboardingContext';
+import { loadAdaptiveSessionHistory, loadAdaptiveTrainingMemory } from '../services/AdaptiveTrainingPersistenceService';
 import { referenceScreenStyles } from '../theme/referenceStyles';
 import type { MainTabParamList, RootStackParamList } from '../types/navigation';
 
@@ -24,11 +27,32 @@ type Props = CompositeScreenProps<
   NativeStackScreenProps<RootStackParamList, 'Main'>
 >;
 
+const skillLabel = (skillId: string) => skillId.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
 export function ProgressScreen({ navigation }: Props): React.JSX.Element {
   const { status } = useOnboarding();
   const dog = status?.state === 'complete' ? status.dog : null;
   const dogName = dog?.name ?? 'My Dog';
   const { passport, loading, error, retry } = useDogLearningPassport();
+  const [adaptiveIntel, setAdaptiveIntel] = useState<TrainingIntelligence | null>(null);
+
+  const loadAdaptive = useCallback(async () => {
+    if (!dog) {
+      setAdaptiveIntel(null);
+      return;
+    }
+    try {
+      const [memory, history] = await Promise.all([
+        loadAdaptiveTrainingMemory(dog.id),
+        loadAdaptiveSessionHistory(dog.id),
+      ]);
+      setAdaptiveIntel(buildTrainingIntelligence(memory, history));
+    } catch {
+      setAdaptiveIntel(null);
+    }
+  }, [dog]);
+
+  useEffect(() => { void loadAdaptive(); }, [loadAdaptive]);
 
   const openNextStep = (current: DogLearningPassport) => {
     if (current.nextStep.kind === 'lesson' && current.nextStep.lessonId) {
@@ -57,6 +81,24 @@ export function ProgressScreen({ navigation }: Props): React.JSX.Element {
       {!loading && error ? <ErrorState message={passportErrorMessage(error)} onRetry={retry} /> : null}
       {!loading && !error && passport ? <>
           <PassportSnapshot dogName={dogName} passport={passport} />
+
+          {adaptiveIntel && adaptiveIntel.totalSessions > 0 ? (
+            <View style={referenceScreenStyles.cardSelected}>
+              <SectionHeader
+                eyebrow="COACHED EVIDENCE"
+                title={`${adaptiveIntel.totalSessions} adaptive session${adaptiveIntel.totalSessions === 1 ? '' : 's'} analysed`}
+                supportingText={adaptiveIntel.strongestSkillId
+                  ? `Strongest current coached evidence: ${skillLabel(adaptiveIntel.strongestSkillId)}.${adaptiveIntel.watchSkillId ? ` Watch priority: ${skillLabel(adaptiveIntel.watchSkillId)}.` : ''}`
+                  : 'Coached rep evidence is being collected.'}
+              />
+              <View style={referenceScreenStyles.statRow}>
+                <Metric value={adaptiveIntel.skills.length} label="Skills" />
+                <Metric value={adaptiveIntel.skills.filter((skill) => skill.direction === 'improving').length} label="Improving" />
+                <Metric value={adaptiveIntel.warnings.length} label="Warnings" />
+              </View>
+              <AppButton title="Open Training Intelligence" onPress={() => navigation.navigate('TrainingIntelligence')} />
+            </View>
+          ) : null}
 
           <View style={referenceScreenStyles.cardSelected}>
             <SectionHeader
@@ -90,14 +132,16 @@ export function ProgressScreen({ navigation }: Props): React.JSX.Element {
             />
           </View>
 
-          <View style={referenceScreenStyles.cardSelected}>
-            <SectionHeader
-              eyebrow="ADAPTIVE INTELLIGENCE"
-              title="See what is changing over time"
-              supportingText="Compare recent coached reps with earlier sessions, spot regression, correction rates, cue repetition and stress-tagged evidence."
-            />
-            <AppButton title="Open Training Intelligence" onPress={() => navigation.navigate('TrainingIntelligence')} />
-          </View>
+          {(!adaptiveIntel || adaptiveIntel.totalSessions === 0) ? (
+            <View style={referenceScreenStyles.cardSelected}>
+              <SectionHeader
+                eyebrow="ADAPTIVE INTELLIGENCE"
+                title="See what is changing over time"
+                supportingText="Complete coached sessions to compare recent reps with earlier sessions, spot regression, cue repetition, correction rates and stress-tagged evidence."
+              />
+              <AppButton title="Open Training Intelligence" onPress={() => navigation.navigate('TrainingIntelligence')} />
+            </View>
+          ) : null}
 
           <View style={referenceScreenStyles.card}>
             <SectionHeader
