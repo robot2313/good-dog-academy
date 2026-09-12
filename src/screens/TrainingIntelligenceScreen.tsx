@@ -10,10 +10,8 @@ import { LoadingState } from '../components/LoadingState';
 import { Metric } from '../components/Metric';
 import { SectionHeader } from '../components/SectionHeader';
 import { buildTrainingIntelligence, type TrainingIntelligence } from '../domain/behaviour/TrainingIntelligence';
-import { emptyAdaptiveTrainingMemory, type AdaptiveTrainingMemory, type SessionHistoryRecord } from '../domain/models/AdaptiveTrainingMemory';
 import { useOnboarding } from '../features/onboarding/OnboardingContext';
-import { appStorage } from '../services/appStorage';
-import { storageKeys } from '../storage/storageKeys';
+import { loadAdaptiveSessionHistory, loadAdaptiveTrainingMemory } from '../services/AdaptiveTrainingPersistenceService';
 import { referenceScreenStyles } from '../theme/referenceStyles';
 import type { RootStackParamList } from '../types/navigation';
 
@@ -30,14 +28,20 @@ export function TrainingIntelligenceScreen({ navigation }: Props): React.JSX.Ele
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!dog) return;
+    if (!dog) {
+      setIntel(null);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      const memories = await appStorage.getItem<AdaptiveTrainingMemory[]>(storageKeys.adaptiveTrainingMemory) ?? [];
-      const history = await appStorage.getItem<SessionHistoryRecord[]>(storageKeys.adaptiveSessionHistory) ?? [];
-      const memory = memories.find((item) => item.dogId === dog.id) ?? emptyAdaptiveTrainingMemory(dog.id);
-      setIntel(buildTrainingIntelligence(memory, history.filter((item) => item.dogId === dog.id)));
+      const [memory, history] = await Promise.all([
+        loadAdaptiveTrainingMemory(dog.id),
+        loadAdaptiveSessionHistory(dog.id),
+      ]);
+      setIntel(buildTrainingIntelligence(memory, history));
     } catch {
       setError('Training Intelligence could not read the saved adaptive training record safely.');
     } finally {
