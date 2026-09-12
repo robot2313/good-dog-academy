@@ -40,8 +40,11 @@ describe('ExpoCameraFrameSource', () => {
   });
 
   it('does not overlap captures and stops scheduling after stop', async () => {
-    let resolveCapture!: (value: { uri: string; width: number; height: number }) => void;
-    const capture = jest.fn(() => new Promise<{ uri: string; width: number; height: number }>((resolve) => {
+    type CapturedFrame = { uri: string; width: number; height: number };
+    let resolveCapture: (value: CapturedFrame) => void = () => {
+      throw new Error('capture resolver was not initialised');
+    };
+    const capture = jest.fn(() => new Promise<CapturedFrame>((resolve) => {
       resolveCapture = resolve;
     }));
     const source = new ExpoCameraFrameSource(capture, 250);
