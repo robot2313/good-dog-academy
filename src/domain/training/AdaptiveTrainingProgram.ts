@@ -133,6 +133,16 @@ function day(
   };
 }
 
+function patternForState(state: DogTwinState): ProgramDayMode[] {
+  return state === 'recover'
+    ? ['recovery', 'rest', 'recovery', 'rest', 'refresher', 'rest', 'recovery']
+    : state === 'build'
+      ? ['train', 'rest', 'train', 'refresher', 'rest', 'train', 'rest']
+      : state === 'consolidate'
+        ? ['train', 'refresher', 'rest', 'train', 'rest', 'refresher', 'train']
+        : ['train', 'rest', 'train', 'refresher', 'train', 'rest', 'train'];
+}
+
 export function buildAdaptiveTrainingProgram(
   memory: AdaptiveTrainingMemory,
   history: SessionHistoryRecord[],
@@ -140,14 +150,7 @@ export function buildAdaptiveTrainingProgram(
 ): AdaptiveTrainingProgram {
   const state = deriveDogTwinState(memory, history);
   const focus = chooseFocusSkill(memory);
-
-  const pattern: ProgramDayMode[] = state === 'recover'
-    ? ['recovery', 'rest', 'recovery', 'rest', 'refresher', 'rest', 'recovery']
-    : state === 'build'
-      ? ['train', 'rest', 'train', 'refresher', 'rest', 'train', 'rest']
-      : state === 'consolidate'
-        ? ['train', 'refresher', 'rest', 'train', 'rest', 'refresher', 'train']
-        : ['train', 'rest', 'train', 'refresher', 'train', 'rest', 'train'];
+  const pattern = patternForState(state);
 
   return {
     dogId: memory.dogId,
@@ -155,5 +158,25 @@ export function buildAdaptiveTrainingProgram(
     state,
     focusSkillId: focus?.skillId ?? null,
     days: pattern.map((mode, index) => day(index + 1, mode, focus, state)),
+  };
+}
+
+export function regenerateRemainingAdaptiveProgram(input: {
+  previous: AdaptiveTrainingProgram;
+  completedThroughDay: number;
+  memory: AdaptiveTrainingMemory;
+  history: SessionHistoryRecord[];
+  generatedAt: string;
+}): AdaptiveTrainingProgram {
+  const completedThroughDay = Math.max(0, Math.min(7, Math.floor(input.completedThroughDay)));
+  const rebuilt = buildAdaptiveTrainingProgram(input.memory, input.history, input.generatedAt);
+  const preserved = input.previous.days.filter((item) => item.dayIndex <= completedThroughDay);
+  const replacement = rebuilt.days
+    .filter((item) => item.dayIndex > completedThroughDay)
+    .map((item) => ({ ...item }));
+
+  return {
+    ...rebuilt,
+    days: [...preserved, ...replacement].sort((a, b) => a.dayIndex - b.dayIndex),
   };
 }
