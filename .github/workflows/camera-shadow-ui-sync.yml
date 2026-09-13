@@ -1,0 +1,99 @@
+name: Camera shadow UI sync
+
+on:
+  push:
+    branches:
+      - feature/adaptive-training-port
+    paths:
+      - .github/workflows/camera-shadow-ui-sync.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/adaptive-training-port
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Wire pose shadow diagnostics into Camera Coach
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const path = 'src/screens/CameraCoachScreen.tsx';
+          let source = fs.readFileSync(path, 'utf8');
+          const replaceOnce = (from, to) => {
+            if (!source.includes(from)) throw new Error(`Patch anchor missing: ${from.slice(0, 100)}`);
+            source = source.replace(from, to);
+          };
+
+          replaceOnce(
+            "import { OwnerFallbackVisionEngine } from '../services/vision/OwnerFallbackVisionEngine';\n",
+            "import { OwnerFallbackVisionEngine } from '../services/vision/OwnerFallbackVisionEngine';\nimport { PoseShadowController, type PoseShadowObservation, type PoseShadowStatus } from '../services/vision/PoseShadowController';\n",
+          );
+
+          replaceOnce(
+            "  const qaTelemetry = useMemo(() => new CameraCoachQaTelemetry(), []);\n",
+            "  const qaTelemetry = useMemo(() => new CameraCoachQaTelemetry(), []);\n  const poseShadow = useMemo(() => new PoseShadowController(), []);\n",
+          );
+
+          replaceOnce(
+            "  const [qaSnapshot, setQaSnapshot] = useState(() => qaTelemetry.getSnapshot());\n",
+            "  const [qaSnapshot, setQaSnapshot] = useState(() => qaTelemetry.getSnapshot());\n  const [poseShadowStatus, setPoseShadowStatus] = useState<PoseShadowStatus>(() => poseShadow.getStatus());\n  const [poseShadowObservation, setPoseShadowObservation] = useState<PoseShadowObservation | null>(null);\n",
+          );
+
+          replaceOnce(
+            "      speechRecognizer.dispose();\n      void spokenCoach.stop();\n",
+            "      speechRecognizer.dispose();\n      void poseShadow.disable();\n      void spokenCoach.stop();\n",
+          );
+
+          replaceOnce(
+            "  }, [handsFreeCoach, speechRecognizer, spokenCoach]);\n",
+            "  }, [handsFreeCoach, poseShadow, speechRecognizer, spokenCoach]);\n",
+          );
+
+          replaceOnce(
+            "      setDiagnostics((current) => ({\n        ...current,\n        framesCaptured: current.framesCaptured + 1,\n        lastFrameAt: frame.capturedAt,\n      }));\n\n      const activeCueAt = cueAtRef.current;\n",
+            "      setDiagnostics((current) => ({\n        ...current,\n        framesCaptured: current.framesCaptured + 1,\n        lastFrameAt: frame.capturedAt,\n      }));\n\n      if (poseShadow.getStatus().state === 'ready') {\n        void poseShadow.analyse(frame).then((observation) => {\n          if (!active || !observation) return;\n          setPoseShadowObservation(observation);\n        });\n      }\n\n      const activeCueAt = cueAtRef.current;\n",
+          );
+
+          replaceOnce(
+            "  }, [expectedCue, handsFreeAvailable, handsFreeCoach, persistIfComplete, recordQa, running, runtime, spokenCoach, startHandsFreeListening]);\n",
+            "  }, [expectedCue, handsFreeAvailable, handsFreeCoach, persistIfComplete, poseShadow, recordQa, running, runtime, spokenCoach, startHandsFreeListening]);\n",
+          );
+
+          replaceOnce(
+            "  const toggleVoice = () => {\n    const next = !voiceEnabled;\n    setVoiceEnabled(next);\n    void spokenCoach.setEnabled(next);\n  };\n",
+            "  const toggleVoice = () => {\n    const next = !voiceEnabled;\n    setVoiceEnabled(next);\n    void spokenCoach.setEnabled(next);\n  };\n\n  const togglePoseShadow = async () => {\n    const current = poseShadow.getStatus();\n    if (current.state === 'ready' || current.state === 'loading') {\n      await poseShadow.disable();\n      setPoseShadowStatus(poseShadow.getStatus());\n      setPoseShadowObservation(null);\n      return;\n    }\n\n    setPoseShadowStatus({ state: 'loading' });\n    setPoseShadowObservation(null);\n    const next = await poseShadow.enable();\n    setPoseShadowStatus(next);\n  };\n",
+          );
+
+          replaceOnce(
+            "          onCameraReady={() => setCameraReady(true)}\n        />\n      </View>\n",
+            "          onCameraReady={() => setCameraReady(true)}\n        />\n        <View pointerEvents=\"none\" style={styles.poseGuideBox}>\n          <Text style={styles.poseGuideText}>KEEP DOG INSIDE THIS SQUARE</Text>\n        </View>\n      </View>\n",
+          );
+
+          replaceOnce(
+            "      <View style={styles.card}>\n        <Text style={styles.sectionTitle}>Real-device QA</Text>\n",
+            "      <View style={styles.card}>\n        <Text style={styles.sectionTitle}>Real vision · shadow test</Text>\n        <Text style={styles.body}>Shadow mode runs the real 17-joint ONNX pose model but cannot score or change a rep. Owner confirmation remains authoritative.</Text>\n        <Text style={styles.body}>Status: {poseShadowStatus.state}{poseShadowStatus.state === 'error' ? ` · ${poseShadowStatus.message}` : ''}</Text>\n        {poseShadowObservation ? (\n          <>\n            <Text style={styles.body}>Pose presence: {poseShadowObservation.dogDetected ? 'detected' : 'not reliable'} · confidence {poseShadowObservation.detectionConfidence === null ? 'n/a' : poseShadowObservation.detectionConfidence.toFixed(2)}</Text>\n            <Text style={styles.body}>Posture: {poseShadowObservation.posture} · confidence {poseShadowObservation.postureConfidence === null ? 'n/a' : poseShadowObservation.postureConfidence.toFixed(2)}</Text>\n            <Text style={styles.body}>ONNX: {poseShadowObservation.inferenceMs ?? 'n/a'} ms · total pipeline: {poseShadowObservation.totalMs} ms</Text>\n          </>\n        ) : null}\n        <Text style={styles.body}>First enable downloads the pinned ~13 MB model. Camera images stay on-device; only the model file is downloaded.</Text>\n        <AppButton\n          title={poseShadowStatus.state === 'ready' || poseShadowStatus.state === 'loading' ? 'Turn real vision shadow test off' : 'Enable real vision shadow test'}\n          onPress={() => void togglePoseShadow()}\n        />\n      </View>\n\n      <View style={styles.card}>\n        <Text style={styles.sectionTitle}>Real-device QA</Text>\n",
+          );
+
+          replaceOnce(
+            "  preview: { flex: 1, minHeight: 360 },\n",
+            "  preview: { flex: 1, minHeight: 360 },\n  poseGuideBox: { position: 'absolute', alignSelf: 'center', top: '8%', width: '84%', aspectRatio: 1, borderWidth: 2, borderColor: '#FFFFFF', borderRadius: 18, alignItems: 'center', justifyContent: 'flex-start', paddingTop: 8 },\n  poseGuideText: { fontSize: 10, lineHeight: 14, fontWeight: '900', letterSpacing: 0.8, color: '#FFFFFF', backgroundColor: 'rgba(11,37,69,0.72)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },\n",
+          );
+
+          fs.writeFileSync(path, source);
+          NODE
+      - name: Commit Camera Coach shadow UI
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/screens/CameraCoachScreen.tsx
+          git commit -m "Wire real vision shadow diagnostics into Camera Coach"
+          git pull --rebase origin feature/adaptive-training-port
+          git push origin HEAD:feature/adaptive-training-port
