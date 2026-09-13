@@ -33,7 +33,20 @@ export type RecordPoseShadowValidationInput = SharedRecordInput & (
   | { ownerLabel?: never; ownerOutcome: TrainingOutcome }
 );
 
+export type PoseShadowValidationSummary = {
+  overall: PoseShadowValidationReport;
+  byPosture: Record<Exclude<DogPostureEvidence, 'unknown'>, PoseShadowValidationReport>;
+  posturesPassingShadowGate: number;
+  allPosturesPassShadowGate: boolean;
+  productionAutoScoringEnabled: false;
+};
+
 const MAX_SAMPLES_PER_DOG = 500;
+const CALIBRATED_POSTURES: Array<Exclude<DogPostureEvidence, 'unknown'>> = [
+  'stand_like',
+  'sit_like',
+  'down_like',
+];
 
 function isTrainingOutcome(value: unknown): value is TrainingOutcome {
   return value === 'success' || value === 'partial-success' || value === 'unsuccessful';
@@ -139,4 +152,26 @@ export async function loadPoseShadowValidationReport(
     ? samples.filter((sample) => sample.expectedPosture === expectedPosture)
     : samples;
   return buildPoseShadowValidationReport(filtered);
+}
+
+export async function loadPoseShadowValidationSummary(
+  dogId: string,
+  storage: StorageAdapter = appStorage,
+): Promise<PoseShadowValidationSummary> {
+  const samples = await loadPoseShadowValidationSamples(dogId, storage);
+  const byPosture = Object.fromEntries(CALIBRATED_POSTURES.map((posture) => [
+    posture,
+    buildPoseShadowValidationReport(samples.filter((sample) => sample.expectedPosture === posture)),
+  ])) as PoseShadowValidationSummary['byPosture'];
+  const posturesPassingShadowGate = CALIBRATED_POSTURES.filter(
+    (posture) => byPosture[posture].shadowQualityGatePassed,
+  ).length;
+
+  return {
+    overall: buildPoseShadowValidationReport(samples),
+    byPosture,
+    posturesPassingShadowGate,
+    allPosturesPassShadowGate: posturesPassingShadowGate === CALIBRATED_POSTURES.length,
+    productionAutoScoringEnabled: false,
+  };
 }
