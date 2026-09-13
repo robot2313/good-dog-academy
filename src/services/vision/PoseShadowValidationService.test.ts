@@ -3,6 +3,7 @@ import { storageKeys } from '../../storage/storageKeys';
 import {
   loadPoseShadowValidationReport,
   loadPoseShadowValidationSamples,
+  loadPoseShadowValidationSummary,
   recordPoseShadowValidationSample,
 } from './PoseShadowValidationService';
 
@@ -86,5 +87,24 @@ describe('PoseShadowValidationService', () => {
     expect(report.precision).toBe(1);
     expect(report.shadowQualityGatePassed).toBe(true);
     expect(report.certifiedForAutoScoring).toBe(false);
+  });
+
+  it('reports each posture separately so one strong posture cannot hide weak coverage elsewhere', async () => {
+    const storage = new MemoryStorage();
+    for (let index = 0; index < 50; index += 1) {
+      await recordPoseShadowValidationSample({
+        ...makeSample(String(index).padStart(2, '0')),
+        id: `sit-${index}`,
+        recordedAt: new Date(Date.UTC(2026, 8, 13, 1, index, 0)).toISOString(),
+      }, storage);
+    }
+
+    const summary = await loadPoseShadowValidationSummary('dog-1', storage);
+    expect(summary.byPosture.sit_like.shadowQualityGatePassed).toBe(true);
+    expect(summary.byPosture.stand_like.shadowQualityGatePassed).toBe(false);
+    expect(summary.byPosture.down_like.shadowQualityGatePassed).toBe(false);
+    expect(summary.posturesPassingShadowGate).toBe(1);
+    expect(summary.allPosturesPassShadowGate).toBe(false);
+    expect(summary.productionAutoScoringEnabled).toBe(false);
   });
 });
