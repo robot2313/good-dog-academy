@@ -10,6 +10,7 @@ export const storageKeys = {
   trainingSessions: '@good-dog-academy/domain/training-sessions',
   adaptiveTrainingMemory: '@good-dog-academy/adaptive/training-memory-v1',
   adaptiveSessionHistory: '@good-dog-academy/adaptive/session-history-v1',
+  poseShadowValidation: '@good-dog-academy/vision/pose-shadow-validation-v1',
   achievements: '@good-dog-academy/domain/achievements',
   progress: '@good-dog-academy/domain/progress',
   notificationSettings: '@good-dog-academy/domain/notification-settings',
