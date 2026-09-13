@@ -274,10 +274,11 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
 
       if (poseShadow.getStatus().state === 'ready') {
         void poseShadow.analyse(frame).then((observation) => {
-          if (!active || !observation) return;
+          if (!active) return;
+          setPoseShadowStatus(poseShadow.getStatus());
+          if (!observation) return;
           setPoseShadowObservation(observation);
           setPoseShadowLabelled(false);
-          setPoseShadowStatus(poseShadow.getStatus());
         });
       }
 
@@ -570,6 +571,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
   }
 
   const latestQaEvent = qaSnapshot.recentEvents[qaSnapshot.recentEvents.length - 1] ?? null;
+  const visionDiagnostics = poseShadow.getDiagnostics();
 
   return (
     <AppScreen>
@@ -607,6 +609,9 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         <Text style={styles.sectionTitle}>Real vision · shadow test</Text>
         <Text style={styles.body}>Shadow mode runs the real 17-joint ONNX pose model but cannot score or change a rep. Your ground-truth label is used only to measure vision accuracy.</Text>
         <Text style={styles.body}>Status: {poseShadowStatus.state}{poseShadowStatus.state === 'error' ? ` · ${poseShadowStatus.message}` : ''}</Text>
+        <Text style={styles.body}>Vision health: {visionDiagnostics.framesAnalysed}/{visionDiagnostics.framesRequested} completed · {visionDiagnostics.framesSkippedBusy} skipped busy · {visionDiagnostics.inferenceErrors} errors</Text>
+        <Text style={styles.body}>Last inference: {visionDiagnostics.lastInferenceAt ?? 'none'} · ONNX {visionDiagnostics.lastInferenceMs ?? 'n/a'} ms · total {visionDiagnostics.lastTotalMs ?? 'n/a'} ms</Text>
+        <Text style={styles.body}>Last confidence: dog {visionDiagnostics.lastDetectionConfidence === null ? 'n/a' : visionDiagnostics.lastDetectionConfidence.toFixed(2)} · posture {visionDiagnostics.lastPostureConfidence === null ? 'n/a' : visionDiagnostics.lastPostureConfidence.toFixed(2)}</Text>
         {poseShadowObservation ? (
           <>
             <Text style={styles.body}>Pose presence: {poseShadowObservation.dogDetected ? 'detected' : 'not reliable'} · confidence {poseShadowObservation.detectionConfidence === null ? 'n/a' : poseShadowObservation.detectionConfidence.toFixed(2)}</Text>
