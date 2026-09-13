@@ -33,9 +33,13 @@ export type PoseShadowValidationReport = {
   precision: number | null;
   falsePositiveRate: number | null;
   coverage: number | null;
+  shadowQualityGatePassed: boolean;
   certifiedForAutoScoring: boolean;
   blockers: string[];
 };
+
+const PRODUCTION_AUTO_SCORING_BLOCKER =
+  'Production auto-scoring remains disabled until animal detection, cue-level validation, licensing review, and physical-device real-dog QA are complete.';
 
 export function buildPoseShadowValidationReport(
   samples: PoseShadowValidationSample[],
@@ -61,19 +65,21 @@ export function buildPoseShadowValidationReport(
     ? truePositiveCandidates.length / successfulOwnerReps.length
     : null;
 
-  const blockers: string[] = [];
+  const qualityBlockers: string[] = [];
   if (samples.length < policy.minimumSamples) {
-    blockers.push(`Need at least ${policy.minimumSamples} owner-labelled validation reps.`);
+    qualityBlockers.push(`Need at least ${policy.minimumSamples} owner-labelled validation reps.`);
   }
   if (autoCandidates.length === 0) {
-    blockers.push('No high-confidence matching posture predictions have been observed yet.');
+    qualityBlockers.push('No high-confidence matching posture predictions have been observed yet.');
   }
   if (precision === null || precision < policy.minimumPrecision) {
-    blockers.push(`High-confidence posture precision must be at least ${(policy.minimumPrecision * 100).toFixed(0)}%.`);
+    qualityBlockers.push(`High-confidence posture precision must be at least ${(policy.minimumPrecision * 100).toFixed(0)}%.`);
   }
   if (falsePositiveRate === null || falsePositiveRate > policy.maximumFalsePositiveRate) {
-    blockers.push(`High-confidence false-positive rate must be at most ${(policy.maximumFalsePositiveRate * 100).toFixed(0)}%.`);
+    qualityBlockers.push(`High-confidence false-positive rate must be at most ${(policy.maximumFalsePositiveRate * 100).toFixed(0)}%.`);
   }
+
+  const shadowQualityGatePassed = qualityBlockers.length === 0;
 
   return {
     samples: samples.length,
@@ -85,7 +91,12 @@ export function buildPoseShadowValidationReport(
     precision,
     falsePositiveRate,
     coverage,
-    certifiedForAutoScoring: blockers.length === 0,
-    blockers,
+    shadowQualityGatePassed,
+    // Shadow labels can tell us whether the current heuristic is promising,
+    // but they are not sufficient evidence to enable autonomous scoring. The
+    // current pose path intentionally has no animal detector and commercial
+    // model/data licensing plus real-device validation are still open gates.
+    certifiedForAutoScoring: false,
+    blockers: [...qualityBlockers, PRODUCTION_AUTO_SCORING_BLOCKER],
   };
 }
