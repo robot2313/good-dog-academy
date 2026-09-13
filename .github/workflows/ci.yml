@@ -13,7 +13,7 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,6 +23,12 @@ jobs:
         with:
           node-version: 20
           cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
 
       - name: Install dependencies
         run: npm ci
@@ -41,3 +47,14 @@ jobs:
 
       - name: Verify ONNX Android registration
         run: node scripts/ensure-onnxruntime-android-registration.mjs
+
+      - name: Prove ONNX package is in generated MainApplication
+        run: |
+          grep -R "ai.onnxruntime.reactnative.OnnxruntimePackage" android/app/src/main/java
+          grep -R "OnnxruntimePackage()" android/app/src/main/java
+
+      - name: Compile Android development native code
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon --stacktrace
