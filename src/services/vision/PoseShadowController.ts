@@ -17,7 +17,31 @@ export type PoseShadowStatus =
   | { state: 'ready' }
   | { state: 'error'; message: string };
 
+export type PoseShadowDiagnostics = {
+  framesRequested: number;
+  framesAnalysed: number;
+  framesSkippedBusy: number;
+  inferenceErrors: number;
+  lastInferenceAt: string | null;
+  lastInferenceMs: number | null;
+  lastTotalMs: number | null;
+  lastDetectionConfidence: number | null;
+  lastPostureConfidence: number | null;
+};
+
 type ModelFactory = () => Promise<QuadrupedPoseModel>;
+
+const initialDiagnostics = (): PoseShadowDiagnostics => ({
+  framesRequested: 0,
+  framesAnalysed: 0,
+  framesSkippedBusy: 0,
+  inferenceErrors: 0,
+  lastInferenceAt: null,
+  lastInferenceMs: null,
+  lastTotalMs: null,
+  lastDetectionConfidence: null,
+  lastPostureConfidence: null,
+});
 
 async function defaultModelFactory(): Promise<QuadrupedPoseModel> {
   // Keep the native ONNX module out of Expo Go startup. It is loaded only when
@@ -30,6 +54,7 @@ export class PoseShadowController {
   private model: QuadrupedPoseModel | null = null;
   private status: PoseShadowStatus = { state: 'off' };
   private inFlight = false;
+  private diagnostics: PoseShadowDiagnostics = initialDiagnostics();
 
   constructor(private readonly makeModel: ModelFactory = defaultModelFactory) {}
 
@@ -37,9 +62,14 @@ export class PoseShadowController {
     return this.status;
   }
 
+  getDiagnostics(): PoseShadowDiagnostics {
+    return { ...this.diagnostics };
+  }
+
   async enable(): Promise<PoseShadowStatus> {
     if (this.status.state === 'ready') return this.status;
     this.status = { state: 'loading' };
+    this.diagnostics = initialDiagnostics();
     try {
       const model = await this.makeModel();
       await model.warmup();
@@ -56,7 +86,14 @@ export class PoseShadowController {
   }
 
   async analyse(frame: CameraFrame): Promise<PoseShadowObservation | null> {
-    if (this.status.state !== 'ready' || !this.model || this.inFlight) return null;
+    if (this.status.state !== 'ready' || !this.model) return null;
+
+    this.diagnostics.framesRequested += 1;
+    if (this.inFlight) {
+      this.diagnostics.framesSkippedBusy += 1;
+      return null;
+    }
+
     this.inFlight = true;
     const startedAt = Date.now();
     try {
@@ -64,15 +101,26 @@ export class PoseShadowController {
       const classification = inference.pose
         ? classifyQuadrupedPosture(inference.pose)
         : { posture: 'unknown' as const, confidence: null };
-      return {
+      const totalMs = Date.now() - startedAt;
+      const observation: PoseShadowObservation = {
         dogDetected: inference.dogDetected,
         detectionConfidence: inference.detectionConfidence,
         posture: classification.posture,
         postureConfidence: classification.confidence,
         inferenceMs: inference.inferenceMs,
-        totalMs: Date.now() - startedAt,
+        totalMs,
       };
+
+      this.diagnostics.framesAnalysed += 1;
+      this.diagnostics.lastInferenceAt = new Date().toISOString();
+      this.diagnostics.lastInferenceMs = inference.inferenceMs;
+      this.diagnostics.lastTotalMs = totalMs;
+      this.diagnostics.lastDetectionConfidence = inference.detectionConfidence;
+      this.diagnostics.lastPostureConfidence = classification.confidence;
+
+      return observation;
     } catch (error) {
+      this.diagnostics.inferenceErrors += 1;
       this.status = {
         state: 'error',
         message: error instanceof Error ? error.message : 'Real vision inference failed.',
@@ -87,6 +135,7 @@ export class PoseShadowController {
     const model = this.model;
     this.model = null;
     this.status = { state: 'off' };
+    this.inFlight = false;
     if (model) await model.dispose();
   }
 }
