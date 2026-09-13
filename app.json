@@ -18,9 +18,6 @@
     "android": {
       "package": "com.robot2313.gooddogacademy",
       "versionCode": 1,
-      "blockedPermissions": [
-        "android.permission.RECORD_AUDIO"
-      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/branding/app-mark.png",
         "backgroundColor": "#FBF8F0"
@@ -31,10 +28,25 @@
     },
     "plugins": [
       "@react-native-community/datetimepicker",
+      "onnxruntime-react-native",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Good Dog Academy to use the camera for optional live training feedback.",
+          "recordAudioAndroid": false
+        }
+      ],
       [
         "expo-image-picker",
         {
           "photosPermission": "Allow Good Dog Academy to choose an optional profile photo for your dog."
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow Good Dog Academy to hear optional spoken training responses.",
+          "speechRecognitionPermission": "Allow Good Dog Academy to turn optional spoken training responses into text."
         }
       ],
       [

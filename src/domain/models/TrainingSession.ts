@@ -1,3 +1,5 @@
+import type { TrainingRep } from './TrainingEvidence';
+
 export type TrainingOutcome = 'success' | 'partial-success' | 'unsuccessful';
 
 export type TrainingSession = {
@@ -10,4 +12,5 @@ export type TrainingSession = {
   durationMinutes: number;
   outcome: TrainingOutcome | null;
   notes: string;
+  reps?: TrainingRep[];
 };

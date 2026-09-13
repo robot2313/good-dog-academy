@@ -27,11 +27,12 @@ export type LessonSummaryScreenViewProps = {
   allowLockedStart?: boolean;
   onBack: () => void;
   onStart: () => void;
+  onCameraCoach?: () => void;
 };
 
 const fallbackEquipment = Object.freeze(['Small rewards your dog enjoys']);
 
-export function LessonSummaryScreenView({ lessonId, lessonDefinition, service, loading, error, onRetry, allowLockedStart = false, onBack, onStart }: LessonSummaryScreenViewProps): React.JSX.Element {
+export function LessonSummaryScreenView({ lessonId, lessonDefinition, service, loading, error, onRetry, allowLockedStart = false, onBack, onStart, onCameraCoach }: LessonSummaryScreenViewProps): React.JSX.Element {
   let lesson: LessonLibraryItem | null = null;
   let derivedError = error;
   if (!loading && !derivedError) { try { lesson = service.getLessonSummary(lessonId); } catch (cause) { derivedError = cause; } }
@@ -65,7 +66,7 @@ export function LessonSummaryScreenView({ lessonId, lessonDefinition, service, l
         {lesson.state !== 'LOCKED' || selfDirected ? <View style={referenceStyles.detailEquipmentCard}><Text accessibilityRole="header" style={referenceStyles.detailSectionTitle}>Before we start</Text>{equipment.map((item, index) => <View key={`${lesson.id}-equipment-${index}`} style={referenceStyles.detailBulletRow}><View style={referenceStyles.detailBulletIcon}><ReferenceIcon name="check" size={12} color="#FFFFFF" strokeWidth={2.4} /></View><Text style={referenceStyles.detailBulletText}>{item}</Text></View>)}</View> : null}
       </View>
     </ScrollView>
-    {canStart ? <View style={referenceStyles.detailFooter}><Pressable accessibilityRole="button" accessibilityLabel="Next" onPress={onStart} style={({ pressed }) => [referenceStyles.largeGreenButton, pressed && referenceStyles.pressed]}><Text style={referenceStyles.largeGreenButtonText}>Start Lesson</Text></Pressable></View> : null}
+    {canStart ? <View style={[referenceStyles.detailFooter, { gap: 8 }]}><Pressable accessibilityRole="button" accessibilityLabel="Next" onPress={onStart} style={({ pressed }) => [referenceStyles.largeGreenButton, pressed && referenceStyles.pressed]}><Text style={referenceStyles.largeGreenButtonText}>Start Lesson</Text></Pressable>{onCameraCoach ? <Pressable accessibilityRole="button" accessibilityLabel="Use Camera Coach beta" onPress={onCameraCoach} style={({ pressed }) => [referenceStyles.largeGreenButton, { backgroundColor: '#0B2545' }, pressed && referenceStyles.pressed]}><Text style={referenceStyles.largeGreenButtonText}>Use Camera Coach (Beta)</Text></Pressable> : null}</View> : null}
   </SafeAreaView>;
 }
 function cleanStep(step: string): string { return step.replace(/^\s*\d+[.)]\s*/, '').trim(); }

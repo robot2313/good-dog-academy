@@ -85,3 +85,67 @@ describe('additional validator boundaries', () => {
     expect(validateBehaviourAssessment({ ...sampleBehaviourAssessment, responses: [{ ...response, frequencyValue: 4 }, ...rest] }).valid).toBe(false);
   });
 });
+
+describe('training session evidence validation', () => {
+  const validRep = {
+    id: 'rep-1',
+    repNumber: 1,
+    evidence: {
+      source: 'camera_auto',
+      confidence: 0.91,
+      observedOutcome: 'success',
+      observedAt: '2026-09-12T10:00:02.000Z',
+      cueAt: '2026-09-12T10:00:00.000Z',
+      responseAt: '2026-09-12T10:00:01.000Z',
+      markerAt: null,
+      rewardAt: null,
+      cueCount: 1,
+      signal: null,
+      posture: 'sit_like',
+      poseConfidence: 0.88,
+      notes: null,
+    },
+    correction: null,
+  };
+
+  it('accepts structured rep evidence and owner corrections', () => {
+    const correctedRep = {
+      ...validRep,
+      correction: {
+        correctedAt: '2026-09-12T10:00:05.000Z',
+        correctedOutcome: 'partial-success',
+        reason: 'Owner saw a delayed response',
+        source: 'owner',
+      },
+    };
+    expect(validateTrainingSession({ ...sampleTrainingSession, reps: [correctedRep] }).valid).toBe(true);
+  });
+
+  it('rejects malformed automatic evidence instead of persisting it', () => {
+    const malformed = {
+      ...validRep,
+      evidence: { ...validRep.evidence, confidence: 1.4, observedAt: 'not-a-date', source: 'unknown_auto' },
+    };
+    const result = validateTrainingSession({ ...sampleTrainingSession, reps: [malformed] });
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((error) => error.includes('confidence'))).toBe(true);
+    expect(result.errors.some((error) => error.includes('observedAt'))).toBe(true);
+    expect(result.errors.some((error) => error.includes('source'))).toBe(true);
+  });
+
+  it('rejects duplicate rep identity and invalid owner corrections', () => {
+    const invalidCorrection = {
+      ...validRep,
+      correction: {
+        correctedAt: 'not-a-date',
+        correctedOutcome: 'mixed',
+        reason: null,
+        source: 'camera',
+      },
+    };
+    const result = validateTrainingSession({ ...sampleTrainingSession, reps: [validRep, { ...invalidCorrection, repNumber: 1 }] });
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((error) => error.includes('unique'))).toBe(true);
+    expect(result.errors.some((error) => error.includes('correction'))).toBe(true);
+  });
+});
