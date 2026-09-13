@@ -24,6 +24,7 @@ import { ExpoTrainingSpeechRecognizer } from '../services/speech/ExpoTrainingSpe
 import { HandsFreeCoachController } from '../services/speech/HandsFreeCoachController';
 import { SpokenCoachController } from '../services/speech/SpokenCoachController';
 import { OwnerFallbackVisionEngine } from '../services/vision/OwnerFallbackVisionEngine';
+import { PoseShadowController, type PoseShadowObservation, type PoseShadowStatus } from '../services/vision/PoseShadowController';
 import type { RootStackParamList } from '../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CameraCoach'>;
@@ -52,6 +53,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
   const speechRecognizer = useMemo(() => new ExpoTrainingSpeechRecognizer(), []);
   const handsFreeCoach = useMemo(() => new HandsFreeCoachController(speechRecognizer), [speechRecognizer]);
   const qaTelemetry = useMemo(() => new CameraCoachQaTelemetry(), []);
+  const poseShadow = useMemo(() => new PoseShadowController(), []);
   const expectedCue = useMemo(
     () => expectedCueResponseForLesson(route.params.lessonId),
     [route.params.lessonId],
@@ -70,6 +72,8 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [debrief, setDebrief] = useState<SessionDebrief | null>(null);
   const [qaSnapshot, setQaSnapshot] = useState(() => qaTelemetry.getSnapshot());
+  const [poseShadowStatus, setPoseShadowStatus] = useState<PoseShadowStatus>(() => poseShadow.getStatus());
+  const [poseShadowObservation, setPoseShadowObservation] = useState<PoseShadowObservation | null>(null);
   const [diagnostics, setDiagnostics] = useState<Diagnostics>({
     framesCaptured: 0,
     framesAnalysed: 0,
@@ -104,9 +108,10 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
       void handsFreeCoach.abort();
       handsFreeCoach.dispose();
       speechRecognizer.dispose();
+      void poseShadow.disable();
       void spokenCoach.stop();
     };
-  }, [handsFreeCoach, speechRecognizer, spokenCoach]);
+  }, [handsFreeCoach, poseShadow, speechRecognizer, spokenCoach]);
 
   const runtime = useMemo(() => {
     if (!dog) return null;
@@ -263,6 +268,13 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         lastFrameAt: frame.capturedAt,
       }));
 
+      if (poseShadow.getStatus().state === 'ready') {
+        void poseShadow.analyse(frame).then((observation) => {
+          if (!active || !observation) return;
+          setPoseShadowObservation(observation);
+        });
+      }
+
       const activeCueAt = cueAtRef.current;
       if (!activeCueAt || runtime.orchestrator.getPendingConfirmation()) return;
 
@@ -333,7 +345,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
       setHandsFreeListening(false);
       void spokenCoach.stop();
     };
-  }, [expectedCue, handsFreeAvailable, handsFreeCoach, persistIfComplete, recordQa, running, runtime, spokenCoach, startHandsFreeListening]);
+  }, [expectedCue, handsFreeAvailable, handsFreeCoach, persistIfComplete, poseShadow, recordQa, running, runtime, spokenCoach, startHandsFreeListening]);
 
   useEffect(() => {
     if (sessionComplete && runtime) void runtime.source.stop();
@@ -492,6 +504,21 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
     void spokenCoach.setEnabled(next);
   };
 
+  const togglePoseShadow = async () => {
+    const current = poseShadow.getStatus();
+    if (current.state === 'ready' || current.state === 'loading') {
+      await poseShadow.disable();
+      setPoseShadowStatus(poseShadow.getStatus());
+      setPoseShadowObservation(null);
+      return;
+    }
+
+    setPoseShadowStatus({ state: 'loading' });
+    setPoseShadowObservation(null);
+    const next = await poseShadow.enable();
+    setPoseShadowStatus(next);
+  };
+
   if (!permission) {
     return <AppScreen><Text style={styles.body}>Checking camera permission…</Text></AppScreen>;
   }
@@ -523,6 +550,9 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
           mode="picture"
           onCameraReady={() => setCameraReady(true)}
         />
+        <View pointerEvents="none" style={styles.poseGuideBox}>
+          <Text style={styles.poseGuideText}>KEEP DOG INSIDE THIS SQUARE</Text>
+        </View>
       </View>
 
       <View style={styles.card}>
@@ -537,6 +567,24 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         <Text style={styles.body}>Frames analysed: {diagnostics.framesAnalysed}</Text>
         <Text style={styles.body}>Last result: {diagnostics.lastResult}</Text>
         <AppButton title={voiceEnabled ? 'Turn spoken coaching off' : 'Turn spoken coaching on'} onPress={toggleVoice} />
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Real vision · shadow test</Text>
+        <Text style={styles.body}>Shadow mode runs the real 17-joint ONNX pose model but cannot score or change a rep. Owner confirmation remains authoritative.</Text>
+        <Text style={styles.body}>Status: {poseShadowStatus.state}{poseShadowStatus.state === 'error' ? ` · ${poseShadowStatus.message}` : ''}</Text>
+        {poseShadowObservation ? (
+          <>
+            <Text style={styles.body}>Pose presence: {poseShadowObservation.dogDetected ? 'detected' : 'not reliable'} · confidence {poseShadowObservation.detectionConfidence === null ? 'n/a' : poseShadowObservation.detectionConfidence.toFixed(2)}</Text>
+            <Text style={styles.body}>Posture: {poseShadowObservation.posture} · confidence {poseShadowObservation.postureConfidence === null ? 'n/a' : poseShadowObservation.postureConfidence.toFixed(2)}</Text>
+            <Text style={styles.body}>ONNX: {poseShadowObservation.inferenceMs ?? 'n/a'} ms · total pipeline: {poseShadowObservation.totalMs} ms</Text>
+          </>
+        ) : null}
+        <Text style={styles.body}>First enable downloads the pinned ~13 MB model. Camera images stay on-device; only the model file is downloaded.</Text>
+        <AppButton
+          title={poseShadowStatus.state === 'ready' || poseShadowStatus.state === 'loading' ? 'Turn real vision shadow test off' : 'Enable real vision shadow test'}
+          onPress={() => void togglePoseShadow()}
+        />
       </View>
 
       <View style={styles.card}>
@@ -652,6 +700,8 @@ const styles = StyleSheet.create({
   safetyText: { fontSize: 13, lineHeight: 19, fontWeight: '700', color: '#984B3E' },
   previewShell: { overflow: 'hidden', borderRadius: 20, minHeight: 360, backgroundColor: '#0B2545' },
   preview: { flex: 1, minHeight: 360 },
+  poseGuideBox: { position: 'absolute', alignSelf: 'center', top: '8%', width: '84%', aspectRatio: 1, borderWidth: 2, borderColor: '#FFFFFF', borderRadius: 18, alignItems: 'center', justifyContent: 'flex-start', paddingTop: 8 },
+  poseGuideText: { fontSize: 10, lineHeight: 14, fontWeight: '900', letterSpacing: 0.8, color: '#FFFFFF', backgroundColor: 'rgba(11,37,69,0.72)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   card: { gap: 10, padding: 16, borderRadius: 18, backgroundColor: '#FFFFFF' },
   debriefCard: { gap: 8, padding: 16, borderRadius: 18, backgroundColor: '#EDF5E9', borderWidth: 1, borderColor: '#CFE2C8' },
   safetyCard: { gap: 8, padding: 16, borderRadius: 18, backgroundColor: '#F8E7E2', borderWidth: 1, borderColor: '#E2C3BB' },
