@@ -15,7 +15,7 @@ import { CameraCoachOrchestrator, type CameraCoachPendingConfirmation } from '..
 import { CameraCoachQaTelemetry, type CameraCoachQaEventType } from '../domain/camera/CameraCoachQaTelemetry';
 import { expectedCueResponseForLesson } from '../domain/camera/ExpectedCueResponse';
 import type { TrainingOutcome } from '../domain/models/TrainingSession';
-import type { PoseShadowValidationReport } from '../domain/vision/PoseShadowValidation';
+import type { PoseShadowGroundTruth, PoseShadowValidationReport } from '../domain/vision/PoseShadowValidation';
 import { loadBundledLessonCatalogue } from '../features/lessons/catalogue';
 import { useOnboarding } from '../features/onboarding/OnboardingContext';
 import { persistCompletedLiveCoachSession } from '../services/AdaptiveTrainingPersistenceService';
@@ -277,6 +277,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
           if (!active || !observation) return;
           setPoseShadowObservation(observation);
           setPoseShadowLabelled(false);
+          setPoseShadowStatus(poseShadow.getStatus());
         });
       }
 
@@ -528,7 +529,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
     setPoseShadowStatus(next);
   };
 
-  const labelPoseShadowPrediction = async (correct: boolean) => {
+  const labelPoseShadowPrediction = async (groundTruth: PoseShadowGroundTruth) => {
     if (!dog || !poseShadowObservation || poseShadowObservation.posture === 'unknown' || poseShadowObservation.postureConfidence === null || poseShadowLabelled) return;
 
     const posture = poseShadowObservation.posture;
@@ -541,10 +542,11 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         expectedPosture: posture,
         predictedPosture: posture,
         confidence: poseShadowObservation.postureConfidence,
-        ownerOutcome: correct ? 'success' : 'unsuccessful',
+        groundTruth,
         recordedAt: new Date().toISOString(),
       });
       setPoseValidationReport(await loadPoseShadowValidationReport(dog.id, posture));
+      setDiagnostics((current) => ({ ...current, lastResult: `Pose calibration saved: AI ${posture}, owner ${groundTruth}.` }));
     } catch {
       setPoseShadowLabelled(false);
       setDiagnostics((current) => ({ ...current, lastResult: 'Could not save pose calibration label.' }));
@@ -593,7 +595,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         <Text style={styles.body}>Session state: {paused ? 'paused' : running ? 'running' : sessionComplete ? 'complete' : 'idle'}</Text>
         <Text style={styles.body}>Spoken coach: {voiceEnabled ? 'on' : 'off'}</Text>
         <Text style={styles.body}>Hands-free control: {handsFreeAvailable === null ? 'checking' : handsFreeAvailable ? (handsFreeListening ? 'listening' : 'available') : 'button fallback'}</Text>
-        <Text style={styles.body}>Automatic posture scoring: {expectedCue ? `eligible (${expectedCue.cueLabel})` : 'owner-confirmed for this lesson'}</Text>
+        <Text style={styles.body}>Automatic posture scoring: disabled during shadow calibration</Text>
         <Text style={styles.body}>Session memory: {saveState === 'saved' ? 'saved' : saveState === 'saving' ? 'saving' : saveState === 'error' ? 'save error' : 'waiting for completion'}</Text>
         <Text style={styles.body}>Frames sampled: {diagnostics.framesCaptured}</Text>
         <Text style={styles.body}>Frames analysed: {diagnostics.framesAnalysed}</Text>
@@ -603,25 +605,29 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Real vision · shadow test</Text>
-        <Text style={styles.body}>Shadow mode runs the real 17-joint ONNX pose model but cannot score or change a rep. Owner confirmation remains authoritative.</Text>
+        <Text style={styles.body}>Shadow mode runs the real 17-joint ONNX pose model but cannot score or change a rep. Your ground-truth label is used only to measure vision accuracy.</Text>
         <Text style={styles.body}>Status: {poseShadowStatus.state}{poseShadowStatus.state === 'error' ? ` · ${poseShadowStatus.message}` : ''}</Text>
         {poseShadowObservation ? (
           <>
             <Text style={styles.body}>Pose presence: {poseShadowObservation.dogDetected ? 'detected' : 'not reliable'} · confidence {poseShadowObservation.detectionConfidence === null ? 'n/a' : poseShadowObservation.detectionConfidence.toFixed(2)}</Text>
-            <Text style={styles.body}>Posture: {poseShadowObservation.posture} · confidence {poseShadowObservation.postureConfidence === null ? 'n/a' : poseShadowObservation.postureConfidence.toFixed(2)}</Text>
+            <Text style={styles.body}>AI posture: {poseShadowObservation.posture} · confidence {poseShadowObservation.postureConfidence === null ? 'n/a' : poseShadowObservation.postureConfidence.toFixed(2)}</Text>
             <Text style={styles.body}>ONNX: {poseShadowObservation.inferenceMs ?? 'n/a'} ms · total pipeline: {poseShadowObservation.totalMs} ms</Text>
             {poseShadowObservation.posture !== 'unknown' && poseShadowObservation.postureConfidence !== null ? (
               <>
-                <Text style={styles.body}>Is that posture prediction correct? Each prediction can be labelled once for private calibration.</Text>
-                <AppButton title={poseShadowLabelled ? 'Prediction labelled' : 'Prediction correct'} onPress={() => void labelPoseShadowPrediction(true)} disabled={poseShadowLabelled} />
-                <AppButton title="Prediction wrong" onPress={() => void labelPoseShadowPrediction(false)} disabled={poseShadowLabelled} />
+                <Text style={styles.body}>What was your dog actually doing? Label each prediction once. This does not change training progress.</Text>
+                <AppButton title={poseShadowLabelled ? 'Ground truth saved' : 'Standing'} onPress={() => void labelPoseShadowPrediction('stand_like')} disabled={poseShadowLabelled} />
+                <AppButton title="Sitting" onPress={() => void labelPoseShadowPrediction('sit_like')} disabled={poseShadowLabelled} />
+                <AppButton title="Lying down" onPress={() => void labelPoseShadowPrediction('down_like')} disabled={poseShadowLabelled} />
+                <AppButton title="No dog in frame" onPress={() => void labelPoseShadowPrediction('no_dog')} disabled={poseShadowLabelled} />
+                <AppButton title="Unsure / skip" onPress={() => void labelPoseShadowPrediction('unsure')} disabled={poseShadowLabelled} />
               </>
             ) : null}
             {poseValidationReport ? (
               <>
-                <Text style={styles.body}>Calibration samples for {poseShadowObservation.posture}: {poseValidationReport.samples}/50 minimum</Text>
+                <Text style={styles.body}>Calibration samples for {poseShadowObservation.posture}: {poseValidationReport.labelledSamples}/50 usable · {poseValidationReport.unsureSamples} unsure</Text>
                 <Text style={styles.body}>Precision: {poseValidationReport.precision === null ? 'n/a' : `${(poseValidationReport.precision * 100).toFixed(1)}%`} · false positives: {poseValidationReport.falsePositiveRate === null ? 'n/a' : `${(poseValidationReport.falsePositiveRate * 100).toFixed(1)}%`}</Text>
-                <Text style={styles.body}>Auto-score certification: {poseValidationReport.certifiedForAutoScoring ? 'threshold passed' : 'not yet certified'}</Text>
+                <Text style={styles.body}>No-dog labels: {poseValidationReport.noDogSamples}</Text>
+                <Text style={styles.body}>Auto-score certification: disabled until all production safety gates pass</Text>
               </>
             ) : null}
           </>
