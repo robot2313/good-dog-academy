@@ -64,6 +64,14 @@ describe('PoseShadowController', () => {
       posture: 'stand_like',
       inferenceMs: 22,
     });
+    expect(controller.getDiagnostics()).toMatchObject({
+      framesRequested: 1,
+      framesAnalysed: 1,
+      framesSkippedBusy: 0,
+      inferenceErrors: 0,
+      lastInferenceMs: 22,
+      lastDetectionConfidence: 0.91,
+    });
   });
 
   it('fails closed when native model startup fails', async () => {
@@ -72,6 +80,49 @@ describe('PoseShadowController', () => {
 
     expect(status).toEqual({ state: 'error', message: 'native module unavailable' });
     await expect(controller.analyse(frame)).resolves.toBeNull();
+  });
+
+  it('records inference errors and exposes the failed state', async () => {
+    const model: QuadrupedPoseModel = {
+      async warmup() {},
+      async infer() { throw new Error('inference exploded'); },
+      async dispose() {},
+    };
+    const controller = new PoseShadowController(async () => model);
+    await controller.enable();
+
+    await expect(controller.analyse(frame)).resolves.toBeNull();
+    expect(controller.getStatus()).toEqual({ state: 'error', message: 'inference exploded' });
+    expect(controller.getDiagnostics()).toMatchObject({
+      framesRequested: 1,
+      framesAnalysed: 0,
+      inferenceErrors: 1,
+    });
+  });
+
+  it('counts frames skipped while inference is already running', async () => {
+    let resolveInference: ((value: Awaited<ReturnType<QuadrupedPoseModel['infer']>>) => void) | null = null;
+    const model: QuadrupedPoseModel = {
+      async warmup() {},
+      async infer() {
+        return new Promise((resolve) => { resolveInference = resolve; });
+      },
+      async dispose() {},
+    };
+    const controller = new PoseShadowController(async () => model);
+    await controller.enable();
+
+    const first = controller.analyse(frame);
+    await expect(controller.analyse({ ...frame, id: 'frame-2' })).resolves.toBeNull();
+    expect(controller.getDiagnostics().framesSkippedBusy).toBe(1);
+
+    resolveInference?.({
+      dogDetected: true,
+      detectionConfidence: 0.91,
+      pose,
+      inferenceMs: 25,
+    });
+    await first;
   });
 
   it('disposes the native model when shadow mode is disabled', async () => {
