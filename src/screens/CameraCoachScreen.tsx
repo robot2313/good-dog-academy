@@ -15,6 +15,7 @@ import { CameraCoachOrchestrator, type CameraCoachPendingConfirmation } from '..
 import { CameraCoachQaTelemetry, type CameraCoachQaEventType } from '../domain/camera/CameraCoachQaTelemetry';
 import { expectedCueResponseForLesson } from '../domain/camera/ExpectedCueResponse';
 import type { TrainingOutcome } from '../domain/models/TrainingSession';
+import type { PoseShadowValidationReport } from '../domain/vision/PoseShadowValidation';
 import { loadBundledLessonCatalogue } from '../features/lessons/catalogue';
 import { useOnboarding } from '../features/onboarding/OnboardingContext';
 import { persistCompletedLiveCoachSession } from '../services/AdaptiveTrainingPersistenceService';
@@ -25,6 +26,7 @@ import { HandsFreeCoachController } from '../services/speech/HandsFreeCoachContr
 import { SpokenCoachController } from '../services/speech/SpokenCoachController';
 import { OwnerFallbackVisionEngine } from '../services/vision/OwnerFallbackVisionEngine';
 import { PoseShadowController, type PoseShadowObservation, type PoseShadowStatus } from '../services/vision/PoseShadowController';
+import { loadPoseShadowValidationReport, recordPoseShadowValidationSample } from '../services/vision/PoseShadowValidationService';
 import type { RootStackParamList } from '../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CameraCoach'>;
@@ -74,6 +76,8 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
   const [qaSnapshot, setQaSnapshot] = useState(() => qaTelemetry.getSnapshot());
   const [poseShadowStatus, setPoseShadowStatus] = useState<PoseShadowStatus>(() => poseShadow.getStatus());
   const [poseShadowObservation, setPoseShadowObservation] = useState<PoseShadowObservation | null>(null);
+  const [poseShadowLabelled, setPoseShadowLabelled] = useState(false);
+  const [poseValidationReport, setPoseValidationReport] = useState<PoseShadowValidationReport | null>(null);
   const [diagnostics, setDiagnostics] = useState<Diagnostics>({
     framesCaptured: 0,
     framesAnalysed: 0,
@@ -272,6 +276,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         void poseShadow.analyse(frame).then((observation) => {
           if (!active || !observation) return;
           setPoseShadowObservation(observation);
+          setPoseShadowLabelled(false);
         });
       }
 
@@ -510,13 +515,40 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
       await poseShadow.disable();
       setPoseShadowStatus(poseShadow.getStatus());
       setPoseShadowObservation(null);
+      setPoseShadowLabelled(false);
+      setPoseValidationReport(null);
       return;
     }
 
     setPoseShadowStatus({ state: 'loading' });
     setPoseShadowObservation(null);
+    setPoseShadowLabelled(false);
+    setPoseValidationReport(null);
     const next = await poseShadow.enable();
     setPoseShadowStatus(next);
+  };
+
+  const labelPoseShadowPrediction = async (correct: boolean) => {
+    if (!dog || !poseShadowObservation || poseShadowObservation.posture === 'unknown' || poseShadowObservation.postureConfidence === null || poseShadowLabelled) return;
+
+    const posture = poseShadowObservation.posture;
+    setPoseShadowLabelled(true);
+    try {
+      await recordPoseShadowValidationSample({
+        id: `pose-shadow-${dog.id}-${Date.now()}`,
+        dogId: dog.id,
+        lessonId: route.params.lessonId,
+        expectedPosture: posture,
+        predictedPosture: posture,
+        confidence: poseShadowObservation.postureConfidence,
+        ownerOutcome: correct ? 'success' : 'unsuccessful',
+        recordedAt: new Date().toISOString(),
+      });
+      setPoseValidationReport(await loadPoseShadowValidationReport(dog.id, posture));
+    } catch {
+      setPoseShadowLabelled(false);
+      setDiagnostics((current) => ({ ...current, lastResult: 'Could not save pose calibration label.' }));
+    }
   };
 
   if (!permission) {
@@ -578,6 +610,20 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
             <Text style={styles.body}>Pose presence: {poseShadowObservation.dogDetected ? 'detected' : 'not reliable'} · confidence {poseShadowObservation.detectionConfidence === null ? 'n/a' : poseShadowObservation.detectionConfidence.toFixed(2)}</Text>
             <Text style={styles.body}>Posture: {poseShadowObservation.posture} · confidence {poseShadowObservation.postureConfidence === null ? 'n/a' : poseShadowObservation.postureConfidence.toFixed(2)}</Text>
             <Text style={styles.body}>ONNX: {poseShadowObservation.inferenceMs ?? 'n/a'} ms · total pipeline: {poseShadowObservation.totalMs} ms</Text>
+            {poseShadowObservation.posture !== 'unknown' && poseShadowObservation.postureConfidence !== null ? (
+              <>
+                <Text style={styles.body}>Is that posture prediction correct? Each prediction can be labelled once for private calibration.</Text>
+                <AppButton title={poseShadowLabelled ? 'Prediction labelled' : 'Prediction correct'} onPress={() => void labelPoseShadowPrediction(true)} disabled={poseShadowLabelled} />
+                <AppButton title="Prediction wrong" onPress={() => void labelPoseShadowPrediction(false)} disabled={poseShadowLabelled} />
+              </>
+            ) : null}
+            {poseValidationReport ? (
+              <>
+                <Text style={styles.body}>Calibration samples for {poseShadowObservation.posture}: {poseValidationReport.samples}/50 minimum</Text>
+                <Text style={styles.body}>Precision: {poseValidationReport.precision === null ? 'n/a' : `${(poseValidationReport.precision * 100).toFixed(1)}%`} · false positives: {poseValidationReport.falsePositiveRate === null ? 'n/a' : `${(poseValidationReport.falsePositiveRate * 100).toFixed(1)}%`}</Text>
+                <Text style={styles.body}>Auto-score certification: {poseValidationReport.certifiedForAutoScoring ? 'threshold passed' : 'not yet certified'}</Text>
+              </>
+            ) : null}
           </>
         ) : null}
         <Text style={styles.body}>First enable downloads the pinned ~13 MB model. Camera images stay on-device; only the model file is downloaded.</Text>
