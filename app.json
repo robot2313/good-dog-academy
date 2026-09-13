@@ -28,6 +28,7 @@
     },
     "plugins": [
       "@react-native-community/datetimepicker",
+      "onnxruntime-react-native",
       [
         "expo-camera",
         {
