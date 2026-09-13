@@ -66,7 +66,7 @@ export type QuadrupedPosturePolicy = {
 
 export const DEFAULT_QUADRUPED_POSTURE_POLICY: QuadrupedPosturePolicy = {
   minJointConfidence: 0.68,
-  minClassificationConfidence: 0.76,
+  minClassificationConfidence: 0.58,
   minBodyHeight: 0.12,
 };
 
@@ -106,14 +106,12 @@ export function classifyQuadrupedPosture(
   const torsoLevel = clamp01(1 - Math.abs(shoulder.y - hip.y) / bodyHeight);
   const neckHipLevel = clamp01(1 - Math.abs(neck.y - hip.y) / bodyHeight);
 
-  // Standing: both front and rear legs are extended and the torso is reasonably level.
   const standScore = clamp01(
     0.38 * shoulderClearance +
     0.38 * hipClearance +
     0.24 * torsoLevel,
   );
 
-  // Sitting: front legs remain extended while the rear quarters are much closer to the floor.
   const sitRearCompression = clamp01(1 - hipClearance);
   const sitScore = clamp01(
     0.46 * shoulderClearance +
@@ -121,7 +119,6 @@ export function classifyQuadrupedPosture(
     0.16 * torsoLevel,
   );
 
-  // Down: shoulders/hips/neck settle toward one body band and both limb clearances compress.
   const downCompression = clamp01(1 - average([shoulderClearance, hipClearance]));
   const downScore = clamp01(
     0.46 * downCompression +
