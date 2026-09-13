@@ -1,13 +1,19 @@
 import type { DogPostureEvidence } from '../models/TrainingEvidence';
 
 export type PoseShadowOwnerLabel = 'correct' | 'incorrect';
+export type PoseShadowGroundTruth = Exclude<DogPostureEvidence, 'unknown'> | 'no_dog' | 'unsure';
 
 export type PoseShadowValidationSample = {
   id: string;
   expectedPosture: Exclude<DogPostureEvidence, 'unknown'>;
   predictedPosture: DogPostureEvidence;
   confidence: number | null;
-  ownerLabel: PoseShadowOwnerLabel;
+  /**
+   * Owner-supplied ground truth for new calibration samples. Legacy samples may
+   * only have ownerLabel; report logic keeps supporting those records.
+   */
+  groundTruth?: PoseShadowGroundTruth;
+  ownerLabel?: PoseShadowOwnerLabel;
 };
 
 export type PoseShadowValidationPolicy = {
@@ -26,6 +32,9 @@ export const DEFAULT_POSE_VALIDATION_POLICY: PoseShadowValidationPolicy = {
 
 export type PoseShadowValidationReport = {
   samples: number;
+  labelledSamples: number;
+  unsureSamples: number;
+  noDogSamples: number;
   successfulOwnerReps: number;
   autoCandidates: number;
   truePositiveCandidates: number;
@@ -42,18 +51,41 @@ export type PoseShadowValidationReport = {
 const PRODUCTION_AUTO_SCORING_BLOCKER =
   'Production auto-scoring remains disabled until animal detection, cue-level validation, licensing review, and physical-device real-dog QA are complete.';
 
+function ownerSaysPredictionIsCorrect(sample: PoseShadowValidationSample): boolean | null {
+  if (sample.groundTruth) {
+    if (sample.groundTruth === 'unsure') return null;
+    if (sample.groundTruth === 'no_dog') return false;
+    return sample.predictedPosture === sample.groundTruth;
+  }
+  if (sample.ownerLabel) return sample.ownerLabel === 'correct';
+  return null;
+}
+
+function ownerObservedExpectedPosture(sample: PoseShadowValidationSample): boolean | null {
+  if (sample.groundTruth) {
+    if (sample.groundTruth === 'unsure' || sample.groundTruth === 'no_dog') return false;
+    return sample.groundTruth === sample.expectedPosture;
+  }
+  if (sample.ownerLabel) return sample.ownerLabel === 'correct';
+  return null;
+}
+
 export function buildPoseShadowValidationReport(
   samples: PoseShadowValidationSample[],
   policy: PoseShadowValidationPolicy = DEFAULT_POSE_VALIDATION_POLICY,
 ): PoseShadowValidationReport {
-  const autoCandidates = samples.filter((sample) => (
+  const labelledSamples = samples.filter((sample) => ownerSaysPredictionIsCorrect(sample) !== null);
+  const unsureSamples = samples.filter((sample) => sample.groundTruth === 'unsure');
+  const noDogSamples = samples.filter((sample) => sample.groundTruth === 'no_dog');
+
+  const autoCandidates = labelledSamples.filter((sample) => (
     sample.confidence !== null &&
     sample.confidence >= policy.candidateConfidence &&
     sample.predictedPosture === sample.expectedPosture
   ));
-  const successfulOwnerReps = samples.filter((sample) => sample.ownerLabel === 'correct');
-  const truePositiveCandidates = autoCandidates.filter((sample) => sample.ownerLabel === 'correct');
-  const falsePositiveCandidates = autoCandidates.filter((sample) => sample.ownerLabel === 'incorrect');
+  const successfulOwnerReps = labelledSamples.filter((sample) => ownerObservedExpectedPosture(sample) === true);
+  const truePositiveCandidates = autoCandidates.filter((sample) => ownerSaysPredictionIsCorrect(sample) === true);
+  const falsePositiveCandidates = autoCandidates.filter((sample) => ownerSaysPredictionIsCorrect(sample) === false);
   const missedSuccessfulReps = successfulOwnerReps.filter((sample) => !autoCandidates.includes(sample));
 
   const precision = autoCandidates.length > 0
@@ -67,7 +99,7 @@ export function buildPoseShadowValidationReport(
     : null;
 
   const qualityBlockers: string[] = [];
-  if (samples.length < policy.minimumSamples) {
+  if (labelledSamples.length < policy.minimumSamples) {
     qualityBlockers.push(`Need at least ${policy.minimumSamples} owner-labelled validation reps.`);
   }
   if (autoCandidates.length === 0) {
@@ -84,6 +116,9 @@ export function buildPoseShadowValidationReport(
 
   return {
     samples: samples.length,
+    labelledSamples: labelledSamples.length,
+    unsureSamples: unsureSamples.length,
+    noDogSamples: noDogSamples.length,
     successfulOwnerReps: successfulOwnerReps.length,
     autoCandidates: autoCandidates.length,
     truePositiveCandidates: truePositiveCandidates.length,
@@ -93,10 +128,6 @@ export function buildPoseShadowValidationReport(
     falsePositiveRate,
     coverage,
     shadowQualityGatePassed,
-    // Shadow labels can tell us whether the current heuristic is promising,
-    // but they are not sufficient evidence to enable autonomous scoring. The
-    // current pose path intentionally has no animal detector and commercial
-    // model/data licensing plus real-device validation are still open gates.
     certifiedForAutoScoring: false,
     blockers: [...qualityBlockers, PRODUCTION_AUTO_SCORING_BLOCKER],
   };
