@@ -130,7 +130,8 @@ export function classifyQuadrupedPosture(
     { posture: 'stand_like', score: standScore },
     { posture: 'sit_like', score: sitScore },
     { posture: 'down_like', score: downScore },
-  ].sort((a, b) => b.score - a.score);
+  ];
+  candidates.sort((a, b) => b.score - a.score);
 
   const best = candidates[0];
   const second = candidates[1];
