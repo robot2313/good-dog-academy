@@ -35,3 +35,9 @@ jobs:
 
       - name: Expo Doctor
         run: npx expo-doctor@latest
+
+      - name: Generate Android project
+        run: npx expo prebuild --platform android --clean --no-install
+
+      - name: Verify ONNX Android registration
+        run: node scripts/ensure-onnxruntime-android-registration.mjs
