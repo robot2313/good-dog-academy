@@ -1,12 +1,13 @@
 import type { DogPostureEvidence } from '../models/TrainingEvidence';
-import type { TrainingOutcome } from '../models/TrainingSession';
+
+export type PoseShadowOwnerLabel = 'correct' | 'incorrect';
 
 export type PoseShadowValidationSample = {
   id: string;
   expectedPosture: Exclude<DogPostureEvidence, 'unknown'>;
   predictedPosture: DogPostureEvidence;
   confidence: number | null;
-  ownerOutcome: TrainingOutcome;
+  ownerLabel: PoseShadowOwnerLabel;
 };
 
 export type PoseShadowValidationPolicy = {
@@ -50,9 +51,9 @@ export function buildPoseShadowValidationReport(
     sample.confidence >= policy.candidateConfidence &&
     sample.predictedPosture === sample.expectedPosture
   ));
-  const successfulOwnerReps = samples.filter((sample) => sample.ownerOutcome === 'success');
-  const truePositiveCandidates = autoCandidates.filter((sample) => sample.ownerOutcome === 'success');
-  const falsePositiveCandidates = autoCandidates.filter((sample) => sample.ownerOutcome !== 'success');
+  const successfulOwnerReps = samples.filter((sample) => sample.ownerLabel === 'correct');
+  const truePositiveCandidates = autoCandidates.filter((sample) => sample.ownerLabel === 'correct');
+  const falsePositiveCandidates = autoCandidates.filter((sample) => sample.ownerLabel === 'incorrect');
   const missedSuccessfulReps = successfulOwnerReps.filter((sample) => !autoCandidates.includes(sample));
 
   const precision = autoCandidates.length > 0
