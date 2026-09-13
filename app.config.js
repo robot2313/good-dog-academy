@@ -6,6 +6,7 @@ module.exports = ({ config }) => {
 
   return {
     ...config,
+    newArchEnabled: false,
     plugins: [...plugins, './plugins/with-onnxruntime'],
   };
 };
