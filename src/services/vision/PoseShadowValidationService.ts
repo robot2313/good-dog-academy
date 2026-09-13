@@ -1,5 +1,6 @@
 import {
   buildPoseShadowValidationReport,
+  type PoseShadowGroundTruth,
   type PoseShadowOwnerLabel,
   type PoseShadowValidationReport,
   type PoseShadowValidationSample,
@@ -29,8 +30,9 @@ type SharedRecordInput = {
 };
 
 export type RecordPoseShadowValidationInput = SharedRecordInput & (
-  | { ownerLabel: PoseShadowOwnerLabel; ownerOutcome?: never }
-  | { ownerLabel?: never; ownerOutcome: TrainingOutcome }
+  | { groundTruth: PoseShadowGroundTruth; ownerLabel?: never; ownerOutcome?: never }
+  | { groundTruth?: never; ownerLabel: PoseShadowOwnerLabel; ownerOutcome?: never }
+  | { groundTruth?: never; ownerLabel?: never; ownerOutcome: TrainingOutcome }
 );
 
 export type PoseShadowValidationSummary = {
@@ -60,14 +62,21 @@ function isPosture(value: unknown): value is DogPostureEvidence {
   return value === 'stand_like' || value === 'sit_like' || value === 'down_like' || value === 'unknown';
 }
 
+function isGroundTruth(value: unknown): value is PoseShadowGroundTruth {
+  return value === 'stand_like' || value === 'sit_like' || value === 'down_like' || value === 'no_dog' || value === 'unsure';
+}
+
+function legacyOwnerLabel(sample: Record<string, unknown>): PoseShadowOwnerLabel | null {
+  if (isOwnerLabel(sample.ownerLabel)) return sample.ownerLabel;
+  if (isTrainingOutcome(sample.ownerOutcome)) return sample.ownerOutcome === 'success' ? 'correct' : 'incorrect';
+  return null;
+}
+
 function normaliseStoredSample(value: unknown): PersistedPoseShadowValidationSample | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const sample = value as Record<string, unknown>;
-  const ownerLabel = isOwnerLabel(sample.ownerLabel)
-    ? sample.ownerLabel
-    : isTrainingOutcome(sample.ownerOutcome)
-      ? sample.ownerOutcome === 'success' ? 'correct' : 'incorrect'
-      : null;
+  const groundTruth = isGroundTruth(sample.groundTruth) ? sample.groundTruth : undefined;
+  const ownerLabel = groundTruth ? undefined : legacyOwnerLabel(sample) ?? undefined;
 
   if (
     typeof sample.id !== 'string' || sample.id.length === 0 ||
@@ -76,7 +85,7 @@ function normaliseStoredSample(value: unknown): PersistedPoseShadowValidationSam
     !isPosture(sample.expectedPosture) || sample.expectedPosture === 'unknown' ||
     !isPosture(sample.predictedPosture) ||
     !(sample.confidence === null || (typeof sample.confidence === 'number' && Number.isFinite(sample.confidence) && sample.confidence >= 0 && sample.confidence <= 1)) ||
-    ownerLabel === null ||
+    (!groundTruth && !ownerLabel) ||
     typeof sample.recordedAt !== 'string' || !Number.isFinite(new Date(sample.recordedAt).getTime())
   ) {
     return null;
@@ -89,7 +98,7 @@ function normaliseStoredSample(value: unknown): PersistedPoseShadowValidationSam
     expectedPosture: sample.expectedPosture,
     predictedPosture: sample.predictedPosture,
     confidence: sample.confidence,
-    ownerLabel,
+    ...(groundTruth ? { groundTruth } : { ownerLabel }),
     recordedAt: sample.recordedAt,
   };
 }
