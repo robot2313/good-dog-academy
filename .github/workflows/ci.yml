@@ -45,6 +45,9 @@ jobs:
       - name: Generate Android project
         run: npx expo prebuild --platform android --clean --no-install
 
+      - name: Prove legacy architecture is generated
+        run: grep -n "newArchEnabled=false" android/gradle.properties
+
       - name: Verify ONNX Android registration
         run: node scripts/ensure-onnxruntime-android-registration.mjs
 
