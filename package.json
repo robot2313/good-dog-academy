@@ -10,6 +10,7 @@
     "test": "jest --runInBand",
     "typecheck": "tsc --noEmit",
     "postinstall": "node scripts/fix-onnxruntime-expo-autolinking.mjs",
+    "eas-build-post-install": "node scripts/ensure-onnxruntime-android-registration.mjs",
     "vision:model:fetch": "node scripts/fetch-quadruped-pose-model.mjs"
   },
   "dependencies": {
