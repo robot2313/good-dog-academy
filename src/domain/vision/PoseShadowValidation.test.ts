@@ -1,12 +1,12 @@
 import { buildPoseShadowValidationReport, type PoseShadowValidationSample } from './PoseShadowValidation';
 
-function sample(index: number, ownerOutcome: 'success' | 'partial-success' | 'unsuccessful' = 'success'): PoseShadowValidationSample {
+function sample(index: number, ownerLabel: 'correct' | 'incorrect' = 'correct'): PoseShadowValidationSample {
   return {
     id: `sample-${index}`,
     expectedPosture: 'sit_like',
     predictedPosture: 'sit_like',
     confidence: 0.93,
-    ownerOutcome,
+    ownerLabel,
   };
 }
 
@@ -22,8 +22,8 @@ describe('buildPoseShadowValidationReport', () => {
 
   it('refuses the shadow quality gate when high-confidence matching predictions include too many false positives', () => {
     const samples = Array.from({ length: 50 }, (_, index) => sample(index));
-    samples[49] = sample(49, 'unsuccessful');
-    samples[48] = sample(48, 'partial-success');
+    samples[49] = sample(49, 'incorrect');
+    samples[48] = sample(48, 'incorrect');
 
     const report = buildPoseShadowValidationReport(samples);
 
