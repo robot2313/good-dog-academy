@@ -39,6 +39,9 @@ jobs:
       - name: Tests
         run: npm test -- --ci
 
+      - name: ONNX registration regression tests
+        run: node --test scripts/onnxruntime-registration.test.mjs
+
       - name: Expo Doctor
         run: npx expo-doctor@latest
 
@@ -51,13 +54,11 @@ jobs:
       - name: Verify ONNX Android registration
         run: node scripts/ensure-onnxruntime-android-registration.mjs
 
-      - name: Prove ONNX package is in generated MainApplication
-        run: |
-          grep -R "ai.onnxruntime.reactnative.OnnxruntimePackage" android/app/src/main/java
-          grep -R "OnnxruntimePackage()" android/app/src/main/java
-
       - name: Compile Android development native code
         working-directory: android
         run: |
           chmod +x gradlew
           ./gradlew :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Verify compiled ONNX registration is unique
+        run: node scripts/ensure-onnxruntime-android-registration.mjs --after-build
