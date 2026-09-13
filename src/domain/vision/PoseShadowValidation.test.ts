@@ -1,12 +1,15 @@
 import { buildPoseShadowValidationReport, type PoseShadowValidationSample } from './PoseShadowValidation';
 
-function sample(index: number, ownerLabel: 'correct' | 'incorrect' = 'correct'): PoseShadowValidationSample {
+function sample(
+  index: number,
+  groundTruth: PoseShadowValidationSample['groundTruth'] = 'sit_like',
+): PoseShadowValidationSample {
   return {
     id: `sample-${index}`,
     expectedPosture: 'sit_like',
     predictedPosture: 'sit_like',
     confidence: 0.93,
-    ownerLabel,
+    groundTruth,
   };
 }
 
@@ -20,17 +23,54 @@ describe('buildPoseShadowValidationReport', () => {
     expect(report.precision).toBe(1);
   });
 
-  it('refuses the shadow quality gate when high-confidence matching predictions include too many false positives', () => {
+  it('treats owner-confirmed different postures as false positives for a high-confidence prediction', () => {
     const samples = Array.from({ length: 50 }, (_, index) => sample(index));
-    samples[49] = sample(49, 'incorrect');
-    samples[48] = sample(48, 'incorrect');
+    samples[49] = sample(49, 'stand_like');
+    samples[48] = sample(48, 'down_like');
 
     const report = buildPoseShadowValidationReport(samples);
 
     expect(report.falsePositiveCandidates).toBe(2);
     expect(report.falsePositiveRate).toBeCloseTo(0.04, 5);
     expect(report.shadowQualityGatePassed).toBe(false);
-    expect(report.certifiedForAutoScoring).toBe(false);
+  });
+
+  it('counts no-dog labels as false positives and excludes unsure labels from quality statistics', () => {
+    const samples = Array.from({ length: 52 }, (_, index) => sample(index));
+    samples[50] = sample(50, 'no_dog');
+    samples[51] = sample(51, 'unsure');
+
+    const report = buildPoseShadowValidationReport(samples);
+
+    expect(report.samples).toBe(52);
+    expect(report.labelledSamples).toBe(51);
+    expect(report.noDogSamples).toBe(1);
+    expect(report.unsureSamples).toBe(1);
+    expect(report.falsePositiveCandidates).toBe(1);
+  });
+
+  it('keeps legacy correct/incorrect labels usable while new samples collect richer ground truth', () => {
+    const samples: PoseShadowValidationSample[] = [
+      {
+        id: 'legacy-correct',
+        expectedPosture: 'sit_like',
+        predictedPosture: 'sit_like',
+        confidence: 0.95,
+        ownerLabel: 'correct',
+      },
+      {
+        id: 'legacy-wrong',
+        expectedPosture: 'sit_like',
+        predictedPosture: 'sit_like',
+        confidence: 0.95,
+        ownerLabel: 'incorrect',
+      },
+    ];
+
+    const report = buildPoseShadowValidationReport(samples);
+    expect(report.labelledSamples).toBe(2);
+    expect(report.truePositiveCandidates).toBe(1);
+    expect(report.falsePositiveCandidates).toBe(1);
   });
 
   it('can pass the statistical shadow gate without self-certifying production auto-scoring', () => {
