@@ -101,11 +101,15 @@ describe('PoseShadowController', () => {
   });
 
   it('counts frames skipped while inference is already running', async () => {
-    let resolveInference: ((value: Awaited<ReturnType<QuadrupedPoseModel['infer']>>) => void) | null = null;
+    type InferenceResult = Awaited<ReturnType<QuadrupedPoseModel['infer']>>;
+    let resolveInference!: (value: InferenceResult) => void;
+    const inferencePromise = new Promise<InferenceResult>((resolve) => {
+      resolveInference = resolve;
+    });
     const model: QuadrupedPoseModel = {
       async warmup() {},
       async infer() {
-        return new Promise((resolve) => { resolveInference = resolve; });
+        return inferencePromise;
       },
       async dispose() {},
     };
@@ -116,7 +120,7 @@ describe('PoseShadowController', () => {
     await expect(controller.analyse({ ...frame, id: 'frame-2' })).resolves.toBeNull();
     expect(controller.getDiagnostics().framesSkippedBusy).toBe(1);
 
-    resolveInference?.({
+    resolveInference({
       dogDetected: true,
       detectionConfidence: 0.91,
       pose,
