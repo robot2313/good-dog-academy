@@ -8,9 +8,7 @@ module.exports = () => {
   });
 
   return {
-    expo: {
-      ...base,
-      plugins: [...plugins, './plugins/with-onnxruntime'],
-    },
+    ...base,
+    plugins: [...plugins, './plugins/with-onnxruntime'],
   };
 };
