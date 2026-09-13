@@ -1,0 +1,84 @@
+name: Pose calibration UI sync
+
+on:
+  push:
+    branches:
+      - feature/adaptive-training-port
+    paths:
+      - .github/workflows/pose-calibration-ui-sync.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/adaptive-training-port
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Wire pose calibration persistence into Camera Coach
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const path = 'src/screens/CameraCoachScreen.tsx';
+          let source = fs.readFileSync(path, 'utf8');
+          const replaceOnce = (from, to) => {
+            if (!source.includes(from)) throw new Error(`Patch anchor missing: ${from.slice(0, 120)}`);
+            source = source.replace(from, to);
+          };
+
+          replaceOnce(
+            "import type { TrainingOutcome } from '../domain/models/TrainingSession';\n",
+            "import type { TrainingOutcome } from '../domain/models/TrainingSession';\nimport type { PoseShadowValidationReport } from '../domain/vision/PoseShadowValidation';\n",
+          );
+
+          replaceOnce(
+            "import { PoseShadowController, type PoseShadowObservation, type PoseShadowStatus } from '../services/vision/PoseShadowController';\n",
+            "import { PoseShadowController, type PoseShadowObservation, type PoseShadowStatus } from '../services/vision/PoseShadowController';\nimport { loadPoseShadowValidationReport, recordPoseShadowValidationSample } from '../services/vision/PoseShadowValidationService';\n",
+          );
+
+          replaceOnce(
+            "  const [poseShadowObservation, setPoseShadowObservation] = useState<PoseShadowObservation | null>(null);\n",
+            "  const [poseShadowObservation, setPoseShadowObservation] = useState<PoseShadowObservation | null>(null);\n  const [poseShadowLabelled, setPoseShadowLabelled] = useState(false);\n  const [poseValidationReport, setPoseValidationReport] = useState<PoseShadowValidationReport | null>(null);\n",
+          );
+
+          replaceOnce(
+            "          setPoseShadowObservation(observation);\n",
+            "          setPoseShadowObservation(observation);\n          setPoseShadowLabelled(false);\n",
+          );
+
+          replaceOnce(
+            "      setPoseShadowObservation(null);\n      return;\n",
+            "      setPoseShadowObservation(null);\n      setPoseShadowLabelled(false);\n      setPoseValidationReport(null);\n      return;\n",
+          );
+
+          replaceOnce(
+            "    setPoseShadowObservation(null);\n    const next = await poseShadow.enable();\n",
+            "    setPoseShadowObservation(null);\n    setPoseShadowLabelled(false);\n    setPoseValidationReport(null);\n    const next = await poseShadow.enable();\n",
+          );
+
+          replaceOnce(
+            "  if (!permission) {\n",
+            "  const labelPoseShadowPrediction = async (correct: boolean) => {\n    if (!dog || !poseShadowObservation || poseShadowObservation.posture === 'unknown' || poseShadowObservation.postureConfidence === null || poseShadowLabelled) return;\n\n    const posture = poseShadowObservation.posture;\n    setPoseShadowLabelled(true);\n    try {\n      await recordPoseShadowValidationSample({\n        id: `pose-shadow-${dog.id}-${Date.now()}`,\n        dogId: dog.id,\n        lessonId: route.params.lessonId,\n        expectedPosture: posture,\n        predictedPosture: posture,\n        confidence: poseShadowObservation.postureConfidence,\n        ownerOutcome: correct ? 'success' : 'unsuccessful',\n        recordedAt: new Date().toISOString(),\n      });\n      setPoseValidationReport(await loadPoseShadowValidationReport(dog.id, posture));\n    } catch {\n      setPoseShadowLabelled(false);\n      setDiagnostics((current) => ({ ...current, lastResult: 'Could not save pose calibration label.' }));\n    }\n  };\n\n  if (!permission) {\n",
+          );
+
+          replaceOnce(
+            "            <Text style={styles.body}>ONNX: {poseShadowObservation.inferenceMs ?? 'n/a'} ms · total pipeline: {poseShadowObservation.totalMs} ms</Text>\n          </>\n",
+            "            <Text style={styles.body}>ONNX: {poseShadowObservation.inferenceMs ?? 'n/a'} ms · total pipeline: {poseShadowObservation.totalMs} ms</Text>\n            {poseShadowObservation.posture !== 'unknown' && poseShadowObservation.postureConfidence !== null ? (\n              <>\n                <Text style={styles.body}>Is that posture prediction correct? Each prediction can be labelled once for private calibration.</Text>\n                <AppButton title={poseShadowLabelled ? 'Prediction labelled' : 'Prediction correct'} onPress={() => void labelPoseShadowPrediction(true)} disabled={poseShadowLabelled} />\n                <AppButton title=\"Prediction wrong\" onPress={() => void labelPoseShadowPrediction(false)} disabled={poseShadowLabelled} />\n              </>\n            ) : null}\n            {poseValidationReport ? (\n              <>\n                <Text style={styles.body}>Calibration samples for {poseShadowObservation.posture}: {poseValidationReport.samples}/50 minimum</Text>\n                <Text style={styles.body}>Precision: {poseValidationReport.precision === null ? 'n/a' : `${(poseValidationReport.precision * 100).toFixed(1)}%`} · false positives: {poseValidationReport.falsePositiveRate === null ? 'n/a' : `${(poseValidationReport.falsePositiveRate * 100).toFixed(1)}%`}</Text>\n                <Text style={styles.body}>Auto-score certification: {poseValidationReport.certifiedForAutoScoring ? 'threshold passed' : 'not yet certified'}</Text>\n              </>\n            ) : null}\n          </>\n",
+          );
+
+          fs.writeFileSync(path, source);
+          NODE
+      - name: Commit pose calibration UI
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/screens/CameraCoachScreen.tsx
+          git commit -m "Add owner-labelled pose shadow calibration"
+          git pull --rebase origin feature/adaptive-training-port
+          git push origin HEAD:feature/adaptive-training-port
