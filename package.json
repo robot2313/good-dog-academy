@@ -8,7 +8,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "jest --runInBand",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "vision:model:fetch": "node scripts/fetch-quadruped-pose-model.mjs"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
