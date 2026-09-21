@@ -4,6 +4,7 @@ import { StorageTransactionManager } from '../../storage/StorageTransactionManag
 import { storageKeys } from '../../storage/storageKeys';
 import type { LessonCatalogue } from '../lessons/catalogue';
 import { DailyPlanRecommendationService } from './DailyPlanRecommendationService';
+import { createAdaptiveTrainingPersistenceService } from '../../services/AdaptiveTrainingPersistenceService';
 
 export type DailyPlanGenerationErrorCode =
   | 'OWNER_NOT_FOUND' | 'DOG_NOT_FOUND' | 'DOG_OWNERSHIP_MISMATCH'
@@ -24,8 +25,16 @@ export type GenerateDailyPlanRequest = {
   targetMinutes?: DailyPlanTargetMinutes;
 };
 
-const generationKeys = [storageKeys.owners, storageKeys.dogs, storageKeys.behaviourProfiles,
-  storageKeys.behaviourAssessments, storageKeys.lessonProgress, storageKeys.dailyPlans] as const;
+const generationKeys = [
+  storageKeys.owners,
+  storageKeys.dogs,
+  storageKeys.behaviourProfiles,
+  storageKeys.behaviourAssessments,
+  storageKeys.lessonProgress,
+  storageKeys.dailyPlans,
+  storageKeys.adaptiveTrainingMemory,
+  storageKeys.adaptiveSessionHistory,
+] as const;
 
 function localDateAt(date: Date, timezone: string): string {
   const parts = new Intl.DateTimeFormat('en-CA', {

@@ -9,6 +9,11 @@ import type {
 } from '../../domain/models';
 import type { LessonCatalogue } from '../lessons/catalogue';
 import { LessonEligibilityService } from '../lessons/eligibility';
+import type {
+  AdaptiveTrainingMemory,
+  SessionHistoryRecord,
+} from '../../domain/models/AdaptiveTrainingMemory';
+import { decideAdaptiveLessonSwitch } from '../../domain/training/AdaptiveLessonSwitch';
 
 export type DailyPlanRecommendationKind = 'new-learning' | 'reinforcement';
 
@@ -37,6 +42,8 @@ export type DailyPlanRecommendationRequest = {
   targetMinutes?: DailyPlanTargetMinutes;
   maximumLessons?: number;
   recentPlans?: readonly DailyPlan[];
+  adaptiveMemory?: AdaptiveTrainingMemory;
+  adaptiveHistory?: readonly SessionHistoryRecord[];
 };
 
 export type DailyPlanRecommendationResult = {
@@ -97,15 +104,63 @@ export class DailyPlanRecommendationService {
         || compareIds(a.lessonId, b.lessonId),
       );
 
+    const adaptiveCandidates = ranked.map((candidate) => {
+      const definition = this.catalogue.requireById(candidate.lessonId);
+
+      return {
+        lessonId: candidate.lessonId,
+        skillId: candidate.skill,
+        difficultyLevel: definition.difficultyLevel,
+      };
+    });
+
+    const applyAdaptiveDecision = (
+      candidate: DailyPlanRecommendation,
+    ): DailyPlanRecommendation => {
+      if (!request.adaptiveMemory || !request.adaptiveHistory) {
+        return candidate;
+      }
+
+      const definition = this.catalogue.requireById(candidate.lessonId);
+
+      const decision = decideAdaptiveLessonSwitch({
+        current: {
+          lessonId: candidate.lessonId,
+          skillId: candidate.skill,
+          difficultyLevel: definition.difficultyLevel,
+        },
+        candidates: adaptiveCandidates,
+        memory: request.adaptiveMemory,
+        history: [...request.adaptiveHistory],
+      });
+
+      if (decision.action !== 'switch') {
+        return candidate;
+      }
+
+      return (
+        ranked.find(
+          (recommendation) =>
+            recommendation.lessonId === decision.lessonId,
+        ) ?? candidate
+      );
+    };
+
     const selected: DailyPlanRecommendation[] = [];
     const selectedSkills = new Set<BehaviourSkill>();
     let totalEstimatedMinutes = 0;
 
-    for (const candidate of ranked) {
+    for (const rankedCandidate of ranked) {
       if (selected.length >= maximumLessons) break;
-      if (selectedSkills.has(candidate.skill)) continue;
 
-      const wouldExceedTarget = totalEstimatedMinutes + candidate.estimatedMinutes > targetMinutes;
+      const candidate = applyAdaptiveDecision(rankedCandidate);
+
+      if (selectedSkills.has(candidate.skill)) continue;
+      if (selected.some((item) => item.lessonId === candidate.lessonId)) continue;
+
+      const wouldExceedTarget =
+        totalEstimatedMinutes + candidate.estimatedMinutes > targetMinutes;
+
       if (wouldExceedTarget && selected.length > 0) continue;
 
       selected.push(candidate);
