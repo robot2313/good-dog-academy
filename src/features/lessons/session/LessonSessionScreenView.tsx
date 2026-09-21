@@ -79,6 +79,7 @@ export function LessonSessionScreenView({
 }: LessonSessionScreenViewProps): React.JSX.Element {
   const steps = lesson.steps.length > 0 ? lesson.steps : [lesson.goal];
   const [helpVisible, setHelpVisible] = useState(false);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const lessonPhoto = getLessonImageSource(lesson.id, lesson.skill);
   const support = lessonSupportContent(lesson);
 
@@ -175,108 +176,187 @@ export function LessonSessionScreenView({
   if (state.phase === 'training') {
     const timerExpired = state.remainingSeconds === 0;
     const canUndo = state.undoSnapshot !== null;
+
+    const safeStepIndex = Math.min(currentStepIndex, steps.length - 1);
+    const currentStep = steps[safeStepIndex];
+    const currentVisual = getLessonStepVisual(lesson.id, safeStepIndex);
+    const isFirstStep = safeStepIndex === 0;
+    const isLastStep = safeStepIndex === steps.length - 1;
+
+    const handlePreviousStep = (): void => {
+      if (isFirstStep) {
+        onCancel();
+        return;
+      }
+
+      setCurrentStepIndex((value) => Math.max(0, value - 1));
+    };
+
+    const handleNextStep = (): void => {
+      if (isLastStep) {
+        onFinish();
+        return;
+      }
+
+      setCurrentStepIndex((value) => Math.min(steps.length - 1, value + 1));
+    };
+
     return <LessonScaffold
-      scroll={false}
       footer={<LessonActionBar
-        back={{ label: 'Back', onPress: onCancel }}
-        forward={{ label: 'Complete Lesson', onPress: onFinish }}
+        back={{
+          label: isFirstStep ? 'Back' : 'Previous',
+          onPress: handlePreviousStep,
+        }}
+        forward={{
+          label: isLastStep ? 'Complete Lesson' : 'Next Step',
+          onPress: handleNextStep,
+        }}
       />}
     >
       <View style={styles.activeColumn}>
-        <LessonPhotoBanner
-          decorative
-          size="compact"
-          source={lessonPhoto}
-          accessibilityLabel={`${lesson.title} lesson photograph`}
-        />
-
         <View style={styles.activeTimerHeader} accessibilityLiveRegion="polite">
           <View>
             <Text style={styles.activeTimerLabel}>
-              {state.running ? 'SESSION RUNNING' : timerExpired ? 'TIME BOX COMPLETE' : 'SESSION PAUSED'}
+              {state.running
+                ? 'SESSION RUNNING'
+                : timerExpired
+                  ? 'TIME BOX COMPLETE'
+                  : 'SESSION PAUSED'}
             </Text>
-            <Text style={styles.activeTimerValue}>{formatSessionTime(state.remainingSeconds)}</Text>
+            <Text style={styles.activeTimerValue}>
+              {formatSessionTime(state.remainingSeconds)}
+            </Text>
           </View>
+
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={state.running ? 'Pause session timer' : 'Resume session timer'}
-            accessibilityState={{ disabled: state.resetSuggested || timerExpired }}
+            accessibilityLabel={
+              state.running ? 'Pause session timer' : 'Resume session timer'
+            }
+            accessibilityState={{
+              disabled: state.resetSuggested || timerExpired,
+            }}
             disabled={state.resetSuggested || timerExpired}
             onPress={state.running ? onPause : onResume}
-            style={({ pressed }) => [styles.activeTimerButton, (state.resetSuggested || timerExpired) && styles.disabled, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.activeTimerButton,
+              (state.resetSuggested || timerExpired) && styles.disabled,
+              pressed && styles.pressed,
+            ]}
           >
-            <Text style={styles.activeTimerButtonText}>{state.running ? 'Pause' : 'Resume'}</Text>
+            <Text style={styles.activeTimerButtonText}>
+              {state.running ? 'Pause' : 'Resume'}
+            </Text>
           </Pressable>
         </View>
 
         <View
           accessible
           accessibilityRole="summary"
-          accessibilityLabel={`All ${steps.length} training steps for ${lesson.title}`}
-          style={styles.activeSteps}
+          accessibilityLabel={`Step ${safeStepIndex + 1} of ${steps.length}`}
+          style={sessionLocal.singleStepCard}
         >
-          {steps.map((step, index) => {
-            const visual = getLessonStepVisual(lesson.id, index);
-            return (
-              <View
-                key={`${lesson.id}-active-step-${index}`}
-                style={[styles.activeStepRow, index === steps.length - 1 && styles.activeStepRowLast]}
-              >
-                <View style={styles.activeStepNumber}>
-                  <Text accessible={false} style={styles.activeStepNumberText}>{index + 1}</Text>
-                </View>
-                <View style={styles.activeStepBody}>
-                  <Text style={styles.activeStepText}>{stripStepNumber(step)}</Text>
-                  {visual?.setupImage ? (
-                    <Image
-                      accessible
-                      accessibilityRole="image"
-                      accessibilityLabel={visual.caption ?? `Step ${index + 1} setup photograph`}
-                      resizeMode="cover"
-                      source={visual.setupImage}
-                      style={sessionLocal.stepVisualImage}
-                    />
-                  ) : null}
-                </View>
-              </View>
-            );
-          })}
+          <View style={sessionLocal.stepProgressRow}>
+            <Text style={sessionLocal.stepProgressText}>
+              STEP {safeStepIndex + 1} OF {steps.length}
+            </Text>
+
+            <View style={sessionLocal.stepDots}>
+              {steps.map((_, index) => (
+                <View
+                  key={`${lesson.id}-step-dot-${index}`}
+                  style={[
+                    sessionLocal.stepDot,
+                    index === safeStepIndex && sessionLocal.stepDotActive,
+                  ]}
+                />
+              ))}
+            </View>
+          </View>
+
+          <Image
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel={
+              currentVisual?.caption ??
+              `${lesson.title}, step ${safeStepIndex + 1}`
+            }
+            resizeMode="contain"
+            source={currentVisual?.setupImage ?? lessonPhoto}
+            style={sessionLocal.singleStepImage}
+          />
+
+          <View style={sessionLocal.singleStepCopy}>
+            <View style={styles.activeStepNumber}>
+              <Text accessible={false} style={styles.activeStepNumberText}>
+                {safeStepIndex + 1}
+              </Text>
+            </View>
+
+            <Text style={sessionLocal.singleStepText}>
+              {stripStepNumber(currentStep)}
+            </Text>
+          </View>
         </View>
 
         {state.resetSuggested ? (
-          <View style={styles.activeResetHint} accessibilityLiveRegion="polite">
-            <Text style={styles.activeResetHintText}>Two tricky attempts in a row. Make the setup easier, then continue.</Text>
+          <View
+            style={styles.activeResetHint}
+            accessibilityLiveRegion="polite"
+          >
+            <Text style={styles.activeResetHintText}>
+              Two tricky attempts in a row. Make the setup easier, then continue.
+            </Text>
+
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="I made it easier, continue"
               onPress={onAcceptReset}
-              style={({ pressed }) => [styles.activeResetHintButton, pressed && styles.pressed]}
-            ><Text style={styles.activeResetHintButtonText}>Continue</Text></Pressable>
+              style={({ pressed }) => [
+                styles.activeResetHintButton,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={styles.activeResetHintButtonText}>Continue</Text>
+            </Pressable>
           </View>
         ) : null}
 
         <View style={styles.activeCounterRow}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Success. ${state.successfulRepetitions} recorded. Mark a successful repetition`}
+            accessibilityLabel={`Success. ${state.successfulRepetitions} recorded`}
             accessibilityState={{ disabled: state.resetSuggested }}
             disabled={state.resetSuggested}
             onPress={onRecordSuccess}
-            style={({ pressed }) => [styles.activeCounterSuccess, state.resetSuggested && styles.disabled, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.activeCounterSuccess,
+              state.resetSuggested && styles.disabled,
+              pressed && styles.pressed,
+            ]}
           >
             <Text style={styles.activeCounterLabelOnDark}>SUCCESS</Text>
-            <Text style={styles.activeCounterValueOnDark}>{state.successfulRepetitions}</Text>
+            <Text style={styles.activeCounterValueOnDark}>
+              {state.successfulRepetitions}
+            </Text>
           </Pressable>
+
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Try again. ${state.needsHelpRepetitions} recorded. Mark a repetition that needs help`}
+            accessibilityLabel={`Try again. ${state.needsHelpRepetitions} recorded`}
             accessibilityState={{ disabled: state.resetSuggested }}
             disabled={state.resetSuggested}
             onPress={onRecordChallenge}
-            style={({ pressed }) => [styles.activeCounterTryAgain, state.resetSuggested && styles.disabled, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.activeCounterTryAgain,
+              state.resetSuggested && styles.disabled,
+              pressed && styles.pressed,
+            ]}
           >
             <Text style={styles.activeCounterLabelLight}>TRY AGAIN</Text>
-            <Text style={styles.activeCounterValueLight}>{state.needsHelpRepetitions}</Text>
+            <Text style={styles.activeCounterValueLight}>
+              {state.needsHelpRepetitions}
+            </Text>
           </Pressable>
         </View>
 
@@ -289,46 +369,88 @@ export function LessonSessionScreenView({
             onPress={onUndo}
             style={styles.activeUndo}
           >
-            <Text style={[styles.activeUndoText, !canUndo && styles.activeUndoTextDisabled]}>Undo last</Text>
+            <Text
+              style={[
+                styles.activeUndoText,
+                !canUndo && styles.activeUndoTextDisabled,
+              ]}
+            >
+              Undo last
+            </Text>
           </Pressable>
+
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="This isn't working. Open help"
             onPress={() => setHelpVisible(true)}
             style={styles.activeUndo}
           >
-            <Text style={styles.activeUndoText}>This isn't working?</Text>
+            <Text style={styles.activeUndoText}>
+              This isn't working?
+            </Text>
           </Pressable>
         </View>
       </View>
 
-      <AppModal visible={helpVisible} title="This isn't working" onClose={() => setHelpVisible(false)} closeLabel="Close help">
+      <AppModal
+        visible={helpVisible}
+        title="This isn't working"
+        onClose={() => setHelpVisible(false)}
+        closeLabel="Close help"
+      >
         <View style={sessionLocal.helpBody}>
           {support.waysToMakeEasier.length > 0 ? (
             <View style={referenceScreenStyles.noticeInfo}>
-              <Text style={referenceScreenStyles.noticeInfoTitle}>Make it easier</Text>
+              <Text style={referenceScreenStyles.noticeInfoTitle}>
+                Make it easier
+              </Text>
               {support.waysToMakeEasier.map((way, index) => (
-                <Text key={`${lesson.id}-help-easier-${index}`} style={referenceScreenStyles.noticeInfoBody}>• {way}</Text>
+                <Text
+                  key={`${lesson.id}-help-easier-${index}`}
+                  style={referenceScreenStyles.noticeInfoBody}
+                >
+                  • {way}
+                </Text>
               ))}
             </View>
           ) : null}
+
           {support.thingsThatMightGoWrong.length > 0 ? (
             <View style={referenceScreenStyles.card}>
-              <Text style={referenceScreenStyles.blockTitle}>Common mistakes</Text>
+              <Text style={referenceScreenStyles.blockTitle}>
+                Common mistakes
+              </Text>
               {support.thingsThatMightGoWrong.slice(0, 3).map((problem, index) => (
-                <Text key={`${lesson.id}-help-problem-${index}`} style={referenceScreenStyles.blockIntro}>• {problem}</Text>
+                <Text
+                  key={`${lesson.id}-help-problem-${index}`}
+                  style={referenceScreenStyles.blockIntro}
+                >
+                  • {problem}
+                </Text>
               ))}
             </View>
           ) : null}
+
           {support.safetyNotes.length > 0 ? (
             <View style={referenceScreenStyles.noticeWarn}>
-              <Text style={referenceScreenStyles.noticeWarnTitle}>Safety first</Text>
+              <Text style={referenceScreenStyles.noticeWarnTitle}>
+                Safety first
+              </Text>
               {support.safetyNotes.map((note, index) => (
-                <Text key={`${lesson.id}-help-safety-${index}`} style={referenceScreenStyles.noticeWarnBody}>• {note}</Text>
+                <Text
+                  key={`${lesson.id}-help-safety-${index}`}
+                  style={referenceScreenStyles.noticeWarnBody}
+                >
+                  • {note}
+                </Text>
               ))}
             </View>
           ) : null}
-          <PrimaryButton title="Try again" onPress={() => setHelpVisible(false)} />
+
+          <PrimaryButton
+            title="Try again"
+            onPress={() => setHelpVisible(false)}
+          />
         </View>
       </AppModal>
     </LessonScaffold>;
@@ -438,6 +560,62 @@ const sessionLocal = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: referencePalette.line,
+  },
+  singleStepCard: {
+    gap: 12,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: referencePalette.line,
+    backgroundColor: referencePalette.surface,
+    padding: 12,
+  },
+  stepProgressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  stepProgressText: {
+    color: referencePalette.greenDark,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+  stepDots: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  stepDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: referencePalette.line,
+  },
+  stepDotActive: {
+    width: 18,
+    backgroundColor: referencePalette.green,
+  },
+  singleStepImage: {
+    width: '100%',
+    aspectRatio: 3 / 4,
+    maxHeight: 380,
+    borderRadius: 14,
+    backgroundColor: referencePalette.greenSoft,
+  },
+  singleStepCopy: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  singleStepText: {
+    flex: 1,
+    minWidth: 0,
+    color: referencePalette.navy,
+    fontSize: 18,
+    lineHeight: 25,
+    fontWeight: '700',
   },
   underCounterRow: { flexDirection: 'row', justifyContent: 'center', gap: 8 },
   completeColumn: { alignItems: 'center', gap: 10, paddingTop: 8 },

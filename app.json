@@ -13,7 +13,11 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.robot2313.gooddogacademy",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "Allow Good Dog Academy to turn optional spoken training responses into text.",
+        "NSMicrophoneUsageDescription": "Allow Good Dog Academy to hear optional spoken training responses."
+      }
     },
     "android": {
       "package": "com.robot2313.gooddogacademy",
@@ -21,7 +25,11 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/branding/app-mark.png",
         "backgroundColor": "#FBF8F0"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro"
@@ -61,9 +69,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "085b689a-4b6b-469b-adbc-7db326b1a3fe"
+        "projectId": "162b7f31-22b3-4a9b-854f-3f664512a454"
       }
     },
-    "owner": "gooddogacademys"
+    "owner": "ribot"
   }
 }

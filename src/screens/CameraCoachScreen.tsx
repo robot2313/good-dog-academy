@@ -2,6 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import Svg, { Circle, Line } from 'react-native-svg';
 
 import { AppButton } from '../components/AppButton';
 import { AppScreen } from '../components/AppScreen';
@@ -16,6 +17,7 @@ import { CameraCoachQaTelemetry, type CameraCoachQaEventType } from '../domain/c
 import { expectedCueResponseForLesson } from '../domain/camera/ExpectedCueResponse';
 import type { TrainingOutcome } from '../domain/models/TrainingSession';
 import type { PoseShadowGroundTruth, PoseShadowValidationReport } from '../domain/vision/PoseShadowValidation';
+import type { QuadrupedJointName } from '../domain/vision/QuadrupedPose';
 import { loadBundledLessonCatalogue } from '../features/lessons/catalogue';
 import { useOnboarding } from '../features/onboarding/OnboardingContext';
 import { persistCompletedLiveCoachSession } from '../services/AdaptiveTrainingPersistenceService';
@@ -40,6 +42,33 @@ type Diagnostics = {
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 type HandsFreeListenMode = 'confirmation' | 'next-rep' | 'paused';
+
+const DEBUG_POSE_BONES: Array<[QuadrupedJointName, QuadrupedJointName]> = [
+  ['left_eye', 'nose'],
+  ['right_eye', 'nose'],
+  ['nose', 'neck'],
+
+  ['neck', 'left_shoulder'],
+  ['neck', 'right_shoulder'],
+
+  ['left_shoulder', 'left_elbow'],
+  ['left_elbow', 'left_front_paw'],
+
+  ['right_shoulder', 'right_elbow'],
+  ['right_elbow', 'right_front_paw'],
+
+  ['left_shoulder', 'left_hip'],
+  ['right_shoulder', 'right_hip'],
+
+  ['left_hip', 'tail_root'],
+  ['right_hip', 'tail_root'],
+
+  ['left_hip', 'left_knee'],
+  ['left_knee', 'left_back_paw'],
+
+  ['right_hip', 'right_knee'],
+  ['right_knee', 'right_back_paw'],
+];
 
 export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Element {
   const { status } = useOnboarding();
@@ -134,7 +163,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
       try {
         const photo = await cameraRef.current.takePictureAsync({
           quality: 0.2,
-          skipProcessing: true,
+          skipProcessing: false,
           shutterSound: false,
         });
         if (!photo?.uri) return null;
@@ -589,6 +618,70 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         <View pointerEvents="none" style={styles.poseGuideBox}>
           <Text style={styles.poseGuideText}>KEEP DOG INSIDE THIS SQUARE</Text>
         </View>
+
+        {poseShadowObservation?.pose ? (
+          <Svg
+            pointerEvents="none"
+            style={StyleSheet.absoluteFill}
+            viewBox="0 0 1000 1000"
+            preserveAspectRatio="none"
+          >
+            {DEBUG_POSE_BONES.map(([from, to]) => {
+              const a = poseShadowObservation.pose?.keypoints[from];
+              const b = poseShadowObservation.pose?.keypoints[to];
+
+              if (!a || !b) return null;
+
+              return (
+                <Line
+                  key={`${from}-${to}`}
+                  x1={a.x * 1000}
+                  y1={a.y * 1000}
+                  x2={b.x * 1000}
+                  y2={b.y * 1000}
+                  stroke="#00E5FF"
+                  strokeWidth={5}
+                  opacity={Math.max(
+                    0.2,
+                    Math.min(a.confidence, b.confidence),
+                  )}
+                />
+              );
+            })}
+
+            {Object.entries(poseShadowObservation.pose.keypoints).map(
+              ([name, point]) => (
+                <Circle
+                  key={name}
+                  cx={point.x * 1000}
+                  cy={point.y * 1000}
+                  r={10}
+                  fill="#FFD54A"
+                  stroke="#000000"
+                  strokeWidth={3}
+                  opacity={Math.max(0.3, point.confidence)}
+                />
+              ),
+            )}
+          </Svg>
+        ) : null}
+
+        <View pointerEvents="none" style={styles.poseDebugOverlay}>
+          <Text style={styles.poseDebugText}>
+            VISION: {poseShadowStatus.state}
+          </Text>
+          <Text style={styles.poseDebugText}>
+            DOG: {poseShadowObservation?.detectionConfidence == null
+              ? 'n/a'
+              : poseShadowObservation.detectionConfidence.toFixed(2)}
+          </Text>
+          <Text style={styles.poseDebugText}>
+            POSTURE: {poseShadowObservation?.posture ?? 'waiting'}
+          </Text>
+          <Text style={styles.poseDebugReason}>
+            {poseShadowObservation?.postureReason ?? 'Waiting for pose analysis'}
+          </Text>
+        </View>
       </View>
 
       <View style={styles.card}>
@@ -616,6 +709,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
           <>
             <Text style={styles.body}>Pose presence: {poseShadowObservation.dogDetected ? 'detected' : 'not reliable'} · confidence {poseShadowObservation.detectionConfidence === null ? 'n/a' : poseShadowObservation.detectionConfidence.toFixed(2)}</Text>
             <Text style={styles.body}>AI posture: {poseShadowObservation.posture} · confidence {poseShadowObservation.postureConfidence === null ? 'n/a' : poseShadowObservation.postureConfidence.toFixed(2)}</Text>
+            <Text style={styles.body}>Posture reason: {poseShadowObservation.postureReason}</Text>
             <Text style={styles.body}>ONNX: {poseShadowObservation.inferenceMs ?? 'n/a'} ms · total pipeline: {poseShadowObservation.totalMs} ms</Text>
             {poseShadowObservation.posture !== 'unknown' && poseShadowObservation.postureConfidence !== null ? (
               <>
@@ -759,6 +853,27 @@ const styles = StyleSheet.create({
   preview: { flex: 1, minHeight: 360 },
   poseGuideBox: { position: 'absolute', alignSelf: 'center', top: '8%', width: '84%', aspectRatio: 1, borderWidth: 2, borderColor: '#FFFFFF', borderRadius: 18, alignItems: 'center', justifyContent: 'flex-start', paddingTop: 8 },
   poseGuideText: { fontSize: 10, lineHeight: 14, fontWeight: '900', letterSpacing: 0.8, color: '#FFFFFF', backgroundColor: 'rgba(11,37,69,0.72)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  poseDebugOverlay: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    bottom: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.72)',
+  },
+  poseDebugText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '800',
+  },
+  poseDebugReason: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    lineHeight: 16,
+  },
   card: { gap: 10, padding: 16, borderRadius: 18, backgroundColor: '#FFFFFF' },
   debriefCard: { gap: 8, padding: 16, borderRadius: 18, backgroundColor: '#EDF5E9', borderWidth: 1, borderColor: '#CFE2C8' },
   safetyCard: { gap: 8, padding: 16, borderRadius: 18, backgroundColor: '#F8E7E2', borderWidth: 1, borderColor: '#E2C3BB' },

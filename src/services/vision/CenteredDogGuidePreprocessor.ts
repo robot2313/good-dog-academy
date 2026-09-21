@@ -25,16 +25,41 @@ export interface QuadrupedFramePreprocessor {
   prepare(frame: CameraFrame): Promise<PreparedQuadrupedInput>;
 }
 
-function centeredSquareCrop(width: number, height: number): {
+const DOG_GUIDE_WIDTH_RATIO = 0.84;
+const DOG_GUIDE_TOP_RATIO = 0.08;
+
+function dogGuideSquareCrop(width: number, height: number): {
   originX: number;
   originY: number;
   width: number;
   height: number;
 } {
-  const side = Math.min(width, height);
+  // Match the visible Camera Coach guide:
+  // centred horizontally, 84% wide and starting about 8% from the top.
+  const side = Math.max(
+    1,
+    Math.floor(Math.min(width, height) * DOG_GUIDE_WIDTH_RATIO),
+  );
+
+  const originX = Math.max(
+    0,
+    Math.min(
+      width - side,
+      Math.floor((width - side) / 2),
+    ),
+  );
+
+  const originY = Math.max(
+    0,
+    Math.min(
+      height - side,
+      Math.floor(height * DOG_GUIDE_TOP_RATIO),
+    ),
+  );
+
   return {
-    originX: Math.max(0, Math.floor((width - side) / 2)),
-    originY: Math.max(0, Math.floor((height - side) / 2)),
+    originX,
+    originY,
     width: side,
     height: side,
   };
@@ -45,7 +70,7 @@ export class CenteredDogGuidePreprocessor implements QuadrupedFramePreprocessor 
     if (!frame.uri) throw new Error('Camera frame has no local image URI.');
     if (frame.width <= 0 || frame.height <= 0) throw new Error('Camera frame dimensions are invalid.');
 
-    const crop = centeredSquareCrop(frame.width, frame.height);
+    const crop = dogGuideSquareCrop(frame.width, frame.height);
     const result = await ImageManipulator.manipulateAsync(
       frame.uri,
       [

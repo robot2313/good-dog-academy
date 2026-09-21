@@ -1,4 +1,7 @@
-import { classifyQuadrupedPosture } from '../../domain/vision/QuadrupedPose';
+import {
+  classifyQuadrupedPosture,
+  type QuadrupedPose,
+} from '../../domain/vision/QuadrupedPose';
 import type { CameraFrame } from '../camera/CameraFrameSource';
 import type { QuadrupedPoseModel } from './QuadrupedPoseModel';
 
@@ -7,6 +10,8 @@ export type PoseShadowObservation = {
   detectionConfidence: number | null;
   posture: 'stand_like' | 'sit_like' | 'down_like' | 'unknown';
   postureConfidence: number | null;
+  postureReason: string;
+  pose: QuadrupedPose | null;
   inferenceMs: number | null;
   totalMs: number;
 };
@@ -100,13 +105,15 @@ export class PoseShadowController {
       const inference = await this.model.infer(frame);
       const classification = inference.pose
         ? classifyQuadrupedPosture(inference.pose)
-        : { posture: 'unknown' as const, confidence: null };
+        : { posture: 'unknown' as const, confidence: null, reason: 'no_pose' };
       const totalMs = Date.now() - startedAt;
       const observation: PoseShadowObservation = {
         dogDetected: inference.dogDetected,
         detectionConfidence: inference.detectionConfidence,
         posture: classification.posture,
         postureConfidence: classification.confidence,
+        postureReason: classification.reason,
+        pose: inference.pose,
         inferenceMs: inference.inferenceMs,
         totalMs,
       };

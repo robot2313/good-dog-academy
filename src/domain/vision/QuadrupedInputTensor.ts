@@ -22,9 +22,9 @@ export function rgbBytesToQuadrupedTensor(
   const output = new Float32Array(QUADRUPED_INPUT_CHANNELS * plane);
   for (let pixel = 0; pixel < plane; pixel += 1) {
     const source = pixel * channels;
-    output[pixel] = ((pixels[source] ?? 0) - QUADRUPED_INPUT_MEAN[0]) / QUADRUPED_INPUT_STD[0];
-    output[plane + pixel] = ((pixels[source + 1] ?? 0) - QUADRUPED_INPUT_MEAN[1]) / QUADRUPED_INPUT_STD[1];
-    output[plane * 2 + pixel] = ((pixels[source + 2] ?? 0) - QUADRUPED_INPUT_MEAN[2]) / QUADRUPED_INPUT_STD[2];
+    output[pixel] = pixels[source] ?? 0;
+    output[plane + pixel] = pixels[source + 1] ?? 0;
+    output[plane * 2 + pixel] = pixels[source + 2] ?? 0;
   }
   return output;
 }
