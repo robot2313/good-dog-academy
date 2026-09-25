@@ -14,6 +14,7 @@ export type CameraEvidenceUncertainty =
   | 'dog_not_detected'
   | 'low_detection_confidence'
   | 'unknown_posture'
+  | 'unstable_posture'
   | 'low_posture_confidence'
   | 'stress_signal'
   | 'expected_posture_not_configured'

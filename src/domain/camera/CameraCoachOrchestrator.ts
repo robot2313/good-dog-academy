@@ -15,6 +15,7 @@ import {
   type CameraRepObservation,
   DEFAULT_CAMERA_EVIDENCE_POLICY,
 } from './cameraEvidence';
+import { PostureBuffer } from './PostureBuffer';
 
 export type CameraCoachPendingConfirmation = {
   vision: DogVisionResult;
@@ -60,6 +61,7 @@ export class CameraCoachOrchestrator {
   private readonly minFrameIntervalMs: number;
   private readonly evidencePolicy: CameraEvidencePolicy;
   private readonly makeRepId: (repNumber: number) => string;
+  private readonly postureBuffer: PostureBuffer;
   private lastAnalysedFrameAtMs: number | null = null;
   private inFlight = false;
   private pending: CameraCoachPendingConfirmation | null = null;
@@ -73,6 +75,9 @@ export class CameraCoachOrchestrator {
     this.visionEngine = visionEngine;
     this.minFrameIntervalMs = Math.max(0, options.minFrameIntervalMs ?? 500);
     this.evidencePolicy = options.evidencePolicy ?? DEFAULT_CAMERA_EVIDENCE_POLICY;
+    this.postureBuffer = new PostureBuffer({
+      minConfidence: this.evidencePolicy.minPostureConfidence,
+    });
     this.makeRepId = options.makeRepId ?? ((repNumber) => `${session.id}-rep-${repNumber}`);
   }
 
@@ -86,6 +91,7 @@ export class CameraCoachOrchestrator {
 
   stopByOwner(): LiveCoachSession {
     this.pending = null;
+    this.postureBuffer.reset();
     this.session = stopLiveCoachSession(this.session);
     return this.session;
   }
@@ -96,6 +102,7 @@ export class CameraCoachOrchestrator {
 
   async dispose(): Promise<void> {
     this.pending = null;
+    this.postureBuffer.reset();
     await this.visionEngine.dispose();
   }
 
@@ -125,10 +132,63 @@ export class CameraCoachOrchestrator {
       const vision = await this.visionEngine.detect(frame);
       if (frameMs !== null) this.lastAnalysedFrameAtMs = frameMs;
 
-      const decision = decideCameraRepEvidence(vision, observation, this.evidencePolicy);
+      const rawDecision = decideCameraRepEvidence(
+        vision,
+        observation,
+        this.evidencePolicy,
+      );
+
+      if (
+        rawDecision.kind === 'ask_owner' &&
+        rawDecision.reason !== 'posture_mismatch'
+      ) {
+        this.pending = {
+          vision,
+          observation,
+          reason: rawDecision.reason,
+        };
+        return {
+          kind: 'owner_confirmation',
+          session: this.session,
+          pending: this.pending,
+        };
+      }
+
+      const temporal = this.postureBuffer.push({
+        posture: vision.posture,
+        confidence: vision.postureConfidence,
+      });
+
+      if (!temporal.stablePosture) {
+        this.pending = {
+          vision: {
+            ...vision,
+            posture: 'unknown',
+            postureConfidence: null,
+          },
+          observation,
+          reason: 'unstable_posture',
+        };
+        return {
+          kind: 'owner_confirmation',
+          session: this.session,
+          pending: this.pending,
+        };
+      }
+
+      const stableVision: DogVisionResult = {
+        ...vision,
+        posture: temporal.stablePosture,
+      };
+
+      const decision = decideCameraRepEvidence(
+        stableVision,
+        observation,
+        this.evidencePolicy,
+      );
       if (decision.kind === 'ask_owner') {
         const pending: CameraCoachPendingConfirmation = {
-          vision,
+          vision: stableVision,
           observation,
           reason: decision.reason,
         };
