@@ -90,6 +90,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
     [route.params.lessonId],
   );
   const [cameraReady, setCameraReady] = useState(false);
+  const [cameraZoom, setCameraZoom] = useState(0);
   const [running, setRunning] = useState(false);
   const [paused, setPaused] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
@@ -613,10 +614,26 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
           style={styles.preview}
           facing="back"
           mode="picture"
+          zoom={cameraZoom}
           onCameraReady={() => setCameraReady(true)}
         />
         <View pointerEvents="none" style={styles.poseGuideBox}>
           <Text style={styles.poseGuideText}>KEEP DOG INSIDE THIS SQUARE</Text>
+        </View>
+
+        <View style={styles.zoomControls}>
+          {[0, 0.5, 1].map((level, index) => {
+            const selected = cameraZoom === level;
+
+            return (
+              <AppButton
+                key={level}
+                title={`${index + 1}×`}
+                onPress={() => setCameraZoom(level)}
+                disabled={selected}
+              />
+            );
+          })}
         </View>
 
         {poseShadowObservation?.pose ? (
@@ -853,6 +870,25 @@ const styles = StyleSheet.create({
   preview: { flex: 1, minHeight: 360 },
   poseGuideBox: { position: 'absolute', alignSelf: 'center', top: '8%', width: '84%', aspectRatio: 1, borderWidth: 2, borderColor: '#FFFFFF', borderRadius: 18, alignItems: 'center', justifyContent: 'flex-start', paddingTop: 8 },
   poseGuideText: { fontSize: 10, lineHeight: 14, fontWeight: '900', letterSpacing: 0.8, color: '#FFFFFF', backgroundColor: 'rgba(11,37,69,0.72)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  zoomControls: {
+    position: 'absolute',
+    right: 12,
+    bottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  zoomLabel: {
+    minWidth: 48,
+    textAlign: 'center',
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '900',
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
   poseDebugOverlay: {
     position: 'absolute',
     left: 12,
