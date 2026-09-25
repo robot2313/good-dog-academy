@@ -1,7 +1,7 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { PanResponder, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Line } from 'react-native-svg';
 
 import { AppButton } from '../components/AppButton';
@@ -91,6 +91,56 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
   );
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraZoom, setCameraZoom] = useState(0);
+  const pinchStartDistanceRef = useRef<number | null>(null);
+  const pinchStartZoomRef = useRef(0);
+
+  const cameraPanResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: (event) => event.nativeEvent.touches.length >= 2,
+        onMoveShouldSetPanResponder: (event) => event.nativeEvent.touches.length >= 2,
+        onPanResponderGrant: (event) => {
+          const touches = event.nativeEvent.touches;
+          if (touches.length < 2) return;
+
+          const dx = touches[0].pageX - touches[1].pageX;
+          const dy = touches[0].pageY - touches[1].pageY;
+
+          pinchStartDistanceRef.current = Math.sqrt(dx * dx + dy * dy);
+          pinchStartZoomRef.current = cameraZoom;
+        },
+        onPanResponderMove: (event) => {
+          const touches = event.nativeEvent.touches;
+          const startDistance = pinchStartDistanceRef.current;
+
+          if (touches.length < 2 || startDistance === null) return;
+
+          const dx = touches[0].pageX - touches[1].pageX;
+          const dy = touches[0].pageY - touches[1].pageY;
+          const currentDistance = Math.sqrt(dx * dx + dy * dy);
+
+          const scale = currentDistance / Math.max(startDistance, 1);
+
+          setCameraZoom(
+            Math.max(
+              0,
+              Math.min(
+                1,
+                pinchStartZoomRef.current + (scale - 1) * 0.7,
+              ),
+            ),
+          );
+        },
+        onPanResponderRelease: () => {
+          pinchStartDistanceRef.current = null;
+        },
+        onPanResponderTerminate: () => {
+          pinchStartDistanceRef.current = null;
+        },
+      }),
+    [cameraZoom],
+  );
+
   const [running, setRunning] = useState(false);
   const [paused, setPaused] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
@@ -608,7 +658,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
       <Text style={styles.title}>Camera Coach</Text>
       <Text style={styles.body}>{dog?.name ?? 'Your dog'} · {route.params.lessonId}</Text>
 
-      <View style={styles.previewShell}>
+      <View style={styles.previewShell} {...cameraPanResponder.panHandlers}>
         <CameraView
           ref={cameraRef}
           style={styles.preview}
