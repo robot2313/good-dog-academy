@@ -33,6 +33,42 @@ import type { RootStackParamList } from '../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CameraCoach'>;
 
+type CameraFramingStatus =
+  | 'waiting'
+  | 'move-closer'
+  | 'move-back'
+  | 'move-left'
+  | 'move-right'
+  | 'good';
+
+function getCameraFramingStatus(
+  pose: PoseShadowObservation['pose'],
+): CameraFramingStatus {
+  if (!pose) return 'waiting';
+
+  const points = Object.values(pose.keypoints).filter(
+    (point) => point.confidence >= 0.55,
+  );
+
+  if (points.length < 6) return 'waiting';
+
+  const minX = Math.min(...points.map((point) => point.x));
+  const maxX = Math.max(...points.map((point) => point.x));
+  const minY = Math.min(...points.map((point) => point.y));
+  const maxY = Math.max(...points.map((point) => point.y));
+
+  const width = maxX - minX;
+  const height = maxY - minY;
+  const centerX = (minX + maxX) / 2;
+
+  if (width < 0.28 || height < 0.28) return 'move-closer';
+  if (width > 0.82 || height > 0.82) return 'move-back';
+  if (centerX < 0.35) return 'move-right';
+  if (centerX > 0.65) return 'move-left';
+
+  return 'good';
+}
+
 type Diagnostics = {
   framesCaptured: number;
   framesAnalysed: number;
@@ -158,6 +194,11 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
   const [poseShadowObservation, setPoseShadowObservation] = useState<PoseShadowObservation | null>(null);
   const [poseShadowLabelled, setPoseShadowLabelled] = useState(false);
   const [poseValidationReport, setPoseValidationReport] = useState<PoseShadowValidationReport | null>(null);
+  const cameraFramingStatus = useMemo(
+    () => getCameraFramingStatus(poseShadowObservation?.pose ?? null),
+    [poseShadowObservation?.pose],
+  );
+
   const [diagnostics, setDiagnostics] = useState<Diagnostics>({
     framesCaptured: 0,
     framesAnalysed: 0,
@@ -670,6 +711,21 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         <View pointerEvents="none" style={styles.poseGuideBox}>
           <Text style={styles.poseGuideText}>KEEP DOG INSIDE THIS SQUARE</Text>
         </View>
+        <View pointerEvents="none" style={styles.framingStatus}>
+          <Text style={styles.framingStatusText}>
+            {cameraFramingStatus === 'move-closer'
+              ? 'Move closer'
+              : cameraFramingStatus === 'move-back'
+                ? 'Move back'
+                : cameraFramingStatus === 'move-left'
+                  ? 'Move left'
+                  : cameraFramingStatus === 'move-right'
+                    ? 'Move right'
+                    : cameraFramingStatus === 'good'
+                      ? 'Dog is in position'
+                      : 'Waiting for dog'}
+          </Text>
+        </View>
 
         <View style={styles.zoomControls}>
           {[0, 0.5, 1].map((level, index) => {
@@ -920,6 +976,23 @@ const styles = StyleSheet.create({
   preview: { flex: 1, minHeight: 360 },
   poseGuideBox: { position: 'absolute', alignSelf: 'center', top: '8%', width: '84%', aspectRatio: 1, borderWidth: 2, borderColor: '#FFFFFF', borderRadius: 18, alignItems: 'center', justifyContent: 'flex-start', paddingTop: 8 },
   poseGuideText: { fontSize: 10, lineHeight: 14, fontWeight: '900', letterSpacing: 0.8, color: '#FFFFFF', backgroundColor: 'rgba(11,37,69,0.72)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  framingStatus: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 64,
+    alignItems: 'center',
+  },
+  framingStatusText: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    backgroundColor: 'rgba(11,37,69,0.82)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
   zoomControls: {
     position: 'absolute',
     right: 12,
