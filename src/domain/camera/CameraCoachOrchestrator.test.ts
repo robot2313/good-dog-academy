@@ -69,17 +69,76 @@ describe('CameraCoachOrchestrator', () => {
       { makeRepId: (repNumber) => `rep-${repNumber}` },
     );
 
-    const result = await orchestrator.processFrame(
+    const first = await orchestrator.processFrame(
       frame('frame-1', '2026-09-12T10:00:01.000Z'),
       observation(),
     );
+    const second = await orchestrator.processFrame(
+      frame('frame-2', '2026-09-12T10:00:02.000Z'),
+      observation({ observedAt: '2026-09-12T10:00:02.000Z', responseAt: '2026-09-12T10:00:02.000Z' }),
+    );
+    const result = await orchestrator.processFrame(
+      frame('frame-3', '2026-09-12T10:00:03.000Z'),
+      observation({ observedAt: '2026-09-12T10:00:03.000Z', responseAt: '2026-09-12T10:00:03.000Z' }),
+    );
 
+    expect(first.kind).toBe('waiting_for_temporal');
+    expect(second.kind).toBe('waiting_for_temporal');
     expect(result.kind).toBe('rep_recorded');
     if (result.kind !== 'rep_recorded') return;
     expect(result.rep.id).toBe('rep-1');
     expect(result.rep.evidence.source).toBe('camera_auto');
     expect(result.session.reps).toHaveLength(1);
     expect(result.decision.action).toBe('hold');
+  });
+
+
+  it('does not count the same stable posture twice without a real transition', async () => {
+    const engine = new FakeVisionEngine(vision());
+    const orchestrator = new CameraCoachOrchestrator(
+      createLiveCoachSession({ id: 'session-duplicate', dogId: 'dog-1', lessonId: 'sit', targetReps: 5 }),
+      engine,
+      { minFrameIntervalMs: 0 },
+    );
+
+    const times = ['2026-09-12T10:00:01.000Z', '2026-09-12T10:00:02.000Z', '2026-09-12T10:00:03.000Z'];
+    for (const [index, time] of times.entries()) {
+      const result = await orchestrator.processFrame(
+        frame(`sit-${index}`, time),
+        observation({ observedAt: time, responseAt: time }),
+      );
+      if (index < 2) expect(result.kind).toBe('waiting_for_temporal');
+    }
+
+    const duplicate = await orchestrator.processFrame(
+      frame('sit-4', '2026-09-12T10:00:04.000Z'),
+      observation({ observedAt: '2026-09-12T10:00:04.000Z', responseAt: '2026-09-12T10:00:04.000Z' }),
+    );
+
+    expect(duplicate.kind).toBe('waiting_for_transition');
+    expect(orchestrator.getSession().reps).toHaveLength(1);
+  });
+
+  it('never records a rep when the vision engine says no dog is present', async () => {
+    const engine = new FakeVisionEngine(vision({
+      dogDetected: false,
+      detectionConfidence: 0.1,
+      posture: 'unknown',
+      postureConfidence: null,
+    }));
+    const orchestrator = new CameraCoachOrchestrator(
+      createLiveCoachSession({ id: 'session-no-dog', dogId: 'dog-1', lessonId: 'sit' }),
+      engine,
+    );
+
+    const result = await orchestrator.processFrame(
+      frame('no-dog', '2026-09-12T10:00:01.000Z'),
+      observation(),
+    );
+
+    expect(result.kind).toBe('owner_confirmation');
+    expect(orchestrator.getSession().reps).toHaveLength(0);
+    expect(orchestrator.getPendingConfirmation()?.reason).toBe('dog_not_detected');
   });
 
   it('throttles frames inside the configured analysis interval', async () => {
