@@ -14,9 +14,9 @@ export type DogVisionResult = {
   analysedAt: string;
   dogDetected: boolean;
   detectionConfidence: number | null;
-  dogBoundingBox: NormalizedDogBox | null;
-  detectionSource: DogDetectionSource | null;
-  trackingConfidence: number | null;
+  dogBoundingBox?: NormalizedDogBox | null;
+  detectionSource?: DogDetectionSource | null;
+  trackingConfidence?: number | null;
   trackingState?: DogTrackingState | null;
   posture: DogPostureEvidence;
   postureConfidence: number | null;
