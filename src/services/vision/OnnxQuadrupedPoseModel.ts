@@ -94,12 +94,12 @@ export class OnnxQuadrupedPoseModel implements QuadrupedPoseModel {
     }
   }
 
-  async infer(frame: CameraFrame): Promise<QuadrupedPoseInference> {
+  async infer(frame: CameraFrame, dogBoundingBox: NormalizedDogBox | null = null): Promise<QuadrupedPoseInference> {
     await this.warmup();
     const session = this.session;
     if (!session) throw new Error('Quadruped pose model session is unavailable.');
 
-    const prepared = await this.preprocessor.prepare(frame);
+    const prepared = await this.preprocessor.prepare(frame, dogBoundingBox);
     const inputName = session.inputNames[0];
     const outputName = session.outputNames[0];
     if (!inputName || !outputName) throw new Error('Quadruped pose model input/output metadata is incomplete.');
