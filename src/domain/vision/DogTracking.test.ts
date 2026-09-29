@@ -23,7 +23,7 @@ describe('DogTracker', () => {
     tracker.update(detection(0.30, 0.30), 0);
     const miss = tracker.update(null, 500);
 
-    expect(miss.state).toBe('tracking');
+    expect(miss.state).toBe('temporarily_lost');
     expect(miss.box?.left).toBeCloseTo(0.30);
     expect(miss.trackingConfidence).toBeGreaterThan(0);
   });
@@ -43,7 +43,19 @@ describe('DogTracker', () => {
     tracker.update(null, 700);
     const reacquired = tracker.update(detection(0.34, 0.32), 800);
 
-    expect(reacquired.state).toBe('acquired');
+    expect(reacquired.state).toBe('reacquiring');
     expect(reacquired.box?.left).toBeCloseTo(0.34);
   });
 });
+
+  it('selects the detection that overlaps the current target when multiple dogs are present', () => {
+    const tracker = new DogTracker();
+    tracker.update(detection(0.10, 0.20), 0);
+
+    const otherDog = detection(0.65, 0.20);
+    const matchingDog = detection(0.14, 0.22);
+    const result = tracker.update([otherDog, matchingDog], 100);
+
+    expect(result.state).toBe('tracking');
+    expect(result.box?.left).toBeLessThan(0.30);
+  });
