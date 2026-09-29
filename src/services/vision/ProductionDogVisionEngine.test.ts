@@ -1,4 +1,5 @@
 import type { CameraFrame } from '../camera/CameraFrameSource';
+import type { DogDetector } from './DogDetector';
 import type { QuadrupedPoseModel } from './QuadrupedPoseModel';
 import { ProductionDogVisionEngine } from './ProductionDogVisionEngine';
 
@@ -16,6 +17,7 @@ const poseModel = (): QuadrupedPoseModel => ({
   infer: jest.fn().mockResolvedValue({
     dogDetected: true,
     detectionConfidence: 0.96,
+    dogBoundingBox: null,
     pose: {
       keypoints: {
         left_eye: { x: 0.35, y: 0.2, confidence: 0.95 },
@@ -42,22 +44,44 @@ const poseModel = (): QuadrupedPoseModel => ({
   dispose: jest.fn().mockResolvedValue(undefined),
 });
 
+const detector = (): DogDetector => ({
+  warmup: jest.fn().mockResolvedValue(undefined),
+  detect: jest.fn().mockResolvedValue({
+    detections: [{
+      box: { left: 0.25, top: 0.12, width: 0.5, height: 0.7 },
+      confidence: 0.96,
+      source: 'dedicated_detector',
+    }],
+    inferenceMs: 18,
+    model: 'test-yolo26',
+  }),
+  dispose: jest.fn().mockResolvedValue(undefined),
+});
+
 describe('ProductionDogVisionEngine', () => {
-  it('uses the same pose model pipeline as live Camera Coach and exposes posture evidence', async () => {
+  it('uses the dedicated detector for presence and the existing pose model for posture', async () => {
     const model = poseModel();
-    const engine = new ProductionDogVisionEngine(async () => model);
+    const dogDetector = detector();
+    const engine = new ProductionDogVisionEngine(
+      async () => model,
+      async () => dogDetector,
+    );
 
     await engine.warmup();
     const result = await engine.detect(frame);
 
     expect(result.dogDetected).toBe(true);
     expect(result.detectionConfidence).toBe(0.96);
+    expect(result.detectionSource).toBe('dedicated_detector');
     expect(result.posture).toBe('stand_like');
     expect(result.postureConfidence).not.toBeNull();
     expect(model.warmup).toHaveBeenCalledTimes(1);
     expect(model.infer).toHaveBeenCalledTimes(1);
+    expect(dogDetector.warmup).toHaveBeenCalledTimes(1);
+    expect(dogDetector.detect).toHaveBeenCalledTimes(1);
 
     await engine.dispose();
     expect(model.dispose).toHaveBeenCalledTimes(1);
+    expect(dogDetector.dispose).toHaveBeenCalledTimes(1);
   });
 });
