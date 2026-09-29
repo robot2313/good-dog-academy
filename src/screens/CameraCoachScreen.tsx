@@ -209,7 +209,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
   const [poseShadowLabelled, setPoseShadowLabelled] = useState(false);
   const [poseValidationReport, setPoseValidationReport] = useState<PoseShadowValidationReport | null>(null);
   const smartFraming = useMemo(
-    () => analyseSmartFraming(latestVision?.dogBoundingBox ?? null, latestVision?.trackingConfidence ?? 0),
+    () => analyseSmartFraming(latestVision?.dogBoundingBox ?? null, latestVision?.trackingConfidence ?? 0, latestVision?.trackingState ?? null),
     [latestVision?.dogBoundingBox, latestVision?.trackingConfidence],
   );
   const cameraFramingStatus = smartFraming.status;
