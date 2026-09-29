@@ -12,6 +12,6 @@ export type QuadrupedPoseInference = {
 
 export interface QuadrupedPoseModel {
   warmup(): Promise<void>;
-  infer(frame: CameraFrame): Promise<QuadrupedPoseInference>;
+  infer(frame: CameraFrame, dogBoundingBox?: NormalizedDogBox | null): Promise<QuadrupedPoseInference>;
   dispose(): Promise<void>;
 }
