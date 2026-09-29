@@ -1,4 +1,4 @@
-import type { NormalizedDogBox } from './DogTracking';
+import type { DogTrackingState, NormalizedDogBox } from './DogTracking';
 
 export type SmartFramingStatus =
   | 'waiting'
@@ -22,8 +22,9 @@ const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
 export function analyseSmartFraming(
   box: NormalizedDogBox | null,
   trackingConfidence: number,
+  trackingState: DogTrackingState | null = null,
 ): SmartFramingResult {
-  if (!box || trackingConfidence < 0.35) {
+  if (!box || trackingConfidence < 0.35 || trackingState === 'temporarily_lost' || trackingState === 'reacquiring') {
     return {
       status: 'dog-not-in-view',
       instruction: 'Keep your dog in view.',
