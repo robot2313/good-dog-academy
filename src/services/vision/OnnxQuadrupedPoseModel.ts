@@ -125,8 +125,6 @@ export class OnnxQuadrupedPoseModel implements QuadrupedPoseModel {
       dogDetected: detection.detected,
       detectionConfidence: detection.confidence,
       dogBoundingBox: detection.box,
-      detectionSource: 'pose_heuristic',
-      trackingConfidence: null,
       pose,
       inferenceMs,
     };
