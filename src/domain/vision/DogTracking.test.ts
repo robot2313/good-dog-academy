@@ -46,8 +46,6 @@ describe('DogTracker', () => {
     expect(reacquired.state).toBe('reacquiring');
     expect(reacquired.box?.left).toBeCloseTo(0.34);
   });
-});
-
   it('selects the detection that overlaps the current target when multiple dogs are present', () => {
     const tracker = new DogTracker();
     tracker.update(detection(0.10, 0.20), 0);
@@ -59,3 +57,5 @@ describe('DogTracker', () => {
     expect(result.state).toBe('tracking');
     expect(result.box?.left).toBeLessThan(0.30);
   });
+
+});
