@@ -29,6 +29,7 @@ export type CameraCoachFrameResult =
   | { kind: 'busy'; session: LiveCoachSession }
   | { kind: 'waiting_for_temporal'; session: LiveCoachSession }
   | { kind: 'waiting_for_transition'; session: LiveCoachSession }
+  | { kind: 'dog_not_in_view'; session: LiveCoachSession }
   | { kind: 'session_complete'; session: LiveCoachSession }
   | {
       kind: 'owner_confirmation';
@@ -150,6 +151,19 @@ export class CameraCoachOrchestrator {
       const vision = await this.visionEngine.detect(frame);
       this.lastVision = vision;
       if (frameMs !== null) this.lastAnalysedFrameAtMs = frameMs;
+
+      if (!vision.dogDetected) {
+        this.pending = null;
+        return { kind: 'dog_not_in_view', session: this.session };
+      }
+
+      // Camera Coach continuously observes vision while idle so the dog guide
+      // can acquire and track the dog before the owner starts a rep. It does
+      // not score anything unless a cue is active.
+      if (!observation.cueAt) {
+        this.postureBuffer.push({ posture: vision.posture, confidence: vision.postureConfidence });
+        return { kind: 'waiting_for_temporal', session: this.session };
+      }
 
       const rawDecision = decideCameraRepEvidence(
         vision,
