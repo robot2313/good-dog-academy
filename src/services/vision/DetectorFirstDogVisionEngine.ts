@@ -45,7 +45,7 @@ export class DetectorFirstDogVisionEngine implements DogVisionEngine {
     if (
       !tracking.box ||
       tracking.state === 'searching' ||
-      tracking.state === 'lost'
+      tracking.state !== 'acquired' && tracking.state !== 'tracking'
     ) {
       return {
         ...common,
