@@ -5,7 +5,7 @@ import type { NormalizedDogBox } from '../../domain/vision/DogTracking';
 export type QuadrupedPoseInference = {
   dogDetected: boolean;
   detectionConfidence: number | null;
-  dogBoundingBox: NormalizedDogBox | null;
+  dogBoundingBox?: NormalizedDogBox | null;
   pose: QuadrupedPose | null;
   inferenceMs: number | null;
 };
