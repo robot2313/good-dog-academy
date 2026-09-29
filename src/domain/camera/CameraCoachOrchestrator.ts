@@ -16,6 +16,7 @@ import {
   DEFAULT_CAMERA_EVIDENCE_POLICY,
 } from './cameraEvidence';
 import { PostureBuffer } from './PostureBuffer';
+import { TemporalRepGate } from './TemporalRepGate';
 
 export type CameraCoachPendingConfirmation = {
   vision: DogVisionResult;
@@ -26,6 +27,7 @@ export type CameraCoachPendingConfirmation = {
 export type CameraCoachFrameResult =
   | { kind: 'throttled'; session: LiveCoachSession }
   | { kind: 'busy'; session: LiveCoachSession }
+  | { kind: 'waiting_for_transition'; session: LiveCoachSession }
   | { kind: 'session_complete'; session: LiveCoachSession }
   | {
       kind: 'owner_confirmation';
@@ -62,6 +64,7 @@ export class CameraCoachOrchestrator {
   private readonly evidencePolicy: CameraEvidencePolicy;
   private readonly makeRepId: (repNumber: number) => string;
   private readonly postureBuffer: PostureBuffer;
+  private readonly repGate: TemporalRepGate;
   private lastAnalysedFrameAtMs: number | null = null;
   private inFlight = false;
   private pending: CameraCoachPendingConfirmation | null = null;
@@ -78,6 +81,7 @@ export class CameraCoachOrchestrator {
     this.postureBuffer = new PostureBuffer({
       minConfidence: this.evidencePolicy.minPostureConfidence,
     });
+    this.repGate = new TemporalRepGate();
     this.makeRepId = options.makeRepId ?? ((repNumber) => `${session.id}-rep-${repNumber}`);
   }
 
@@ -92,6 +96,7 @@ export class CameraCoachOrchestrator {
   stopByOwner(): LiveCoachSession {
     this.pending = null;
     this.postureBuffer.reset();
+    this.repGate.reset();
     this.session = stopLiveCoachSession(this.session);
     return this.session;
   }
@@ -103,6 +108,7 @@ export class CameraCoachOrchestrator {
   async dispose(): Promise<void> {
     this.pending = null;
     this.postureBuffer.reset();
+    this.repGate.reset();
     await this.visionEngine.dispose();
   }
 
@@ -129,6 +135,10 @@ export class CameraCoachOrchestrator {
 
     this.inFlight = true;
     try {
+      if (observation.expectedPosture && observation.expectedPosture !== 'unknown' && observation.cueAt) {
+        this.repGate.beginCue(observation.cueAt, observation.expectedPosture);
+      }
+
       const vision = await this.visionEngine.detect(frame);
       if (frameMs !== null) this.lastAnalysedFrameAtMs = frameMs;
 
@@ -180,6 +190,13 @@ export class CameraCoachOrchestrator {
         ...vision,
         posture: temporal.stablePosture,
       };
+
+      if (observation.expectedPosture && observation.expectedPosture !== 'unknown') {
+        const gate = this.repGate.observe(temporal.stablePosture, observation.expectedPosture);
+        if (!gate.readyToScore && gate.waitingForTransition) {
+          return { kind: 'waiting_for_transition', session: this.session };
+        }
+      }
 
       const decision = decideCameraRepEvidence(
         stableVision,
