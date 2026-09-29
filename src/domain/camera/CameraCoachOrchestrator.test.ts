@@ -52,6 +52,9 @@ function vision(overrides: Partial<DogVisionResult> = {}): DogVisionResult {
     analysedAt: '2026-09-12T10:00:01.000Z',
     dogDetected: true,
     detectionConfidence: 0.94,
+    dogBoundingBox: { left: 0.25, top: 0.2, width: 0.45, height: 0.45 },
+    detectionSource: 'pose_heuristic',
+    trackingConfidence: 0.9,
     posture: 'sit_like',
     postureConfidence: 0.91,
     stressSignal: 'none',
@@ -123,6 +126,9 @@ describe('CameraCoachOrchestrator', () => {
     const engine = new FakeVisionEngine(vision({
       dogDetected: false,
       detectionConfidence: 0.1,
+      dogBoundingBox: null,
+      detectionSource: null,
+      trackingConfidence: 0,
       posture: 'unknown',
       postureConfidence: null,
     }));
@@ -136,9 +142,9 @@ describe('CameraCoachOrchestrator', () => {
       observation(),
     );
 
-    expect(result.kind).toBe('owner_confirmation');
+    expect(result.kind).toBe('dog_not_in_view');
     expect(orchestrator.getSession().reps).toHaveLength(0);
-    expect(orchestrator.getPendingConfirmation()?.reason).toBe('dog_not_detected');
+    expect(orchestrator.getPendingConfirmation()).toBeNull();
   });
 
   it('throttles frames inside the configured analysis interval', async () => {
