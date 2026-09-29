@@ -27,6 +27,7 @@ export type CameraCoachPendingConfirmation = {
 export type CameraCoachFrameResult =
   | { kind: 'throttled'; session: LiveCoachSession }
   | { kind: 'busy'; session: LiveCoachSession }
+  | { kind: 'waiting_for_temporal'; session: LiveCoachSession }
   | { kind: 'waiting_for_transition'; session: LiveCoachSession }
   | { kind: 'session_complete'; session: LiveCoachSession }
   | {
@@ -178,20 +179,7 @@ export class CameraCoachOrchestrator {
       });
 
       if (!temporal.stablePosture) {
-        this.pending = {
-          vision: {
-            ...vision,
-            posture: 'unknown',
-            postureConfidence: null,
-          },
-          observation,
-          reason: 'unstable_posture',
-        };
-        return {
-          kind: 'owner_confirmation',
-          session: this.session,
-          pending: this.pending,
-        };
+        return { kind: 'waiting_for_temporal', session: this.session };
       }
 
       const stableVision: DogVisionResult = {
