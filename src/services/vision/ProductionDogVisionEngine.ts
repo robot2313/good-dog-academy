@@ -1,8 +1,8 @@
 import type { CameraFrame } from '../camera/CameraFrameSource';
 import type { DogVisionEngine, DogVisionResult } from './DogVisionEngine';
-import { PoseDogVisionEngine } from './PoseDogVisionEngine';
 import type { QuadrupedPoseModel } from './QuadrupedPoseModel';
-import { TrackedDogVisionEngine } from './TrackedDogVisionEngine';
+import { DetectorFirstDogVisionEngine } from './DetectorFirstDogVisionEngine';
+import { DogTracker } from '../../domain/vision/DogTracking';
 
 type ModelFactory = () => Promise<QuadrupedPoseModel>;
 
@@ -11,22 +11,45 @@ async function defaultModelFactory(): Promise<QuadrupedPoseModel> {
   return new OnnxQuadrupedPoseModel();
 }
 
+async function defaultDetectorFactory() {
+  const { OnnxYolo26DogDetector } = await import('./OnnxYolo26DogDetector');
+  return new OnnxYolo26DogDetector();
+}
+
 /**
- * Production on-device vision adapter.
+ * Production vision path during migration:
  *
- * The native ONNX runtime is loaded lazily so Expo Go/startup paths do not
- * import the native module. The same validated 17-joint pose pipeline used by
- * shadow validation is therefore used for live Camera Coach inference.
+ * Camera
+ *   -> dedicated YOLO26 dog detector
+ *   -> temporal dog tracker
+ *   -> tracked dog ROI
+ *   -> existing validated 17-point quadruped pose
+ *   -> posture classifier
+ *
+ * The 17-point model remains intact as the pose/fallback layer. It is no
+ * longer allowed to establish dog presence.
  */
 export class ProductionDogVisionEngine implements DogVisionEngine {
-  private engine: TrackedDogVisionEngine | null = null;
+  private engine: DetectorFirstDogVisionEngine | null = null;
 
-  constructor(private readonly makeModel: ModelFactory = defaultModelFactory) {}
+  constructor(
+    private readonly makeModel: ModelFactory = defaultModelFactory,
+    private readonly makeDetector = defaultDetectorFactory,
+  ) {}
 
-  private async ensureEngine(): Promise<PoseDogVisionEngine> {
+  private async ensureEngine(): Promise<DetectorFirstDogVisionEngine> {
     if (this.engine) return this.engine;
+
+    const detector = await this.makeDetector();
     const model = await this.makeModel();
-    this.engine = new TrackedDogVisionEngine(new PoseDogVisionEngine(model));
+    const tracker = new DogTracker();
+
+    this.engine = new DetectorFirstDogVisionEngine(
+      detector,
+      tracker,
+      model,
+    );
+
     return this.engine;
   }
 
