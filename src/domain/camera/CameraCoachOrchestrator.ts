@@ -68,6 +68,7 @@ export class CameraCoachOrchestrator {
   private lastAnalysedFrameAtMs: number | null = null;
   private inFlight = false;
   private pending: CameraCoachPendingConfirmation | null = null;
+  private lastVision: DogVisionResult | null = null;
 
   constructor(
     session: LiveCoachSession,
@@ -93,8 +94,13 @@ export class CameraCoachOrchestrator {
     return this.pending;
   }
 
+  getLastVisionResult(): DogVisionResult | null {
+    return this.lastVision;
+  }
+
   stopByOwner(): LiveCoachSession {
     this.pending = null;
+    this.lastVision = null;
     this.postureBuffer.reset();
     this.repGate.reset();
     this.session = stopLiveCoachSession(this.session);
@@ -107,6 +113,7 @@ export class CameraCoachOrchestrator {
 
   async dispose(): Promise<void> {
     this.pending = null;
+    this.lastVision = null;
     this.postureBuffer.reset();
     this.repGate.reset();
     await this.visionEngine.dispose();
@@ -140,6 +147,7 @@ export class CameraCoachOrchestrator {
       }
 
       const vision = await this.visionEngine.detect(frame);
+      this.lastVision = vision;
       if (frameMs !== null) this.lastAnalysedFrameAtMs = frameMs;
 
       const rawDecision = decideCameraRepEvidence(
