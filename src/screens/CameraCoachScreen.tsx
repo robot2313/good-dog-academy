@@ -26,7 +26,7 @@ import { ExpoCoachSpeech } from '../services/speech/ExpoCoachSpeech';
 import { ExpoTrainingSpeechRecognizer } from '../services/speech/ExpoTrainingSpeechRecognizer';
 import { HandsFreeCoachController } from '../services/speech/HandsFreeCoachController';
 import { SpokenCoachController } from '../services/speech/SpokenCoachController';
-import { OwnerFallbackVisionEngine } from '../services/vision/OwnerFallbackVisionEngine';
+import { ProductionDogVisionEngine } from '../services/vision/ProductionDogVisionEngine';
 import { PoseShadowController, type PoseShadowObservation, type PoseShadowStatus } from '../services/vision/PoseShadowController';
 import { loadPoseShadowValidationReport, recordPoseShadowValidationSample } from '../services/vision/PoseShadowValidationService';
 import type { RootStackParamList } from '../types/navigation';
@@ -78,6 +78,16 @@ type Diagnostics = {
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 type HandsFreeListenMode = 'confirmation' | 'next-rep' | 'paused';
+
+function liveVisionStatus(vision: { dogDetected: boolean; posture: string; postureConfidence: number | null } | null): string {
+  if (!vision) return 'Watching for your dog…';
+  if (!vision.dogDetected) return 'Looking for your dog';
+  if (vision.posture === 'unknown' || vision.postureConfidence === null) return 'Dog detected · checking position';
+  if (vision.posture === 'sit_like') return 'Sit detected';
+  if (vision.posture === 'stand_like') return 'Stand detected';
+  if (vision.posture === 'down_like') return 'Down detected';
+  return 'Dog detected';
+}
 
 const DEBUG_POSE_BONES: Array<[QuadrupedJointName, QuadrupedJointName]> = [
   ['left_eye', 'nose'],
@@ -192,6 +202,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
   const [qaSnapshot, setQaSnapshot] = useState(() => qaTelemetry.getSnapshot());
   const [poseShadowStatus, setPoseShadowStatus] = useState<PoseShadowStatus>(() => poseShadow.getStatus());
   const [poseShadowObservation, setPoseShadowObservation] = useState<PoseShadowObservation | null>(null);
+  const [latestVision, setLatestVision] = useState<ReturnType<CameraCoachOrchestrator['getLastVisionResult']>>(null);
   const [poseShadowLabelled, setPoseShadowLabelled] = useState(false);
   const [poseValidationReport, setPoseValidationReport] = useState<PoseShadowValidationReport | null>(null);
   const cameraFramingStatus = useMemo(
@@ -241,7 +252,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
   const runtime = useMemo(() => {
     if (!dog) return null;
 
-    const vision = new OwnerFallbackVisionEngine();
+    const vision = new ProductionDogVisionEngine();
     const session = createLiveCoachSession({
       id: `camera-${dog.id}-${Date.now()}`,
       dogId: dog.id,
@@ -422,6 +433,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
           : 'Camera Coach observation requires owner confirmation because this lesson has no certified posture-only success criterion.',
       }).then((result) => {
         if (!active || pausedRef.current) return;
+        setLatestVision(runtime.orchestrator.getLastVisionResult());
         if (result.kind === 'owner_confirmation') {
           recordQa('frame_analysed', frame.id);
           recordQa('owner_confirmation_requested', result.pending.reason);
@@ -434,6 +446,11 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
           void spokenCoach.announce({ type: 'owner_confirmation', pending: result.pending }).then(() => {
             if (handsFreeAvailable) void startHandsFreeListening('confirmation');
           });
+        } else if (result.kind === 'waiting_for_transition') {
+          setDiagnostics((current) => ({
+            ...current,
+            lastResult: 'Waiting for the dog to leave the previous posture before scoring again.',
+          }));
         } else if (result.kind === 'rep_recorded') {
           recordQa('frame_analysed', frame.id);
           recordQa('automatic_rep_recorded', result.rep.id);
@@ -711,6 +728,10 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         <View pointerEvents="none" style={styles.poseGuideBox}>
           <Text style={styles.poseGuideText}>KEEP DOG INSIDE THIS SQUARE</Text>
         </View>
+        <View pointerEvents="none" style={styles.visionStatus}>
+          <Text style={styles.visionStatusText}>{liveVisionStatus(latestVision)}</Text>
+        </View>
+
         <View pointerEvents="none" style={styles.framingStatus}>
           <Text style={styles.framingStatusText}>
             {cameraFramingStatus === 'move-closer'
@@ -813,7 +834,8 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         <Text style={styles.body}>Session state: {paused ? 'paused' : running ? 'running' : sessionComplete ? 'complete' : 'idle'}</Text>
         <Text style={styles.body}>Spoken coach: {voiceEnabled ? 'on' : 'off'}</Text>
         <Text style={styles.body}>Hands-free control: {handsFreeAvailable === null ? 'checking' : handsFreeAvailable ? (handsFreeListening ? 'listening' : 'available') : 'button fallback'}</Text>
-        <Text style={styles.body}>Automatic posture scoring: disabled during shadow calibration</Text>
+        <Text style={styles.body}>AI Vision: on-device 17-joint pose analysis</Text>
+        <Text style={styles.body}>Automatic scoring: enabled only for certified posture lessons; otherwise owner confirmation remains authoritative</Text>
         <Text style={styles.body}>Session memory: {saveState === 'saved' ? 'saved' : saveState === 'saving' ? 'saving' : saveState === 'error' ? 'save error' : 'waiting for completion'}</Text>
         <Text style={styles.body}>Frames sampled: {diagnostics.framesCaptured}</Text>
         <Text style={styles.body}>Frames analysed: {diagnostics.framesAnalysed}</Text>
@@ -823,7 +845,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Real vision · shadow test</Text>
-        <Text style={styles.body}>Shadow mode runs the real 17-joint ONNX pose model but cannot score or change a rep. Your ground-truth label is used only to measure vision accuracy.</Text>
+        <Text style={styles.body}>Shadow mode is an optional calibration tool. Live Camera Coach now uses the same on-device 17-joint ONNX pipeline; calibration labels never change training progress.</Text>
         <Text style={styles.body}>Status: {poseShadowStatus.state}{poseShadowStatus.state === 'error' ? ` · ${poseShadowStatus.message}` : ''}</Text>
         <Text style={styles.body}>Vision health: {visionDiagnostics.framesAnalysed}/{visionDiagnostics.framesRequested} completed · {visionDiagnostics.framesSkippedBusy} skipped busy · {visionDiagnostics.inferenceErrors} errors</Text>
         <Text style={styles.body}>Last inference: {visionDiagnostics.lastInferenceAt ?? 'none'} · ONNX {visionDiagnostics.lastInferenceMs ?? 'n/a'} ms · total {visionDiagnostics.lastTotalMs ?? 'n/a'} ms</Text>
@@ -976,6 +998,23 @@ const styles = StyleSheet.create({
   preview: { flex: 1, minHeight: 360 },
   poseGuideBox: { position: 'absolute', alignSelf: 'center', top: '8%', width: '84%', aspectRatio: 1, borderWidth: 2, borderColor: '#FFFFFF', borderRadius: 18, alignItems: 'center', justifyContent: 'flex-start', paddingTop: 8 },
   poseGuideText: { fontSize: 10, lineHeight: 14, fontWeight: '900', letterSpacing: 0.8, color: '#FFFFFF', backgroundColor: 'rgba(11,37,69,0.72)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  visionStatus: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    top: 16,
+    alignItems: 'center',
+  },
+  visionStatusText: {
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    backgroundColor: 'rgba(11,37,69,0.84)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
   framingStatus: {
     position: 'absolute',
     left: 16,
