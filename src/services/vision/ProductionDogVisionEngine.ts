@@ -2,6 +2,7 @@ import type { CameraFrame } from '../camera/CameraFrameSource';
 import type { DogVisionEngine, DogVisionResult } from './DogVisionEngine';
 import { PoseDogVisionEngine } from './PoseDogVisionEngine';
 import type { QuadrupedPoseModel } from './QuadrupedPoseModel';
+import { TrackedDogVisionEngine } from './TrackedDogVisionEngine';
 
 type ModelFactory = () => Promise<QuadrupedPoseModel>;
 
@@ -18,14 +19,14 @@ async function defaultModelFactory(): Promise<QuadrupedPoseModel> {
  * shadow validation is therefore used for live Camera Coach inference.
  */
 export class ProductionDogVisionEngine implements DogVisionEngine {
-  private engine: PoseDogVisionEngine | null = null;
+  private engine: TrackedDogVisionEngine | null = null;
 
   constructor(private readonly makeModel: ModelFactory = defaultModelFactory) {}
 
   private async ensureEngine(): Promise<PoseDogVisionEngine> {
     if (this.engine) return this.engine;
     const model = await this.makeModel();
-    this.engine = new PoseDogVisionEngine(model);
+    this.engine = new TrackedDogVisionEngine(new PoseDogVisionEngine(model));
     return this.engine;
   }
 
