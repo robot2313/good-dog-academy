@@ -896,7 +896,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         <Text style={styles.body}>QA diagnostics store counters/events only—no audio or camera frames.</Text>
       </View>
 
-      </View> : null}
+      </> : null}
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Hands-free owner control</Text>
