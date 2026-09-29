@@ -1,10 +1,12 @@
 import type { CameraFrame } from '../camera/CameraFrameSource';
 import type { DogVisionEngine, DogVisionResult } from './DogVisionEngine';
+import type { DogDetector } from './DogDetector';
 import type { QuadrupedPoseModel } from './QuadrupedPoseModel';
 import { DetectorFirstDogVisionEngine } from './DetectorFirstDogVisionEngine';
 import { DogTracker } from '../../domain/vision/DogTracking';
 
 type ModelFactory = () => Promise<QuadrupedPoseModel>;
+type DetectorFactory = () => Promise<DogDetector>;
 
 async function defaultModelFactory(): Promise<QuadrupedPoseModel> {
   const { OnnxQuadrupedPoseModel } = await import('./OnnxQuadrupedPoseModel');
@@ -34,7 +36,7 @@ export class ProductionDogVisionEngine implements DogVisionEngine {
 
   constructor(
     private readonly makeModel: ModelFactory = defaultModelFactory,
-    private readonly makeDetector = defaultDetectorFactory,
+    private readonly makeDetector: DetectorFactory = defaultDetectorFactory,
   ) {}
 
   private async ensureEngine(): Promise<DetectorFirstDogVisionEngine> {
