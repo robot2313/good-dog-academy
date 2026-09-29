@@ -1,5 +1,6 @@
 import type { CameraFrame } from '../camera/CameraFrameSource';
 import type { DogPostureEvidence } from '../../domain/models/TrainingEvidence';
+import type { DogDetectionSource, NormalizedDogBox } from '../../domain/vision/DogTracking';
 
 export type VisionStressSignal =
   | 'none'
@@ -13,6 +14,9 @@ export type DogVisionResult = {
   analysedAt: string;
   dogDetected: boolean;
   detectionConfidence: number | null;
+  dogBoundingBox: NormalizedDogBox | null;
+  detectionSource: DogDetectionSource | null;
+  trackingConfidence: number | null;
   posture: DogPostureEvidence;
   postureConfidence: number | null;
   stressSignal: VisionStressSignal;
