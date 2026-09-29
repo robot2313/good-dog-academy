@@ -829,7 +829,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
           </Svg>
         ) : null}
 
-        <View pointerEvents="none" style={styles.poseDebugOverlay}>
+        {showDiagnostics ? <View pointerEvents="none" style={styles.poseDebugOverlay}>
           <Text style={styles.poseDebugText}>
             VISION: {poseShadowStatus.state}
           </Text>
@@ -844,6 +844,17 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
           <Text style={styles.poseDebugReason}>
             {poseShadowObservation?.postureReason ?? 'Waiting for pose analysis'}
           </Text>
+        </View> : null}
+
+        <View style={styles.cockpitControls}>
+          {paused ? (
+            <AppButton title="Resume" onPress={resumeTraining} />
+          ) : running && !sessionComplete ? (
+            <AppButton title="Pause" onPress={pauseTraining} />
+          ) : null}
+          {!paused && running && !cueAt && !pending && !sessionComplete ? (
+            <AppButton title="Next rep" onPress={startNextRep} />
+          ) : null}
         </View>
       </View>
 
@@ -1073,6 +1084,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 12,
+  },
+  cockpitControls: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    bottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
   },
   zoomControls: {
     position: 'absolute',
