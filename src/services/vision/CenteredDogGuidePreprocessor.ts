@@ -7,6 +7,7 @@ import {
   rgbBytesToQuadrupedTensor,
 } from '../../domain/vision/QuadrupedInputTensor';
 import type { CameraFrame } from '../camera/CameraFrameSource';
+import type { NormalizedDogBox } from '../../domain/vision/DogTracking';
 
 export type NormalizedCropRect = {
   left: number;
@@ -22,7 +23,7 @@ export type PreparedQuadrupedInput = {
 };
 
 export interface QuadrupedFramePreprocessor {
-  prepare(frame: CameraFrame): Promise<PreparedQuadrupedInput>;
+  prepare(frame: CameraFrame, dogBoundingBox?: NormalizedDogBox | null): Promise<PreparedQuadrupedInput>;
 }
 
 const DOG_GUIDE_WIDTH_RATIO = 0.84;
@@ -65,12 +66,28 @@ function dogGuideSquareCrop(width: number, height: number): {
   };
 }
 
+function trackedDogSquareCrop(
+  width: number,
+  height: number,
+  box: NormalizedDogBox,
+): { originX: number; originY: number; width: number; height: number } {
+  const padding = 1.35;
+  const centerX = (box.left + box.width / 2) * width;
+  const centerY = (box.top + box.height / 2) * height;
+  const side = Math.max(1, Math.min(width, height, Math.max(box.width * width, box.height * height) * padding));
+  const originX = Math.max(0, Math.min(width - side, centerX - side / 2));
+  const originY = Math.max(0, Math.min(height - side, centerY - side / 2));
+  return { originX: Math.floor(originX), originY: Math.floor(originY), width: Math.floor(side), height: Math.floor(side) };
+}
+
 export class CenteredDogGuidePreprocessor implements QuadrupedFramePreprocessor {
-  async prepare(frame: CameraFrame): Promise<PreparedQuadrupedInput> {
+  async prepare(frame: CameraFrame, dogBoundingBox: NormalizedDogBox | null = null): Promise<PreparedQuadrupedInput> {
     if (!frame.uri) throw new Error('Camera frame has no local image URI.');
     if (frame.width <= 0 || frame.height <= 0) throw new Error('Camera frame dimensions are invalid.');
 
-    const crop = dogGuideSquareCrop(frame.width, frame.height);
+    const crop = dogBoundingBox
+      ? trackedDogSquareCrop(frame.width, frame.height, dogBoundingBox)
+      : dogGuideSquareCrop(frame.width, frame.height);
     const result = await ImageManipulator.manipulateAsync(
       frame.uri,
       [
