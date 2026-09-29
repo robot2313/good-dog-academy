@@ -18,6 +18,7 @@ import { expectedCueResponseForLesson } from '../domain/camera/ExpectedCueRespon
 import type { TrainingOutcome } from '../domain/models/TrainingSession';
 import type { PoseShadowGroundTruth, PoseShadowValidationReport } from '../domain/vision/PoseShadowValidation';
 import type { QuadrupedJointName } from '../domain/vision/QuadrupedPose';
+import { analyseSmartFraming } from '../domain/vision/SmartFraming';
 import { loadBundledLessonCatalogue } from '../features/lessons/catalogue';
 import { useOnboarding } from '../features/onboarding/OnboardingContext';
 import { persistCompletedLiveCoachSession } from '../services/AdaptiveTrainingPersistenceService';
@@ -203,13 +204,15 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
   const [poseShadowStatus, setPoseShadowStatus] = useState<PoseShadowStatus>(() => poseShadow.getStatus());
   const [poseShadowObservation, setPoseShadowObservation] = useState<PoseShadowObservation | null>(null);
   const [latestVision, setLatestVision] = useState<ReturnType<CameraCoachOrchestrator['getLastVisionResult']>>(null);
+  const [sessionSnapshot, setSessionSnapshot] = useState<LiveCoachSession | null>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [poseShadowLabelled, setPoseShadowLabelled] = useState(false);
   const [poseValidationReport, setPoseValidationReport] = useState<PoseShadowValidationReport | null>(null);
-  const cameraFramingStatus = useMemo(
-    () => getCameraFramingStatus(poseShadowObservation?.pose ?? null),
-    [poseShadowObservation?.pose],
+  const smartFraming = useMemo(
+    () => analyseSmartFraming(latestVision?.dogBoundingBox ?? null, latestVision?.trackingConfidence ?? 0),
+    [latestVision?.dogBoundingBox, latestVision?.trackingConfidence],
   );
+  const cameraFramingStatus = smartFraming.status;
 
   const [diagnostics, setDiagnostics] = useState<Diagnostics>({
     framesCaptured: 0,
@@ -416,7 +419,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
       }
 
       const activeCueAt = cueAtRef.current;
-      if (!activeCueAt || runtime.orchestrator.getPendingConfirmation()) return;
+      if (runtime.orchestrator.getPendingConfirmation()) return;
 
       void runtime.orchestrator.processFrame(frame, {
         outcome: 'partial-success',
@@ -435,7 +438,11 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
       }).then((result) => {
         if (!active || pausedRef.current) return;
         setLatestVision(runtime.orchestrator.getLastVisionResult());
-        if (result.kind === 'owner_confirmation') {
+        setSessionSnapshot(result.session);
+        if (result.kind === 'dog_not_in_view') {
+          setPending(null);
+          setDiagnostics((current) => ({ ...current, lastResult: 'Dog not in view. No rep can be scored.' }));
+        } else if (result.kind === 'owner_confirmation') {
           recordQa('frame_analysed', frame.id);
           recordQa('owner_confirmation_requested', result.pending.reason);
           setPending(result.pending);
@@ -508,6 +515,8 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
     setPaused(false);
     setDebrief(null);
     setLastTranscript(null);
+    setLatestVision(null);
+    setSessionSnapshot(runtime?.orchestrator.getSession() ?? null);
     setRunning(true);
     setSaveState('idle');
     void spokenCoach.announce({ type: 'session_started', dogName: dog?.name ?? 'your dog' }).then(() => {
@@ -727,6 +736,20 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
           zoom={cameraZoom}
           onCameraReady={() => setCameraReady(true)}
         />
+        {latestVision?.dogBoundingBox ? (
+          <View
+            pointerEvents="none"
+            style={[
+              styles.trackingBox,
+              {
+                left: `${latestVision.dogBoundingBox.left * 100}%`,
+                top: `${latestVision.dogBoundingBox.top * 100}%`,
+                width: `${latestVision.dogBoundingBox.width * 100}%`,
+                height: `${latestVision.dogBoundingBox.height * 100}%`,
+              },
+            ]}
+          />
+        ) : null}
         <View pointerEvents="none" style={styles.poseGuideBox}>
           <Text style={styles.poseGuideText}>KEEP DOG INSIDE THIS SQUARE</Text>
         </View>
@@ -735,19 +758,13 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         </View>
 
         <View pointerEvents="none" style={styles.framingStatus}>
-          <Text style={styles.framingStatusText}>
-            {cameraFramingStatus === 'move-closer'
-              ? 'Move closer'
-              : cameraFramingStatus === 'move-back'
-                ? 'Move back'
-                : cameraFramingStatus === 'move-left'
-                  ? 'Move left'
-                  : cameraFramingStatus === 'move-right'
-                    ? 'Move right'
-                    : cameraFramingStatus === 'good'
-                      ? 'Dog is in position'
-                      : 'Waiting for dog'}
-          </Text>
+          <Text style={styles.framingStatusText}>{smartFraming.instruction}</Text>
+        </View>
+
+        <View pointerEvents="none" style={styles.lessonOverlay}>
+          <Text style={styles.lessonOverlayTitle}>{route.params.lessonId}</Text>
+          <Text style={styles.lessonOverlayRep}>{sessionSnapshot ? `${sessionSnapshot.reps.length} / ${sessionSnapshot.targetReps}` : '0 / 5'} reps</Text>
+          <Text style={styles.lessonOverlayInstruction}>{smartFraming.ready ? (cueAt ? 'Watching your dog…' : 'Ready when you are.') : smartFraming.instruction}</Text>
         </View>
 
         <View style={styles.zoomControls}>
@@ -765,7 +782,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
           })}
         </View>
 
-        {poseShadowObservation?.pose ? (
+        {showDiagnostics && poseShadowObservation?.pose ? (
           <Svg
             pointerEvents="none"
             style={StyleSheet.absoluteFill}
@@ -1020,6 +1037,26 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 12,
   },
+  trackingBox: {
+    position: 'absolute',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  lessonOverlay: {
+    position: 'absolute',
+    left: 12,
+    top: 64,
+    maxWidth: '72%',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 14,
+    backgroundColor: 'rgba(11,37,69,0.84)',
+  },
+  lessonOverlayTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+  lessonOverlayRep: { color: '#FFFFFF', fontSize: 20, fontWeight: '900', marginTop: 2 },
+  lessonOverlayInstruction: { color: '#FFFFFF', fontSize: 13, lineHeight: 18, marginTop: 2 },
   framingStatus: {
     position: 'absolute',
     left: 16,
