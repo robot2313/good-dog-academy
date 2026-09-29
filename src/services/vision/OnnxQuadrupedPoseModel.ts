@@ -2,6 +2,7 @@ import { InferenceSession, Tensor } from 'onnxruntime-react-native';
 
 import { decodeQuadrupedHeatmaps } from '../../domain/vision/QuadrupedHeatmapDecoder';
 import { QUADRUPED_JOINTS, type QuadrupedJointName, type QuadrupedPose } from '../../domain/vision/QuadrupedPose';
+import type { NormalizedDogBox } from '../../domain/vision/DogTracking';
 import type { CameraFrame } from '../camera/CameraFrameSource';
 import {
   CenteredDogGuidePreprocessor,
@@ -34,11 +35,22 @@ function mapPoseFromCrop(pose: QuadrupedPose, crop: NormalizedCropRect): Quadrup
   return { keypoints: Object.fromEntries(entries) as QuadrupedPose['keypoints'] };
 }
 
-function poseDetectionSummary(pose: QuadrupedPose): { detected: boolean; confidence: number } {
+function poseDetectionSummary(pose: QuadrupedPose): { detected: boolean; confidence: number; box: NormalizedDogBox | null } {
   const confidences = QUADRUPED_JOINTS.map((name) => pose.keypoints[name].confidence);
   const confidentJoints = confidences.filter((value) => value >= TRACKED_JOINT_THRESHOLD).length;
   const confidentCore = CORE_JOINTS.filter((name) => pose.keypoints[name].confidence >= TRACKED_JOINT_THRESHOLD).length;
   const strongest = [...confidences].sort((a, b) => b - a).slice(0, 6);
+  const visible = QUADRUPED_JOINTS
+    .map((name) => pose.keypoints[name])
+    .filter((point) => point.confidence >= TRACKED_JOINT_THRESHOLD);
+  const box = visible.length >= 6
+    ? {
+        left: Math.max(0, Math.min(...visible.map((point) => point.x))),
+        top: Math.max(0, Math.min(...visible.map((point) => point.y))),
+        width: Math.max(0.001, Math.min(1, Math.max(...visible.map((point) => point.x)) - Math.min(...visible.map((point) => point.x)))),
+        height: Math.max(0.001, Math.min(1, Math.max(...visible.map((point) => point.y)) - Math.min(...visible.map((point) => point.y)))),
+      }
+    : null;
   const confidence = strongest.length > 0
     ? strongest.reduce((total, value) => total + value, 0) / strongest.length
     : 0;
@@ -49,6 +61,7 @@ function poseDetectionSummary(pose: QuadrupedPose): { detected: boolean; confide
   return {
     detected: confidentJoints >= 6 && confidentCore >= 3,
     confidence: Math.max(0, Math.min(1, confidence)),
+    box,
   };
 }
 
@@ -111,6 +124,9 @@ export class OnnxQuadrupedPoseModel implements QuadrupedPoseModel {
     return {
       dogDetected: detection.detected,
       detectionConfidence: detection.confidence,
+      dogBoundingBox: detection.box,
+      detectionSource: 'pose_heuristic',
+      trackingConfidence: null,
       pose,
       inferenceMs,
     };
