@@ -203,6 +203,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
   const [poseShadowStatus, setPoseShadowStatus] = useState<PoseShadowStatus>(() => poseShadow.getStatus());
   const [poseShadowObservation, setPoseShadowObservation] = useState<PoseShadowObservation | null>(null);
   const [latestVision, setLatestVision] = useState<ReturnType<CameraCoachOrchestrator['getLastVisionResult']>>(null);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [poseShadowLabelled, setPoseShadowLabelled] = useState(false);
   const [poseValidationReport, setPoseValidationReport] = useState<PoseShadowValidationReport | null>(null);
   const cameraFramingStatus = useMemo(
@@ -715,6 +716,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
     <AppScreen>
       <Text style={styles.title}>Camera Coach</Text>
       <Text style={styles.body}>{dog?.name ?? 'Your dog'} · {route.params.lessonId}</Text>
+      <AppButton title={showDiagnostics ? 'Hide developer diagnostics' : 'Developer diagnostics'} onPress={() => setShowDiagnostics((current) => !current)} />
 
       <View style={styles.previewShell} {...cameraPanResponder.panHandlers}>
         <CameraView
@@ -828,6 +830,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         </View>
       </View>
 
+      {showDiagnostics ? <>
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Live diagnostics</Text>
         <Text style={styles.body}>Camera: {cameraReady ? 'ready' : 'starting'}</Text>
@@ -892,6 +895,8 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         <Text style={styles.body}>Latest QA event: {latestQaEvent ? `${latestQaEvent.type}${latestQaEvent.detail ? ` · ${latestQaEvent.detail}` : ''}` : 'none yet'}</Text>
         <Text style={styles.body}>QA diagnostics store counters/events only—no audio or camera frames.</Text>
       </View>
+
+      </View> : null}
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Hands-free owner control</Text>
