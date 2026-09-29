@@ -27,7 +27,8 @@ export class TrackedDogVisionEngine implements DogVisionEngine {
 
     return {
       ...raw,
-      dogDetected: tracking.state !== 'lost' && tracking.state !== 'searching',
+      dogDetected: tracking.state === 'acquired' || tracking.state === 'tracking',
+      trackingState: tracking.state,
       dogBoundingBox: tracking.box,
       detectionSource: tracking.source,
       trackingConfidence: tracking.trackingConfidence,
