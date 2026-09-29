@@ -13,7 +13,13 @@ export type DogDetection = {
   source: DogDetectionSource;
 };
 
-export type DogTrackingState = 'searching' | 'acquired' | 'tracking' | 'lost';
+export type DogTrackingState =
+  | 'searching'
+  | 'acquired'
+  | 'tracking'
+  | 'temporarily_lost'
+  | 'reacquiring'
+  | 'lost';
 
 export type DogTrackingResult = {
   box: NormalizedDogBox | null;
@@ -40,10 +46,27 @@ function iou(a: NormalizedDogBox, b: NormalizedDogBox): number {
   return union <= 0 ? 0 : intersection / union;
 }
 
+function chooseDetection(
+  current: NormalizedDogBox | null,
+  detections: DogDetection[],
+): DogDetection | null {
+  const valid = detections.filter((item) => item.confidence > 0);
+  if (valid.length === 0) return null;
+  if (!current) {
+    return [...valid].sort((a, b) => b.confidence - a.confidence)[0] ?? null;
+  }
+
+  return [...valid].sort((a, b) => {
+    const aScore = iou(current, a.box) * 0.75 + a.confidence * 0.25;
+    const bScore = iou(current, b.box) * 0.75 + b.confidence * 0.25;
+    return bScore - aScore;
+  })[0] ?? null;
+}
+
 /**
- * Lightweight temporal box tracker. It intentionally does not invent a new
- * location during a miss: it holds the last stable box for a short grace
- * period, then declares the dog lost. This is a tracker, not a detector.
+ * Temporal box tracker. Detection confidence and tracking confidence remain
+ * separate. The tracker holds a stable box during short detector gaps and
+ * explicitly transitions through temporary loss/reacquisition.
  */
 export class DogTracker {
   private box: NormalizedDogBox | null = null;
@@ -63,15 +86,24 @@ export class DogTracker {
     } = {},
   ) {}
 
-  update(detection: DogDetection | null, nowMs: number): DogTrackingResult {
+  update(detections: DogDetection[] | DogDetection | null, nowMs: number): DogTrackingResult {
     const alpha = this.options.smoothingAlpha ?? 0.32;
     const reacquireAlpha = this.options.reacquireAlpha ?? 0.55;
     const lostAfterMs = this.options.lostAfterMs ?? 1800;
     const maxMisses = this.options.maxMisses ?? 3;
     const minConfidence = this.options.minDetectionConfidence ?? 0.60;
 
-    if (detection && detection.confidence >= minConfidence) {
-      const wasLost = this.state === 'lost' || this.box === null;
+    const candidates = detections
+      ? (Array.isArray(detections) ? detections : [detections])
+          .filter((item) => item.confidence >= minConfidence)
+      : [];
+
+    const detection = chooseDetection(this.box, candidates);
+
+    if (detection) {
+      const wasLost = this.state === 'lost';
+      const wasSearching = this.state === 'searching' || this.box === null;
+
       if (!this.box || wasLost) {
         this.box = detection.box;
       } else {
@@ -86,21 +118,25 @@ export class DogTracker {
       }
 
       this.confidence = clamp01(
-        smooth(this.confidence, detection.confidence, wasLost ? 0.65 : 0.30),
+        smooth(this.confidence, detection.confidence, wasLost || wasSearching ? 0.65 : 0.30),
       );
       this.lastDetectionAtMs = nowMs;
       this.misses = 0;
-      this.state = wasLost ? 'acquired' : 'tracking';
+      this.state = wasLost ? 'reacquiring' : wasSearching ? 'acquired' : 'tracking';
       this.source = detection.source;
     } else {
       this.misses += 1;
       const ageMs = this.box ? Math.max(0, nowMs - this.lastDetectionAtMs) : 0;
-      if (!this.box || ageMs > lostAfterMs || this.misses > maxMisses) {
-        this.state = this.box ? 'lost' : 'searching';
+
+      if (!this.box) {
+        this.state = 'searching';
         this.confidence = 0;
-        if (this.state === 'lost') this.source = null;
+      } else if (ageMs > lostAfterMs || this.misses > maxMisses) {
+        this.state = 'lost';
+        this.confidence = 0;
+        this.source = null;
       } else {
-        this.state = 'tracking';
+        this.state = 'temporarily_lost';
         this.confidence = clamp01(this.confidence * 0.82);
       }
     }
