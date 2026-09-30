@@ -91,7 +91,7 @@ describe('Lesson Session — single active-session screen', () => {
     expect(view.queryByText('Stand near your dog with rewards ready.')).toBeNull();
     expect(view.getByRole('summary', { name: 'Step 2 of 5' })).toBeTruthy();
 
-    fireEvent.press(view.getByRole('button', { name: 'Back' }));
+    fireEvent.press(view.getByRole('button', { name: 'Previous' }));
     expect(view.getByText('Stand near your dog with rewards ready.')).toBeTruthy();
     expect(view.getByRole('summary', { name: 'Step 1 of 5' })).toBeTruthy();
     expect(props.onCancel).not.toHaveBeenCalled();
