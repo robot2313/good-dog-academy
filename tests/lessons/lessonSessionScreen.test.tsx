@@ -75,7 +75,7 @@ describe('Lesson Session — single active-session screen', () => {
     expect(view.getByText('Stand near your dog with rewards ready.')).toBeTruthy();
     expect(view.queryByText('Wait quietly without prompting.')).toBeNull();
     expect(view.getByRole('summary', { name: 'Step 1 of 5' })).toBeTruthy();
-    expect(view.getByRole('image', { name: 'Step 1 of 5' })).toBeTruthy();
+    expect(view.getByRole('image', { name: 'Rich Test Lesson, step 1' })).toBeTruthy();
     expect(view.queryByRole('button', { name: 'Previous training step' })).toBeNull();
     expect(view.queryByRole('progressbar')).toBeNull();
 
