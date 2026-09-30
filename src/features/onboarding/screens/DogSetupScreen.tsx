@@ -2,6 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 import { Image, Text, View } from 'react-native';
 import { useState } from 'react';
+import { TrainerCoach } from '../../../components/TrainerCoach';
 
 import { AppScreen } from '../../../components/AppScreen';
 import { ErrorState } from '../../../components/ErrorState';
@@ -45,6 +46,7 @@ export function DogSetupScreen({ navigation }: Props): React.JSX.Element {
     <AppScreen>
       <SecondaryTextButton title="Back" onPress={() => navigation.goBack()} />
       <ProgressIndicator current={2} total={2} />
+      <TrainerCoach compact message="Now tell me about your dog. Please be as accurate as you can — these details help me choose a safe starting point. If you’re unsure, just give me your best estimate." />
       <View>
         <Text style={styles.onboardingTitle}>Meet your dog.</Text>
         <Text style={styles.onboardingBody}>These details help us keep future training safe, relevant, and achievable.</Text>
