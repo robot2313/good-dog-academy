@@ -45,6 +45,10 @@ describe('guided Lesson Session navigation', () => {
     fireEvent.press(view.getByRole('button', { name: 'Start Lesson' }));
 
     expect(await view.findByText('SESSION RUNNING')).toBeTruthy();
+    for (let step = 0; step < 4; step += 1) {
+      fireEvent.press(view.getByRole('button', { name: 'Next Step' }));
+    }
+    expect(view.getByRole('button', { name: 'Complete Lesson' })).toBeTruthy();
     fireEvent.press(view.getByRole('button', { name: 'Complete Lesson' }));
     expect(view.getByRole('header', { name: 'How did it feel?' })).toBeTruthy();
     fireEvent.press(view.getByRole('button', { name: /^5 out of 5/ }));
@@ -119,6 +123,9 @@ describe('guided Lesson Session navigation', () => {
     fireEvent.press(view.getByRole('button', { name: 'Start Lesson' }));
 
     expect(await view.findByText('SESSION RUNNING')).toBeTruthy();
+    for (let step = 0; step < 4; step += 1) {
+      fireEvent.press(view.getByRole('button', { name: 'Next Step' }));
+    }
     fireEvent.press(view.getByRole('button', { name: 'Complete Lesson' }));
     fireEvent.press(view.getByRole('button', { name: /^5 out of 5/ }));
     fireEvent.press(view.getByRole('button', { name: 'Save session' }));
