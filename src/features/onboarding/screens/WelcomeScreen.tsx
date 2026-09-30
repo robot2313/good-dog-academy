@@ -12,6 +12,7 @@ import { styles } from '../../../theme/styles';
 import type { RootStackParamList } from '../../../types/navigation';
 import { useOnboarding } from '../OnboardingContext';
 import { useState } from 'react';
+import { TrainerCoach } from '../../../components/TrainerCoach';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Welcome'>;
 
@@ -32,6 +33,7 @@ export function WelcomeScreen({ navigation }: Props): React.JSX.Element {
         source={require('../../../../assets/lesson-images/by-lesson/confidence-choice-and-exploration.jpg')}
         accessibilityLabel="A relaxed dog exploring calmly with its owner"
       />
+      <TrainerCoach message="Hey! I’m your Good Dog trainer. Before we start, I want to learn a little about your dog so I can work out the right place to begin. Give me your best answers — I’ll keep learning as we train." onContinue={() => navigation.navigate('OwnerSetup')} continueLabel="Let’s get started" />
       <View style={styles.hero}>
         <Text style={styles.eyebrow}>GOOD DOG ACADEMY</Text>
         <Text style={styles.heroTitle}>Raise an amazing dog.</Text>
