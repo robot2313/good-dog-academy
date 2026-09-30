@@ -13,7 +13,7 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,6 +24,12 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
       - name: Install dependencies
         run: npm ci
 
@@ -33,5 +39,26 @@ jobs:
       - name: Tests
         run: npm test -- --ci
 
+      - name: ONNX registration regression tests
+        run: node --test scripts/onnxruntime-registration.test.mjs
+
       - name: Expo Doctor
         run: npx expo-doctor@latest
+
+      - name: Generate Android project
+        run: npx expo prebuild --platform android --clean --no-install
+
+      - name: Prove legacy architecture is generated
+        run: grep -n "newArchEnabled=false" android/gradle.properties
+
+      - name: Verify ONNX Android registration
+        run: node scripts/ensure-onnxruntime-android-registration.mjs
+
+      - name: Compile Android development native code
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Verify compiled ONNX registration is unique
+        run: node scripts/ensure-onnxruntime-android-registration.mjs --after-build

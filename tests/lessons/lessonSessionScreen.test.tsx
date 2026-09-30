@@ -62,41 +62,49 @@ describe('Lesson Session — Before You Begin', () => {
 });
 
 describe('Lesson Session — single active-session screen', () => {
-  it('shows the timer, all five steps at once, counters, undo and finish actions', () => {
+  it('shows one guided step at a time with counters, undo and navigation', () => {
     const props = screenProps(runningState());
     const view = render(<LessonSessionScreenView {...props} />);
 
-    // Compact timer header with pause control.
     expect(view.getByText('SESSION RUNNING')).toBeTruthy();
     expect(view.getByText('5:00')).toBeTruthy();
     fireEvent.press(view.getByRole('button', { name: 'Pause session timer' }));
     expect(props.onPause).toHaveBeenCalledTimes(1);
 
-    // All five steps render simultaneously.
+    // The current step is shown, with explicit step navigation.
     expect(view.getByText('Stand near your dog with rewards ready.')).toBeTruthy();
-    expect(view.getByText('Wait quietly without prompting.')).toBeTruthy();
-    expect(view.getByText('Mark the moment they look at you.')).toBeTruthy();
-    expect(view.getByText('Reward beside your leg.')).toBeTruthy();
-    expect(view.getByText('Repeat five times and finish keen.')).toBeTruthy();
-
-    // No per-step page navigation and no active-session photograph.
+    expect(view.queryByText('Wait quietly without prompting.')).toBeNull();
+    expect(view.getByRole('summary', { name: 'Step 1 of 5' })).toBeTruthy();
+    expect(view.getByRole('image', { name: 'Rich Test Lesson, step 1' })).toBeTruthy();
     expect(view.queryByRole('button', { name: 'Previous training step' })).toBeNull();
-    expect(view.queryByRole('button', { name: 'Next training step' })).toBeNull();
     expect(view.queryByRole('progressbar')).toBeNull();
-    expect(view.queryByRole('image')).toBeNull();
 
-    // Counters use the Success / Try Again wording.
     expect(view.getByText('SUCCESS')).toBeTruthy();
     expect(view.getByText('TRY AGAIN')).toBeTruthy();
-    fireEvent.press(view.getByRole('button', { name: /Mark a successful repetition/ }));
-    fireEvent.press(view.getByRole('button', { name: /Mark a repetition that needs help/ }));
+    fireEvent.press(view.getByRole('button', { name: /Success\. 0 recorded/ }));
+    fireEvent.press(view.getByRole('button', { name: /Try again\. 0 recorded/ }));
     expect(props.onRecordSuccess).toHaveBeenCalledTimes(1);
     expect(props.onRecordChallenge).toHaveBeenCalledTimes(1);
 
+    fireEvent.press(view.getByRole('button', { name: 'Next Step' }));
+    expect(view.getByText('Wait quietly without prompting.')).toBeTruthy();
+    expect(view.queryByText('Stand near your dog with rewards ready.')).toBeNull();
+    expect(view.getByRole('summary', { name: 'Step 2 of 5' })).toBeTruthy();
+
+    fireEvent.press(view.getByRole('button', { name: 'Previous' }));
+    expect(view.getByText('Stand near your dog with rewards ready.')).toBeTruthy();
+    expect(view.getByRole('summary', { name: 'Step 1 of 5' })).toBeTruthy();
+    expect(props.onCancel).not.toHaveBeenCalled();
+
+    // Move to the final step, where the forward action becomes Complete Lesson.
+    fireEvent.press(view.getByRole('button', { name: 'Next Step' }));
+    fireEvent.press(view.getByRole('button', { name: 'Next Step' }));
+    fireEvent.press(view.getByRole('button', { name: 'Next Step' }));
+    fireEvent.press(view.getByRole('button', { name: 'Next Step' }));
+    expect(view.getByText('Repeat five times and finish keen.')).toBeTruthy();
+    expect(view.getByRole('summary', { name: 'Step 5 of 5' })).toBeTruthy();
     fireEvent.press(view.getByRole('button', { name: 'Complete Lesson' }));
-    fireEvent.press(view.getByRole('button', { name: 'Back' }));
     expect(props.onFinish).toHaveBeenCalledTimes(1);
-    expect(props.onCancel).toHaveBeenCalledTimes(1);
   });
 
   it('disables Undo until a check-in exists, then reverses the latest tap', () => {

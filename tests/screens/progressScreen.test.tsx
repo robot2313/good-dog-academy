@@ -1,18 +1,26 @@
 import type { ComponentProps } from 'react';
-import { fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 
 import { sampleBehaviourProfile, sampleDog, sampleOwner } from '../../src/development/seed/sampleData';
+import { emptyAdaptiveTrainingMemory } from '../../src/domain/models/AdaptiveTrainingMemory';
 import { DogLearningPassportError } from '../../src/features/progress/passport/DogLearningPassportError';
 import type { DogLearningPassport } from '../../src/features/progress/passport/DogLearningPassportTypes';
 import { useDogLearningPassport } from '../../src/features/progress/passport/useDogLearningPassport';
 import { useOnboarding } from '../../src/features/onboarding/OnboardingContext';
+import { loadAdaptiveSessionHistory, loadAdaptiveTrainingMemory } from '../../src/services/AdaptiveTrainingPersistenceService';
 import { ProgressScreen } from '../../src/screens/ProgressScreen';
 
 jest.mock('../../src/features/onboarding/OnboardingContext', () => ({ useOnboarding: jest.fn() }));
 jest.mock('../../src/features/progress/passport/useDogLearningPassport', () => ({ useDogLearningPassport: jest.fn() }));
+jest.mock('../../src/services/AdaptiveTrainingPersistenceService', () => ({
+  loadAdaptiveTrainingMemory: jest.fn(),
+  loadAdaptiveSessionHistory: jest.fn(),
+}));
 
 const mockUseOnboarding = jest.mocked(useOnboarding);
 const mockUseDogLearningPassport = jest.mocked(useDogLearningPassport);
+const mockLoadAdaptiveTrainingMemory = jest.mocked(loadAdaptiveTrainingMemory);
+const mockLoadAdaptiveSessionHistory = jest.mocked(loadAdaptiveSessionHistory);
 
 describe('ProgressScreen Learning Passport', () => {
   beforeEach(() => {
@@ -26,6 +34,8 @@ describe('ProgressScreen Learning Passport', () => {
     mockUseDogLearningPassport.mockReturnValue({
       passport: passport(), loading: false, error: null, retry: jest.fn(),
     });
+    mockLoadAdaptiveTrainingMemory.mockResolvedValue(emptyAdaptiveTrainingMemory(sampleDog.id));
+    mockLoadAdaptiveSessionHistory.mockResolvedValue([]);
   });
 
   it('shows dog-specific evidence and preserves lesson, session, and history navigation', () => {
@@ -47,6 +57,38 @@ describe('ProgressScreen Learning Passport', () => {
 
     fireEvent.press(view.getByRole('button', { name: 'View session history' }));
     expect(navigate).toHaveBeenCalledWith('SessionHistory');
+  });
+
+  it('surfaces coached adaptive evidence and its intelligence views without replacing the passport', async () => {
+    mockLoadAdaptiveTrainingMemory.mockResolvedValue({
+      schemaVersion: 1,
+      dogId: sampleDog.id,
+      totalSessions: 3,
+      updatedAt: '2026-09-10T10:00:00.000Z',
+      skills: {
+        focus: {
+          skillId: 'focus', sessionsCompleted: 3, totalReps: 15, cleanRepRate: 0.8,
+          repeatedCueRate: 0.1, slowResponseRate: 0.1, stressSignalRate: 0,
+          correctedRepRate: 0, lastTrainedAt: '2026-09-10T10:00:00.000Z', lastEndedEarly: false,
+          lastEndReason: 'target_reached', recommendedDifficulty: { distance: 2, duration: 2, distraction: 1 },
+        },
+      },
+    });
+    mockLoadAdaptiveSessionHistory.mockResolvedValue([
+      history('h3', 0.9, '2026-09-10T10:00:00.000Z'),
+      history('h2', 0.8, '2026-09-09T10:00:00.000Z'),
+      history('h1', 0.6, '2026-09-08T10:00:00.000Z'),
+    ]);
+
+    const navigate = jest.fn();
+    const view = render(<ProgressScreen {...props(navigate)} />);
+
+    await waitFor(() => expect(view.getByText('3 adaptive sessions analysed')).toBeTruthy());
+    expect(view.getByText(/Strongest current coached evidence: Focus/)).toBeTruthy();
+    fireEvent.press(view.getByRole('button', { name: 'Open Training Intelligence' }));
+    expect(navigate).toHaveBeenCalledWith('TrainingIntelligence');
+    fireEvent.press(view.getByRole('button', { name: 'Open Behaviour Timeline' }));
+    expect(navigate).toHaveBeenCalledWith('BehaviourTimeline');
   });
 
   it('shows accessible loading and safe error states with retry', () => {
@@ -86,6 +128,26 @@ describe('ProgressScreen Learning Passport', () => {
     expect(navigate).toHaveBeenCalledWith('Academy');
   });
 });
+
+function history(id: string, cleanRepRate: number, completedAt: string) {
+  return {
+    id,
+    dogId: sampleDog.id,
+    lessonId: 'focus-name-response',
+    skillId: 'focus',
+    completedAt,
+    totalReps: 5,
+    cleanRepRate,
+    repeatedCueRate: 0,
+    slowResponseRate: 0,
+    stressSignalRate: 0,
+    correctedRepRate: 0,
+    endedEarly: false,
+    endReason: 'target_reached' as const,
+    startingDifficulty: { distance: 1, duration: 1, distraction: 1 },
+    endingDifficulty: { distance: 2, duration: 2, distraction: 1 },
+  };
+}
 
 function passport(overrides: Partial<DogLearningPassport> = {}): DogLearningPassport {
   return {

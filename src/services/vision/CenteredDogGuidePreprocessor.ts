@@ -1,0 +1,138 @@
+import { File } from 'expo-file-system';
+import * as ImageManipulator from 'expo-image-manipulator';
+import * as jpeg from 'jpeg-js';
+
+import {
+  QUADRUPED_INPUT_SIZE,
+  rgbBytesToQuadrupedTensor,
+} from '../../domain/vision/QuadrupedInputTensor';
+import type { CameraFrame } from '../camera/CameraFrameSource';
+import type { NormalizedDogBox } from '../../domain/vision/DogTracking';
+
+export type NormalizedCropRect = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
+
+export type PreparedQuadrupedInput = {
+  data: Float32Array;
+  dimensions: readonly [1, 3, 256, 256];
+  crop: NormalizedCropRect;
+};
+
+export interface QuadrupedFramePreprocessor {
+  prepare(frame: CameraFrame, dogBoundingBox?: NormalizedDogBox | null): Promise<PreparedQuadrupedInput>;
+}
+
+const DOG_GUIDE_WIDTH_RATIO = 0.84;
+const DOG_GUIDE_TOP_RATIO = 0.08;
+
+function dogGuideSquareCrop(width: number, height: number): {
+  originX: number;
+  originY: number;
+  width: number;
+  height: number;
+} {
+  // Match the visible Camera Coach guide:
+  // centred horizontally, 84% wide and starting about 8% from the top.
+  const side = Math.max(
+    1,
+    Math.floor(Math.min(width, height) * DOG_GUIDE_WIDTH_RATIO),
+  );
+
+  const originX = Math.max(
+    0,
+    Math.min(
+      width - side,
+      Math.floor((width - side) / 2),
+    ),
+  );
+
+  const originY = Math.max(
+    0,
+    Math.min(
+      height - side,
+      Math.floor(height * DOG_GUIDE_TOP_RATIO),
+    ),
+  );
+
+  return {
+    originX,
+    originY,
+    width: side,
+    height: side,
+  };
+}
+
+function trackedDogSquareCrop(
+  width: number,
+  height: number,
+  box: NormalizedDogBox,
+): { originX: number; originY: number; width: number; height: number } {
+  const padding = 1.35;
+  const centerX = (box.left + box.width / 2) * width;
+  const centerY = (box.top + box.height / 2) * height;
+  const side = Math.max(1, Math.min(width, height, Math.max(box.width * width, box.height * height) * padding));
+  const originX = Math.max(0, Math.min(width - side, centerX - side / 2));
+  const originY = Math.max(0, Math.min(height - side, centerY - side / 2));
+  return { originX: Math.floor(originX), originY: Math.floor(originY), width: Math.floor(side), height: Math.floor(side) };
+}
+
+export class CenteredDogGuidePreprocessor implements QuadrupedFramePreprocessor {
+  async prepare(frame: CameraFrame, dogBoundingBox: NormalizedDogBox | null = null): Promise<PreparedQuadrupedInput> {
+    if (!frame.uri) throw new Error('Camera frame has no local image URI.');
+    if (frame.width <= 0 || frame.height <= 0) throw new Error('Camera frame dimensions are invalid.');
+
+    const crop = dogBoundingBox
+      ? trackedDogSquareCrop(frame.width, frame.height, dogBoundingBox)
+      : dogGuideSquareCrop(frame.width, frame.height);
+    const result = await ImageManipulator.manipulateAsync(
+      frame.uri,
+      [
+        { crop },
+        { resize: { width: QUADRUPED_INPUT_SIZE, height: QUADRUPED_INPUT_SIZE } },
+      ],
+      { compress: 0.9, format: ImageManipulator.SaveFormat.JPEG },
+    );
+
+    const outputFile = new File(result.uri);
+    try {
+      const bytes = await outputFile.bytes();
+      const decoded = jpeg.decode(bytes, {
+        useTArray: true,
+        formatAsRGBA: true,
+        tolerantDecoding: true,
+        maxResolutionInMP: 1,
+        maxMemoryUsageInMB: 32,
+      });
+
+      if (decoded.width !== QUADRUPED_INPUT_SIZE || decoded.height !== QUADRUPED_INPUT_SIZE) {
+        throw new Error(`Preprocessed image was ${decoded.width}x${decoded.height}, expected 256x256.`);
+      }
+
+      return {
+        data: rgbBytesToQuadrupedTensor(
+          decoded.data as Uint8Array,
+          decoded.width,
+          decoded.height,
+          4,
+        ),
+        dimensions: [1, 3, 256, 256],
+        crop: {
+          left: crop.originX / frame.width,
+          top: crop.originY / frame.height,
+          width: crop.width / frame.width,
+          height: crop.height / frame.height,
+        },
+      };
+    } finally {
+      try {
+        await Promise.resolve(outputFile.delete());
+      } catch {
+        // Cache cleanup failure must not turn otherwise valid pose evidence into an app error.
+      }
+    }
+  }
+}

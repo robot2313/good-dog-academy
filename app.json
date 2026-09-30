@@ -13,28 +13,48 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.robot2313.gooddogacademy",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "Allow Good Dog Academy to turn optional spoken training responses into text.",
+        "NSMicrophoneUsageDescription": "Allow Good Dog Academy to hear optional spoken training responses."
+      }
     },
     "android": {
       "package": "com.robot2313.gooddogacademy",
       "versionCode": 1,
-      "blockedPermissions": [
-        "android.permission.RECORD_AUDIO"
-      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/branding/app-mark.png",
         "backgroundColor": "#FBF8F0"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro"
     },
     "plugins": [
       "@react-native-community/datetimepicker",
+      "onnxruntime-react-native",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Good Dog Academy to use the camera for optional live training feedback.",
+          "recordAudioAndroid": false
+        }
+      ],
       [
         "expo-image-picker",
         {
           "photosPermission": "Allow Good Dog Academy to choose an optional profile photo for your dog."
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow Good Dog Academy to hear optional spoken training responses.",
+          "speechRecognitionPermission": "Allow Good Dog Academy to turn optional spoken training responses into text."
         }
       ],
       [
@@ -49,9 +69,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "085b689a-4b6b-469b-adbc-7db326b1a3fe"
+        "projectId": "162b7f31-22b3-4a9b-854f-3f664512a454"
       }
     },
-    "owner": "gooddogacademys"
+    "owner": "ribot"
   }
 }

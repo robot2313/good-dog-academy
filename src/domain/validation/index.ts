@@ -10,6 +10,6 @@ export {
   validateNotificationSettings,
   validateOwner,
   validateProgress,
-  validateTrainingSession,
   validateTroubleshooterAttempt,
 } from './validators';
+export { validateTrainingSession } from './trainingSessionValidator';

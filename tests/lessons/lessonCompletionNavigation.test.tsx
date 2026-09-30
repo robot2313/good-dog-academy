@@ -39,7 +39,10 @@ function renderSession() {
 
 async function driveToSave(view: ReturnType<typeof renderSession>['view']) {
   fireEvent.press(await view.findByRole('button', { name: 'Start Lesson' }));
-  fireEvent.press(await view.findByRole('button', { name: 'Complete Lesson' }));
+  for (let step = 0; step < 4; step += 1) {
+    fireEvent.press(view.getByRole('button', { name: 'Next Step' }));
+  }
+  fireEvent.press(view.getByRole('button', { name: 'Complete Lesson' }));
   fireEvent.press(await view.findByRole('button', { name: /^5 out of 5/ }));
   await act(async () => {
     fireEvent.press(view.getByRole('button', { name: 'Save session' }));

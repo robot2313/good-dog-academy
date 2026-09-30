@@ -12,7 +12,7 @@ type ExpoConfig = {
     android: {
       package: string;
       versionCode: number;
-      blockedPermissions: string[];
+      blockedPermissions?: string[];
       adaptiveIcon: { foregroundImage: string; backgroundColor: string };
     };
     plugins: unknown[];
@@ -46,8 +46,11 @@ describe('release configuration', () => {
     expect(JSON.stringify(config.expo.plugins)).toContain('expo-splash-screen');
   });
 
-  it('blocks the unused microphone permission and defines preview and production builds', () => {
-    expect(config.expo.android.blockedPermissions).toContain('android.permission.RECORD_AUDIO');
+  it('configures optional speech recognition and defines preview and production builds', () => {
+    expect(config.expo.android.blockedPermissions ?? []).not.toContain('android.permission.RECORD_AUDIO');
+    const plugins = JSON.stringify(config.expo.plugins);
+    expect(plugins).toContain('expo-speech-recognition');
+    expect(plugins).toContain('spoken training responses');
     expect(eas.build).toHaveProperty('preview');
     expect(eas.build).toHaveProperty('production');
   });

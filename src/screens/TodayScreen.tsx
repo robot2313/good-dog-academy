@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
 import { IdentityHeader } from '../components/IdentityHeader';
+import { HomeTrainerTour } from '../components/HomeTrainerTour';
 import { LessonCompletionCelebration } from '../components/LessonCompletionCelebration';
 import { ReferenceIcon } from '../components/ReferenceIcon';
 import { useTodayPlan } from '../features/daily-plan/useTodayPlan';
@@ -64,6 +65,7 @@ export function TodayScreen({ navigation, route }: TodayScreenProps): React.JSX.
       <Pressable accessibilityRole="button" accessibilityLabel="Help me now with a training problem" accessibilityHint="Opens quick, safety-first guidance for what is happening right now" onPress={() => navigation.navigate('Troubleshooter', { mode: 'help-now' })} style={({ pressed }) => [referenceStyles.helpStrip, pressed && referenceStyles.pressed]}><View style={referenceStyles.helpStripCopy}><Text style={referenceStyles.helpStripTitle}>Need help right now?</Text><Text style={referenceStyles.helpStripBody}>Get one safe next step for the behaviour you are seeing.</Text></View><ReferenceIcon name="chevron" size={17} color="#8B6A34" /></Pressable>
     </ScrollView>
     <LessonCompletionCelebration visible={celebration.visible} dogName={dogName ?? 'your dog'} photoUri={photoUri} lessonTitle={celebration.title} onContinue={() => setCelebration((current) => ({ ...current, visible: false }))} testID="lesson-completion-celebration" />
+    <HomeTrainerTour dogName={dogName ?? 'your dog'} onStartTraining={openNextLesson} />
   </SafeAreaView>;
 }
 function getOnboardingIdentity() { try { const { status } = useOnboarding(); return status?.state === 'complete' ? { dog: status.dog, ownerName: status.owner.displayName } : null; } catch { return null; } }

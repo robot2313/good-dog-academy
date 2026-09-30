@@ -21,8 +21,13 @@ export type RootStackParamList = {
   Privacy: undefined;
   LessonSummary: { lessonId: string; dailyPlanId?: string; selfDirected?: boolean };
   LessonSession: { lessonId: string; dailyPlanId?: string; selfDirected?: boolean };
+  CameraCoach: { lessonId: string; dailyPlanId?: string };
   SessionHistory: undefined;
   SessionDetail: { sessionId: string };
+  TrainingIntelligence: undefined;
+  AdaptiveProgram: undefined;
+  BehaviourTimeline: undefined;
+  WeeklyTrainerReview: undefined;
 };
 
 export type MainTabParamList = {

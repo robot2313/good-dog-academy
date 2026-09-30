@@ -1,5 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Text, View } from 'react-native';
+import { TrainerCoach } from '../../../components/TrainerCoach';
 
 import { AppScreen } from '../../../components/AppScreen';
 import { FormTextInput } from '../../../components/FormTextInput';
@@ -37,6 +38,7 @@ export function OwnerSetupScreen({ navigation }: Props): React.JSX.Element {
     <AppScreen>
       <SecondaryTextButton title="Back" onPress={() => navigation.goBack()} />
       <ProgressIndicator current={1} total={2} />
+      <TrainerCoach compact message="First, I need a little context about you. Your experience and goals help me make the training feel useful from day one." />
       <View>
         <Text style={styles.onboardingTitle}>Tell us about you.</Text>
         <Text style={styles.onboardingBody}>A little context helps us shape training around your experience and goals.</Text>
