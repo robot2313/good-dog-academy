@@ -81,8 +81,8 @@ describe('Lesson Session — single active-session screen', () => {
 
     expect(view.getByText('SUCCESS')).toBeTruthy();
     expect(view.getByText('TRY AGAIN')).toBeTruthy();
-    fireEvent.press(view.getByRole('button', { name: /Mark a successful repetition/ }));
-    fireEvent.press(view.getByRole('button', { name: /Mark a repetition that needs help/ }));
+    fireEvent.press(view.getByRole('button', { name: /Success\. 0 recorded/ }));
+    fireEvent.press(view.getByRole('button', { name: /Try again\. 0 recorded/ }));
     expect(props.onRecordSuccess).toHaveBeenCalledTimes(1);
     expect(props.onRecordChallenge).toHaveBeenCalledTimes(1);
 
