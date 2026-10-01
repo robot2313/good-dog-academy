@@ -19,6 +19,7 @@ import type { TrainingOutcome } from '../domain/models/TrainingSession';
 import type { PoseShadowGroundTruth, PoseShadowValidationReport } from '../domain/vision/PoseShadowValidation';
 import type { QuadrupedJointName } from '../domain/vision/QuadrupedPose';
 import { analyseSmartFraming } from '../domain/vision/SmartFraming';
+import { liveVisionStatus } from '../domain/vision/CameraCoachStatus';
 import { loadBundledLessonCatalogue } from '../features/lessons/catalogue';
 import { useOnboarding } from '../features/onboarding/OnboardingContext';
 import { persistCompletedLiveCoachSession } from '../services/AdaptiveTrainingPersistenceService';
@@ -80,15 +81,7 @@ type Diagnostics = {
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 type HandsFreeListenMode = 'confirmation' | 'next-rep' | 'paused';
 
-function liveVisionStatus(vision: { dogDetected: boolean; posture: string; postureConfidence: number | null } | null): string {
-  if (!vision) return 'Watching for your dog…';
-  if (!vision.dogDetected) return 'Looking for your dog';
-  if (vision.posture === 'unknown' || vision.postureConfidence === null) return 'Dog detected · checking position';
-  if (vision.posture === 'sit_like') return 'Sit detected';
-  if (vision.posture === 'stand_like') return 'Stand detected';
-  if (vision.posture === 'down_like') return 'Down detected';
-  return 'Dog detected';
-}
+
 
 const DEBUG_POSE_BONES: Array<[QuadrupedJointName, QuadrupedJointName]> = [
   ['left_eye', 'nose'],
@@ -754,7 +747,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
           <Text style={styles.poseGuideText}>KEEP DOG INSIDE THIS SQUARE</Text>
         </View>
         <View pointerEvents="none" style={styles.visionStatus}>
-          <Text style={styles.visionStatusText}>{liveVisionStatus(latestVision)}</Text>
+          <Text style={styles.visionStatusText}>{liveVisionStatus(latestVision, smartFraming)}</Text>
         </View>
 
         <View pointerEvents="none" style={styles.framingStatus}>
