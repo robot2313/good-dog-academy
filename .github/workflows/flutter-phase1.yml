@@ -1,0 +1,79 @@
+name: Flutter Phase 1 APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/flutter-migration
+    paths:
+      - 'flutter_app/**'
+      - '.github/workflows/flutter-phase1.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.2'
+          channel: stable
+          cache: true
+
+      - name: Show Flutter version
+        run: flutter --version
+
+      - name: Generate temporary Android project
+        run: |
+          rm -rf /tmp/gda_flutter
+          flutter create             --platforms=android             --org com.robot2313.migration             --project-name good_dog_academy             /tmp/gda_flutter
+
+      - name: Install Good Dog Academy Flutter source
+        run: |
+          cp flutter_app/pubspec.yaml /tmp/gda_flutter/pubspec.yaml
+          cp flutter_app/analysis_options.yaml /tmp/gda_flutter/analysis_options.yaml
+          rm -rf /tmp/gda_flutter/lib
+          rm -rf /tmp/gda_flutter/test
+          cp -R flutter_app/lib /tmp/gda_flutter/lib
+          cp -R flutter_app/test /tmp/gda_flutter/test
+
+      - name: Get dependencies
+        working-directory: /tmp/gda_flutter
+        run: flutter pub get
+
+      - name: Check formatting
+        working-directory: /tmp/gda_flutter
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Analyze
+        working-directory: /tmp/gda_flutter
+        run: flutter analyze
+
+      - name: Run tests
+        working-directory: /tmp/gda_flutter
+        run: flutter test
+
+      - name: Build Android APK
+        working-directory: /tmp/gda_flutter
+        run: flutter build apk --debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: good-dog-academy-flutter-phase1
+          path: /tmp/gda_flutter/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 14
