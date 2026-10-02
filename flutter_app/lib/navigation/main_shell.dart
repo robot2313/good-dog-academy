@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../core/theme/gda_theme.dart';
+import '../features/discovery/categories_screen.dart';
+import '../features/discovery/dog_stages_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/shared/placeholder_tab.dart';
 
@@ -21,16 +23,8 @@ class _MainShellState extends State<MainShell> {
       description: 'Your training journey will be migrated here.',
       icon: Icons.route_rounded,
     ),
-    PlaceholderTab(
-      title: 'Categories',
-      description: 'The lesson catalogue and categories will be migrated here.',
-      icon: Icons.school_rounded,
-    ),
-    PlaceholderTab(
-      title: 'Dogs',
-      description: 'Dog stages, profile and personalisation will live here.',
-      icon: Icons.pets_rounded,
-    ),
+    CategoriesScreen(),
+    DogStagesScreen(),
     PlaceholderTab(
       title: 'Progress',
       description: 'Training history and progress will be migrated here.',
