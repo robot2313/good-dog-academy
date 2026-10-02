@@ -16,7 +16,26 @@ export type ExpectedCueResponse = {
  * attention, loose-lead movement or relaxed behaviour and often explicitly
  * permits more than one body position. Those lessons must remain owner-confirmed.
  */
-const EXPECTED_CUE_RESPONSES: Readonly<Record<string, ExpectedCueResponse>> = Object.freeze({});
+const EXPECTED_CUE_RESPONSES: Readonly<Record<string, ExpectedCueResponse>> = Object.freeze({
+  'qa-camera-sit': {
+    cueId: 'qa-camera-sit',
+    cueLabel: 'Sit',
+    expectedPosture: 'sit_like',
+    responseWindowMs: 5000,
+  },
+  'qa-camera-stand': {
+    cueId: 'qa-camera-stand',
+    cueLabel: 'Stand',
+    expectedPosture: 'stand_like',
+    responseWindowMs: 5000,
+  },
+  'qa-camera-down': {
+    cueId: 'qa-camera-down',
+    cueLabel: 'Down',
+    expectedPosture: 'down_like',
+    responseWindowMs: 5000,
+  },
+});
 
 export function expectedCueResponseForLesson(lessonId: string): ExpectedCueResponse | null {
   return EXPECTED_CUE_RESPONSES[lessonId] ?? null;

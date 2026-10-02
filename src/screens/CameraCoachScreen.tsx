@@ -15,6 +15,7 @@ import {
 import { CameraCoachOrchestrator, type CameraCoachPendingConfirmation } from '../domain/camera/CameraCoachOrchestrator';
 import { CameraCoachQaTelemetry, type CameraCoachQaEventType } from '../domain/camera/CameraCoachQaTelemetry';
 import { expectedCueResponseForLesson } from '../domain/camera/ExpectedCueResponse';
+import { isCameraCoachQaLessonId } from '../domain/camera/CameraCoachQaLessons';
 import type { TrainingOutcome } from '../domain/models/TrainingSession';
 import type { PoseShadowGroundTruth, PoseShadowValidationReport } from '../domain/vision/PoseShadowValidation';
 import type { QuadrupedJointName } from '../domain/vision/QuadrupedPose';
@@ -78,7 +79,7 @@ type Diagnostics = {
   lastResult: string;
 };
 
-type SaveState = 'idle' | 'saving' | 'saved' | 'error';
+type SaveState = 'idle' | 'saving' | 'saved' | 'qa-complete' | 'error';
 type HandsFreeListenMode = 'confirmation' | 'next-rep' | 'paused';
 
 
@@ -301,6 +302,16 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
     if (session.status !== 'complete') return;
     completedSessionRef.current = session;
     if (persistedSessionIdRef.current === session.id) return;
+
+    if (isCameraCoachQaLessonId(route.params.lessonId)) {
+      setSaveState('qa-complete');
+      setDiagnostics((current) => ({
+        ...current,
+        lastResult: 'QA session complete. No production training history was changed.',
+      }));
+      await spokenCoach.announce({ type: 'session_finished' });
+      return;
+    }
 
     const startedAt = sessionStartedAtRef.current;
     if (!startedAt) return;
@@ -860,7 +871,7 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
         <Text style={styles.body}>Hands-free control: {handsFreeAvailable === null ? 'checking' : handsFreeAvailable ? (handsFreeListening ? 'listening' : 'available') : 'button fallback'}</Text>
         <Text style={styles.body}>AI Vision: on-device 17-joint pose analysis</Text>
         <Text style={styles.body}>Automatic scoring: enabled only for certified posture lessons; otherwise owner confirmation remains authoritative</Text>
-        <Text style={styles.body}>Session memory: {saveState === 'saved' ? 'saved' : saveState === 'saving' ? 'saving' : saveState === 'error' ? 'save error' : 'waiting for completion'}</Text>
+        <Text style={styles.body}>Session memory: {saveState === 'saved' ? 'saved' : saveState === 'saving' ? 'saving' : saveState === 'qa-complete' ? 'QA complete — not persisted' : saveState === 'error' ? 'save error' : 'waiting for completion'}</Text>
         <Text style={styles.body}>Frames sampled: {diagnostics.framesCaptured}</Text>
         <Text style={styles.body}>Frames analysed: {diagnostics.framesAnalysed}</Text>
         <Text style={styles.body}>Last result: {diagnostics.lastResult}</Text>
@@ -971,6 +982,13 @@ export function CameraCoachScreen({ route, navigation }: Props): React.JSX.Eleme
           <Text style={styles.sectionTitle}>Session save needs retry</Text>
           <Text style={styles.body}>The completed session is still held in memory. Retrying will use the same session ID, so it will not create a duplicate.</Text>
           <AppButton title="Retry saving session" onPress={retrySave} />
+        </View>
+      ) : null}
+
+      {saveState === 'qa-complete' ? (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>QA session complete</Text>
+          <Text style={styles.body}>This QA session was completed successfully. It was not added to production training history or used to update the Adaptive Brain.</Text>
         </View>
       ) : null}
 
