@@ -34,7 +34,7 @@ class _MainShellState extends State<MainShell> {
     PlaceholderTab(
       title: 'Progress',
       description: 'Training history and progress will be migrated here.',
-      icon: Icons.monitoring_rounded,
+      icon: Icons.bar_chart,
     ),
   ];
 
@@ -74,8 +74,8 @@ class _MainShellState extends State<MainShell> {
             label: 'Dogs',
           ),
           NavigationDestination(
-            icon: Icon(Icons.monitoring_outlined),
-            selectedIcon: Icon(Icons.monitoring_rounded),
+            icon: Icon(Icons.bar_chart),
+            selectedIcon: Icon(Icons.bar_chart),
             label: 'Progress',
           ),
         ],
