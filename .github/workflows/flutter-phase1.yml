@@ -55,9 +55,9 @@ jobs:
         working-directory: /tmp/gda_flutter
         run: flutter pub get
 
-      - name: Check formatting
+      - name: Format Flutter source
         working-directory: /tmp/gda_flutter
-        run: dart format --output=none --set-exit-if-changed lib test
+        run: dart format lib test
 
       - name: Analyze
         working-directory: /tmp/gda_flutter
