@@ -1,9 +1,33 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:good_dog_academy/features/discovery/discovery_data.dart';
 import 'package:good_dog_academy/main.dart';
 
 void main() {
+  test('production discovery data contains all training categories', () {
+    expect(
+      trainingCategories.map((category) => category.label).toList(),
+      [
+        'House Training',
+        'Chewing',
+        'Barking',
+        'Jumping Up',
+        'Recall',
+        'Loose-Lead Walking',
+        'Focus',
+        'Impulse Control',
+        'Confidence',
+        'Reactivity',
+      ],
+    );
+
+    expect(
+      trainingCategories.every((category) => category.lessonCount == 6),
+      isTrue,
+    );
+  });
+
   testWidgets(
-    'Categories tab renders production discovery categories',
+    'Categories tab renders and scrolls production discovery categories',
     (tester) async {
       await tester.pumpWidget(const GoodDogAcademyApp());
 
@@ -11,14 +35,17 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('House Training'), findsOneWidget);
-      expect(find.text('Chewing'), findsOneWidget);
-      expect(find.text('Barking'), findsOneWidget);
-      expect(find.text('Jumping Up'), findsOneWidget);
-      expect(find.text('Recall'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.text('Loose-Lead Walking'),
+        300,
+      );
       expect(find.text('Loose-Lead Walking'), findsOneWidget);
-      expect(find.text('Focus'), findsOneWidget);
-      expect(find.text('Impulse Control'), findsOneWidget);
-      expect(find.text('Confidence'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.text('Reactivity'),
+        300,
+      );
       expect(find.text('Reactivity'), findsOneWidget);
     },
   );
