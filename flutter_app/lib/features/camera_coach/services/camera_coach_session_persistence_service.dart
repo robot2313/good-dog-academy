@@ -97,6 +97,12 @@ class CameraCoachSessionPersistenceService {
       dailyPlanId: dailyPlanId,
       notes: notes,
       reps: reps,
+      cameraCoach: CameraCoachSessionMetadataRecord(
+        endedEarly: session.endedEarly,
+        endReason: _storedEndReason(session.endReason),
+        startingDifficulty: _storedDifficulty(session.startingDifficulty),
+        endingDifficulty: _storedDifficulty(session.difficulty),
+      ),
       allowPrerequisiteBypass: allowPrerequisiteBypass,
     );
 
@@ -185,6 +191,30 @@ StoredDogPosture? _storedPosture(DogPosture? posture) {
       return StoredDogPosture.sitLike;
     case DogPosture.downLike:
       return StoredDogPosture.downLike;
+    case null:
+      return null;
+  }
+}
+
+
+TrainingDifficultyRecord _storedDifficulty(DifficultyVector difficulty) {
+  return TrainingDifficultyRecord(
+    distance: difficulty.distance,
+    duration: difficulty.duration,
+    distraction: difficulty.distraction,
+  );
+}
+
+CameraCoachEndReason? _storedEndReason(LiveCoachEndReason? reason) {
+  switch (reason) {
+    case LiveCoachEndReason.targetReached:
+      return CameraCoachEndReason.targetReached;
+    case LiveCoachEndReason.stress:
+      return CameraCoachEndReason.stress;
+    case LiveCoachEndReason.fatigue:
+      return CameraCoachEndReason.fatigue;
+    case LiveCoachEndReason.ownerStopped:
+      return CameraCoachEndReason.ownerStopped;
     case null:
       return null;
   }

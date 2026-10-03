@@ -151,6 +151,15 @@ void main() {
       progress.sessions.single.reps.first.evidence.posture,
       StoredDogPosture.standLike,
     );
+    expect(progress.sessions.single.cameraCoach, isNotNull);
+    expect(
+      progress.sessions.single.cameraCoach!.endReason,
+      CameraCoachEndReason.targetReached,
+    );
+    expect(
+      progress.sessions.single.cameraCoach!.endingDifficulty.duration,
+      2,
+    );
   });
 
   test('retrying the same Camera Coach session is idempotent', () async {

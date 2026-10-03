@@ -86,6 +86,145 @@ StoredDogPosture storedDogPostureFromValue(String value) {
   throw TrainingSessionDataException('Unknown stored dog posture: $value');
 }
 
+enum CameraCoachEndReason {
+  targetReached,
+  stress,
+  fatigue,
+  ownerStopped,
+}
+
+String cameraCoachEndReasonStorageValue(CameraCoachEndReason reason) {
+  switch (reason) {
+    case CameraCoachEndReason.targetReached:
+      return 'target_reached';
+    case CameraCoachEndReason.stress:
+      return 'stress';
+    case CameraCoachEndReason.fatigue:
+      return 'fatigue';
+    case CameraCoachEndReason.ownerStopped:
+      return 'owner_stopped';
+  }
+}
+
+CameraCoachEndReason cameraCoachEndReasonFromStorage(String value) {
+  switch (value) {
+    case 'target_reached':
+      return CameraCoachEndReason.targetReached;
+    case 'stress':
+      return CameraCoachEndReason.stress;
+    case 'fatigue':
+      return CameraCoachEndReason.fatigue;
+    case 'owner_stopped':
+      return CameraCoachEndReason.ownerStopped;
+  }
+  throw TrainingSessionDataException('Unknown Camera Coach end reason: $value');
+}
+
+class TrainingDifficultyRecord {
+  const TrainingDifficultyRecord({
+    required this.distance,
+    required this.duration,
+    required this.distraction,
+  });
+
+  final int distance;
+  final int duration;
+  final int distraction;
+
+  Map<String, Object?> toJson() => <String, Object?>{
+    'distance': distance,
+    'duration': duration,
+    'distraction': distraction,
+  };
+
+  factory TrainingDifficultyRecord.fromJson(Map<String, Object?> json) {
+    final record = TrainingDifficultyRecord(
+      distance: _requiredInt(json, 'distance'),
+      duration: _requiredInt(json, 'duration'),
+      distraction: _requiredInt(json, 'distraction'),
+    );
+    record.validate();
+    return record;
+  }
+
+  void validate() {
+    if (distance < 1 ||
+        distance > 5 ||
+        duration < 1 ||
+        duration > 5 ||
+        distraction < 1 ||
+        distraction > 5) {
+      throw const TrainingSessionDataException(
+        'Training difficulty values must be between 1 and 5.',
+      );
+    }
+  }
+}
+
+class CameraCoachSessionMetadataRecord {
+  const CameraCoachSessionMetadataRecord({
+    required this.endedEarly,
+    required this.endReason,
+    required this.startingDifficulty,
+    required this.endingDifficulty,
+  });
+
+  final bool endedEarly;
+  final CameraCoachEndReason? endReason;
+  final TrainingDifficultyRecord startingDifficulty;
+  final TrainingDifficultyRecord endingDifficulty;
+
+  Map<String, Object?> toJson() => <String, Object?>{
+    'endedEarly': endedEarly,
+    'endReason': endReason == null
+        ? null
+        : cameraCoachEndReasonStorageValue(endReason!),
+    'startingDifficulty': startingDifficulty.toJson(),
+    'endingDifficulty': endingDifficulty.toJson(),
+  };
+
+  factory CameraCoachSessionMetadataRecord.fromJson(
+    Map<String, Object?> json,
+  ) {
+    final starting = json['startingDifficulty'];
+    final ending = json['endingDifficulty'];
+    final reason = json['endReason'];
+    if (starting is! Map || ending is! Map) {
+      throw const TrainingSessionDataException(
+        'Camera Coach difficulty metadata must be objects.',
+      );
+    }
+    final record = CameraCoachSessionMetadataRecord(
+      endedEarly: _requiredBool(json, 'endedEarly'),
+      endReason: reason == null
+          ? null
+          : reason is String
+          ? cameraCoachEndReasonFromStorage(reason)
+          : throw const TrainingSessionDataException(
+              'Camera Coach end reason must be a string or null.',
+            ),
+      startingDifficulty: TrainingDifficultyRecord.fromJson(
+        starting.cast<String, Object?>(),
+      ),
+      endingDifficulty: TrainingDifficultyRecord.fromJson(
+        ending.cast<String, Object?>(),
+      ),
+    );
+    record.validate();
+    return record;
+  }
+
+  void validate() {
+    startingDifficulty.validate();
+    endingDifficulty.validate();
+    if (endedEarly && endReason == CameraCoachEndReason.targetReached) {
+      throw const TrainingSessionDataException(
+        'An early-ended Camera Coach session cannot be target reached.',
+      );
+    }
+  }
+}
+
 class RepEvidenceRecord {
   const RepEvidenceRecord({
     required this.source,
@@ -308,6 +447,7 @@ class TrainingSessionRecord {
     required this.outcome,
     required this.notes,
     this.reps = const <TrainingRepRecord>[],
+    this.cameraCoach,
   });
 
   final String id;
@@ -320,6 +460,7 @@ class TrainingSessionRecord {
   final TrainingOutcome? outcome;
   final String notes;
   final List<TrainingRepRecord> reps;
+  final CameraCoachSessionMetadataRecord? cameraCoach;
 
   Map<String, Object?> toJson() => <String, Object?>{
     'id': id,
@@ -332,11 +473,13 @@ class TrainingSessionRecord {
     'outcome': outcome == null ? null : trainingOutcomeStorageValue(outcome!),
     'notes': notes,
     'reps': reps.map((rep) => rep.toJson()).toList(growable: false),
+    'cameraCoach': cameraCoach?.toJson(),
   };
 
   factory TrainingSessionRecord.fromJson(Map<String, Object?> json) {
     final outcomeValue = json['outcome'];
     final repsValue = json['reps'];
+    final cameraCoachValue = json['cameraCoach'];
     final reps = <TrainingRepRecord>[];
     if (repsValue != null) {
       if (repsValue is! List) {
@@ -356,6 +499,12 @@ class TrainingSessionRecord {
       }
     }
 
+    if (cameraCoachValue != null && cameraCoachValue is! Map) {
+      throw const TrainingSessionDataException(
+        'Camera Coach session metadata must be an object or null.',
+      );
+    }
+
     final record = TrainingSessionRecord(
       id: _requiredString(json, 'id'),
       dogId: _requiredString(json, 'dogId'),
@@ -373,6 +522,11 @@ class TrainingSessionRecord {
             ),
       notes: _requiredString(json, 'notes'),
       reps: List.unmodifiable(reps),
+      cameraCoach: cameraCoachValue == null
+          ? null
+          : CameraCoachSessionMetadataRecord.fromJson(
+              (cameraCoachValue as Map).cast<String, Object?>(),
+            ),
     );
     record.validate();
     return record;
@@ -425,6 +579,8 @@ class TrainingSessionRecord {
       );
     }
 
+    cameraCoach?.validate();
+
     final repIds = <String>{};
     final repNumbers = <int>{};
     for (final rep in reps) {
@@ -472,6 +628,14 @@ String? _nullableString(Map<String, Object?> json, String key) {
   if (value == null) return null;
   if (value is! String) {
     throw TrainingSessionDataException('$key must be a string or null.');
+  }
+  return value;
+}
+
+bool _requiredBool(Map<String, Object?> json, String key) {
+  final value = json[key];
+  if (value is! bool) {
+    throw TrainingSessionDataException('$key must be a boolean.');
   }
   return value;
 }
