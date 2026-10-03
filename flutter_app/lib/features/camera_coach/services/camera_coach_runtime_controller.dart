@@ -195,8 +195,11 @@ class CameraCoachRuntimeController extends ChangeNotifier {
     await spokenCoach?.announce(const SessionResumedCoachEvent());
   }
 
-  Future<bool> repeatLastCoachMessage() async =>
-      await spokenCoach?.repeatLast() ?? false;
+  Future<bool> repeatLastCoachMessage() async {
+    final coach = spokenCoach;
+    if (coach == null) return false;
+    return coach.repeatLast();
+  }
 
   Future<void> setVoiceEnabled(bool enabled) async {
     await spokenCoach?.setEnabled(enabled);
@@ -228,13 +231,16 @@ class CameraCoachRuntimeController extends ChangeNotifier {
         await spokenCoach?.announce(
           OwnerConfirmationCoachEvent(result.pending!),
         );
+        break;
       case CameraCoachFrameKind.repRecorded:
         await _handleRecordedRep(result);
+        break;
       case CameraCoachFrameKind.sessionComplete:
         _activeCueAt = null;
         status = CameraCoachRuntimeStatus.complete;
         await _stopFrameSource();
         await spokenCoach?.announce(const SessionFinishedCoachEvent());
+        break;
       case CameraCoachFrameKind.throttled:
       case CameraCoachFrameKind.busy:
       case CameraCoachFrameKind.waitingForTemporal:
@@ -243,6 +249,7 @@ class CameraCoachRuntimeController extends ChangeNotifier {
         status = _activeCueAt == null
             ? CameraCoachRuntimeStatus.ready
             : CameraCoachRuntimeStatus.cueActive;
+        break;
     }
   }
 
