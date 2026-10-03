@@ -273,20 +273,28 @@ class _QuestionCard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 8),
-          for (final option in AssessmentOption.values)
-            RadioListTile<AssessmentOption>(
-              key: ValueKey(
-                '${question.id}-${assessmentOptionStorageValue(option)}',
-              ),
-              contentPadding: EdgeInsets.zero,
-              dense: true,
-              title: Text(assessmentOptionLabel(option)),
-              value: option,
-              groupValue: value,
-              onChanged: (selected) {
-                if (selected != null) onChanged(selected);
-              },
+          RadioGroup<AssessmentOption>(
+            groupValue: value,
+            onChanged: (selected) {
+              if (selected != null) {
+                onChanged(selected);
+              }
+            },
+            child: Column(
+              children: [
+                for (final option in AssessmentOption.values)
+                  RadioListTile<AssessmentOption>(
+                    key: ValueKey(
+                      '${question.id}-${assessmentOptionStorageValue(option)}',
+                    ),
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    title: Text(assessmentOptionLabel(option)),
+                    value: option,
+                  ),
+              ],
             ),
+          ),
         ],
       ),
     ),

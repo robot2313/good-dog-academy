@@ -159,7 +159,9 @@ class BehaviourAssessmentRecord {
       ownerId: _requiredString(json, 'ownerId'),
       dogId: _requiredString(json, 'dogId'),
       responses: responsesRaw.map((item) {
-        if (item is! Map) throw const AssessmentDataException('Assessment response must be an object.');
+        if (item is! Map) {
+          throw const AssessmentDataException('Assessment response must be an object.');
+        }
         return AssessmentResponseRecord.fromJson(item.cast<String, Object?>());
       }).toList(growable: false),
       calculatedScores: scoresRaw.map<String, int>((key, value) {
@@ -169,7 +171,9 @@ class BehaviourAssessmentRecord {
         return MapEntry(key, value);
       }),
       unknownSkills: unknownRaw.map((item) {
-        if (item is! String) throw const AssessmentDataException('Unknown skill must be a string.');
+        if (item is! String) {
+          throw const AssessmentDataException('Unknown skill must be a string.');
+        }
         return item;
       }).toList(growable: false),
       completedAt: _requiredString(json, 'completedAt'),
@@ -263,7 +267,9 @@ class BehaviourProfileRecord {
       energyLevel: _requiredString(json, 'energyLevel'),
       foodMotivation: _requiredString(json, 'foodMotivation'),
       challenges: challengesRaw.map((item) {
-        if (item is! String) throw const AssessmentDataException('Challenge must be a string.');
+        if (item is! String) {
+          throw const AssessmentDataException('Challenge must be a string.');
+        }
         return item;
       }).toList(growable: false),
       skillScores: scoresRaw.map<String, int>((key, value) {
@@ -325,34 +331,44 @@ void _validateScores(Map<String, int> scores) {
 
 ScoringDirection _directionFromStorage(String value) {
   for (final direction in ScoringDirection.values) {
-    if (direction.name == value) return direction;
+    if (direction.name == value) {
+      return direction;
+    }
   }
   throw AssessmentDataException('Unknown scoring direction: $value');
 }
 
 String _requiredString(Map<String, Object?> json, String key) {
   final value = json[key];
-  if (value is! String) throw AssessmentDataException('$key must be a string.');
+  if (value is! String) {
+    throw AssessmentDataException('$key must be a string.');
+  }
   return value;
 }
 
 String? _nullableString(Map<String, Object?> json, String key) {
   final value = json[key];
   if (value == null) return null;
-  if (value is! String) throw AssessmentDataException('$key must be a string or null.');
+  if (value is! String) {
+    throw AssessmentDataException('$key must be a string or null.');
+  }
   return value;
 }
 
 int _requiredInt(Map<String, Object?> json, String key) {
   final value = json[key];
-  if (value is! int) throw AssessmentDataException('$key must be an integer.');
+  if (value is! int) {
+    throw AssessmentDataException('$key must be an integer.');
+  }
   return value;
 }
 
 int? _nullableInt(Map<String, Object?> json, String key) {
   final value = json[key];
   if (value == null) return null;
-  if (value is! int) throw AssessmentDataException('$key must be an integer or null.');
+  if (value is! int) {
+    throw AssessmentDataException('$key must be an integer or null.');
+  }
   return value;
 }
 
