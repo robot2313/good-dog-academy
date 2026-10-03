@@ -4,6 +4,7 @@ import '../../core/theme/gda_theme.dart';
 import '../lessons/data/production_lessons.dart';
 import '../lessons/domain/lesson_models.dart';
 import '../lessons/logic/lesson_unlock_service.dart';
+import '../lessons/progress/lesson_progress_controller.dart';
 
 class JourneyScreen extends StatefulWidget {
   const JourneyScreen({super.key});
@@ -15,15 +16,38 @@ class JourneyScreen extends StatefulWidget {
 class _JourneyScreenState extends State<JourneyScreen> {
   String expandedStage = 'foundation';
 
-  late final List<LessonLibraryItem> lessons =
-      const LessonUnlockService(
-    productionLessons,
-  ).resolve(
-    const <LessonProgressSnapshot>[],
-  ).values.toList(growable: false);
-
   @override
   Widget build(BuildContext context) {
+    final progress =
+        LessonProgressScope.maybeOf(context);
+
+    if (progress?.loading == true) {
+      return const SafeArea(
+        bottom: false,
+        child: Center(
+          child: CircularProgressIndicator(
+            semanticsLabel: 'Loading training progress',
+          ),
+        ),
+      );
+    }
+
+    if (progress?.error != null) {
+      return SafeArea(
+        bottom: false,
+        child: _JourneyProgressLoadError(
+          onRetry: progress!.reload,
+        ),
+      );
+    }
+
+    final lessons = const LessonUnlockService(
+      productionLessons,
+    ).resolve(
+      progress?.snapshots ??
+          const <LessonProgressSnapshot>[],
+    ).values.toList(growable: false);
+
     final stages = createJourneyStages(lessons);
 
     final firstIncompleteStage = stages.firstWhere(
@@ -112,8 +136,8 @@ class _JourneyScreenState extends State<JourneyScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Progress and adaptive journey adjustments will connect '
-            'when Flutter training persistence is migrated.',
+            'Adaptive journey adjustments will connect when Flutter '
+            'adaptive training memory is migrated.',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: GdaColors.muted,
@@ -122,6 +146,52 @@ class _JourneyScreenState extends State<JourneyScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _JourneyProgressLoadError extends StatelessWidget {
+  const _JourneyProgressLoadError({
+    required this.onRetry,
+  });
+
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              color: GdaColors.muted,
+              size: 34,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Training progress could not be loaded safely.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'No saved training data was changed.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton(
+              onPressed: () {
+                onRetry();
+              },
+              child: const Text('Try again'),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -5,6 +5,7 @@ import 'data/lesson_collections.dart';
 import 'data/production_lessons.dart';
 import 'domain/lesson_models.dart';
 import 'logic/lesson_unlock_service.dart';
+import 'progress/lesson_progress_controller.dart';
 
 enum LessonBrowserScopeType {
   skill,
@@ -47,12 +48,17 @@ class LessonBrowserScreen extends StatefulWidget {
 class _LessonBrowserScreenState extends State<LessonBrowserScreen> {
   _DifficultyFilter difficultyFilter = _DifficultyFilter.all;
 
-  late final Map<String, LessonLibraryItem> resolvedLessons =
-      const LessonUnlockService(
-    productionLessons,
-  ).resolve(
-    const <LessonProgressSnapshot>[],
-  );
+  Map<String, LessonLibraryItem> get resolvedLessons {
+    final progress =
+        LessonProgressScope.maybeOf(context);
+
+    return const LessonUnlockService(
+      productionLessons,
+    ).resolve(
+      progress?.snapshots ??
+          const <LessonProgressSnapshot>[],
+    );
+  }
 
   List<LessonLibraryItem> get scopedLessons {
     final lessons = resolvedLessons.values;
@@ -83,6 +89,29 @@ class _LessonBrowserScreenState extends State<LessonBrowserScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final progress =
+        LessonProgressScope.maybeOf(context);
+
+    if (progress?.loading == true) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: const Center(
+          child: CircularProgressIndicator(
+            semanticsLabel: 'Loading training progress',
+          ),
+        ),
+      );
+    }
+
+    if (progress?.error != null) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: _ProgressLoadError(
+          onRetry: progress!.reload,
+        ),
+      );
+    }
+
     final allLessons = scopedLessons;
     final visibleLessons = filteredLessons;
 
@@ -170,6 +199,52 @@ class _LessonBrowserScreenState extends State<LessonBrowserScreen> {
                   ],
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProgressLoadError extends StatelessWidget {
+  const _ProgressLoadError({
+    required this.onRetry,
+  });
+
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              color: GdaColors.muted,
+              size: 34,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Training progress could not be loaded safely.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'No saved training data was changed.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton(
+              onPressed: () {
+                onRetry();
+              },
+              child: const Text('Try again'),
+            ),
           ],
         ),
       ),
