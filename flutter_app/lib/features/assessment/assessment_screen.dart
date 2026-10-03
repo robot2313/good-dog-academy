@@ -205,40 +205,48 @@ class _Section extends StatelessWidget {
       ),
     };
 
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        Text(
-          'STEP ${step + 1} OF 5',
-          style: const TextStyle(
-            color: GdaColors.forest,
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
-          ),
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'STEP ${step + 1} OF 5',
+              style: const TextStyle(
+                color: GdaColors.forest,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              details.title,
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(details.body),
+            const SizedBox(height: 18),
+            for (final question in questions) ...[
+              _QuestionCard(
+                question: question,
+                value: answers[question.id],
+                onChanged: (option) => onAnswer(question.id, option),
+              ),
+              const SizedBox(height: 14),
+            ],
+            if (section == AssessmentSection.control &&
+                hasSevereReactivityResponse(answers)) ...[
+              const _SafetyNotice(),
+              const SizedBox(height: 18),
+            ],
+            FilledButton(
+              onPressed: complete ? onContinue : null,
+              child: const Text('Continue'),
+            ),
+          ],
         ),
-        const SizedBox(height: 6),
-        Text(details.title, style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: 8),
-        Text(details.body),
-        const SizedBox(height: 18),
-        for (final question in questions) ...[
-          _QuestionCard(
-            question: question,
-            value: answers[question.id],
-            onChanged: (option) => onAnswer(question.id, option),
-          ),
-          const SizedBox(height: 14),
-        ],
-        if (section == AssessmentSection.control &&
-            hasSevereReactivityResponse(answers)) ...[
-          const _SafetyNotice(),
-          const SizedBox(height: 18),
-        ],
-        FilledButton(
-          onPressed: complete ? onContinue : null,
-          child: const Text('Continue'),
-        ),
-      ],
+      ),
     );
   }
 }
