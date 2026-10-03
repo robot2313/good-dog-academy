@@ -136,7 +136,7 @@ class DogTracker {
       _misses++;
       final ageMs = _box == null
           ? 0
-          : (nowMs - _lastDetectionAtMs).clamp(0, 1 << 31);
+          : _nonNegativeAge(nowMs - _lastDetectionAtMs);
 
       if (_box == null) {
         _state = DogTrackingState.searching;
@@ -158,7 +158,7 @@ class DogTracker {
       trackingConfidence: _confidence,
       ageMs: _box == null
           ? 0
-          : (nowMs - _lastDetectionAtMs).clamp(0, 1 << 31),
+          : _nonNegativeAge(nowMs - _lastDetectionAtMs),
       consecutiveMisses: _misses,
       source: _source,
     );
@@ -208,8 +208,8 @@ double _iou(NormalizedDogBox a, NormalizedDogBox b) {
   final bBottom = b.top + b.height;
   final bottom = aBottom < bBottom ? aBottom : bBottom;
 
-  final intersectionWidth = (right - left).clamp(0.0, double.infinity);
-  final intersectionHeight = (bottom - top).clamp(0.0, double.infinity);
+  final intersectionWidth = right > left ? right - left : 0.0;
+  final intersectionHeight = bottom > top ? bottom - top : 0.0;
   final intersection = intersectionWidth * intersectionHeight;
   final union = a.width * a.height + b.width * b.height - intersection;
   return union <= 0 ? 0 : intersection / union;
@@ -218,4 +218,10 @@ double _iou(NormalizedDogBox a, NormalizedDogBox b) {
 double _smooth(double previous, double next, double alpha) =>
     previous + (next - previous) * alpha;
 
-double _clamp01(double value) => value.clamp(0.0, 1.0);
+double _clamp01(double value) {
+  if (value < 0) return 0;
+  if (value > 1) return 1;
+  return value;
+}
+
+int _nonNegativeAge(int value) => value < 0 ? 0 : value;
