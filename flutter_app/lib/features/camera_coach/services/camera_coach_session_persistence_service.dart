@@ -48,6 +48,7 @@ class CameraCoachSessionPersistenceService
 
   final LessonProgressController progressController;
 
+  @override
   Future<CameraCoachPersistenceResult> persistCompletedSession({
     required String ownerId,
     required String dogId,
