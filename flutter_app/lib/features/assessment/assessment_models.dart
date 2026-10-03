@@ -279,7 +279,9 @@ class BehaviourProfileRecord {
         return MapEntry(key, value);
       }),
       unknownSkills: unknownRaw.map((item) {
-        if (item is! String) throw const AssessmentDataException('Unknown skill must be a string.');
+        if (item is! String) {
+          throw const AssessmentDataException('Unknown skill must be a string.');
+        }
         return item;
       }).toList(growable: false),
       assessmentId: _nullableString(json, 'assessmentId'),
@@ -348,7 +350,9 @@ String _requiredString(Map<String, Object?> json, String key) {
 
 String? _nullableString(Map<String, Object?> json, String key) {
   final value = json[key];
-  if (value == null) return null;
+  if (value == null) {
+    return null;
+  }
   if (value is! String) {
     throw AssessmentDataException('$key must be a string or null.');
   }

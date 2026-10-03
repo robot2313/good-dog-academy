@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:good_dog_academy/features/assessment/assessment_catalogue.dart';
 import 'package:good_dog_academy/features/assessment/assessment_controller.dart';
-import 'package:good_dog_academy/features/assessment/assessment_models.dart';
 import 'package:good_dog_academy/features/assessment/assessment_repository.dart';
 import 'package:good_dog_academy/features/identity/app_identity_controller.dart';
 import 'package:good_dog_academy/features/identity/app_identity_repository.dart';
