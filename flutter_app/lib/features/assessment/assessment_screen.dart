@@ -37,7 +37,7 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
     }
 
     return PopScope(
-      canPop: step > 0 && !assessment.saving,
+      canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop && step > 0 && !assessment.saving) {
           setState(() => step--);
@@ -275,6 +275,9 @@ class _QuestionCard extends StatelessWidget {
           const SizedBox(height: 8),
           for (final option in AssessmentOption.values)
             RadioListTile<AssessmentOption>(
+              key: ValueKey(
+                '${question.id}-${assessmentOptionStorageValue(option)}',
+              ),
               contentPadding: EdgeInsets.zero,
               dense: true,
               title: Text(assessmentOptionLabel(option)),
