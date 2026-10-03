@@ -18,11 +18,13 @@ class LessonSessionScreen extends StatefulWidget {
     required this.ownerId,
     required this.dogId,
     required this.allowPrerequisiteBypass,
+    this.dailyPlanId,
   });
 
   final String lessonId;
   final String ownerId;
   final String dogId;
+  final String? dailyPlanId;
   final bool allowPrerequisiteBypass;
 
   @override
@@ -188,6 +190,7 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
         attemptedAt: DateTime.now().toUtc().toIso8601String(),
         startedAt: startedAt,
         sessionId: sessionId,
+        dailyPlanId: widget.dailyPlanId,
         notes:
             'Guided check-ins: $successfulRepetitions successful; '
             '$needsHelpRepetitions needed help. '

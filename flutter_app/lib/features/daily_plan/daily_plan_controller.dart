@@ -7,6 +7,7 @@ import '../assessment/assessment_models.dart';
 import '../identity/app_identity_controller.dart';
 import '../identity/app_identity_record.dart';
 import '../lessons/progress/lesson_progress_controller.dart';
+import '../lessons/progress/lesson_progress_record.dart';
 import 'daily_plan_generation_service.dart';
 import 'daily_plan_models.dart';
 import 'daily_plan_repository.dart';
@@ -42,7 +43,7 @@ class DailyPlanController extends ChangeNotifier {
     required AppDogRecord dog,
     required BehaviourProfileRecord profile,
     required BehaviourAssessmentRecord assessment,
-    required List progressRecords,
+    required List<LessonProgressRecord> progressRecords,
     DateTime? now,
   }) async {
     final generation = ++_generation;
@@ -60,7 +61,7 @@ class DailyPlanController extends ChangeNotifier {
         dog: dog,
         profile: profile,
         assessment: assessment,
-        progress: progressRecords.cast(),
+        progress: progressRecords,
         now: now ?? DateTime.now(),
       );
       if (_disposed ||

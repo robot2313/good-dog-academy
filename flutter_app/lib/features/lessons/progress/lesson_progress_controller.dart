@@ -98,6 +98,7 @@ class LessonProgressController extends ChangeNotifier {
     required String attemptedAt,
     String? startedAt,
     String? sessionId,
+    String? dailyPlanId,
     String notes = '',
     bool allowPrerequisiteBypass = false,
   }) async {
@@ -201,7 +202,7 @@ class LessonProgressController extends ChangeNotifier {
       id: resolvedSessionId,
       dogId: dogId,
       lessonId: lessonId,
-      dailyPlanId: null,
+      dailyPlanId: dailyPlanId,
       startedAt: started.toIso8601String(),
       completedAt: completedAtDate.toIso8601String(),
       durationMinutes: (elapsedMilliseconds / 60000).round().clamp(0, 1440),

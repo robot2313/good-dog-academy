@@ -14,10 +14,12 @@ class LessonDetailScreen extends StatelessWidget {
     super.key,
     required this.lessonId,
     this.allowSelfDirectedStart = false,
+    this.dailyPlanId,
   });
 
   final String lessonId;
   final bool allowSelfDirectedStart;
+  final String? dailyPlanId;
 
   @override
   Widget build(BuildContext context) {
@@ -276,6 +278,7 @@ class LessonDetailScreen extends StatelessWidget {
                               lessonId: lesson.id,
                               ownerId: identity!.owner!.id,
                               dogId: identity.selectedDog!.id,
+                              dailyPlanId: dailyPlanId,
                               allowPrerequisiteBypass: selfDirected,
                             ),
                           ),

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/gda_theme.dart';
 import '../identity/app_identity_controller.dart';
+import '../daily_plan/daily_plan_controller.dart';
 import '../identity/dog_selector.dart';
 import '../identity/dog_avatar.dart';
 import '../lessons/progress/lesson_progress_controller.dart';
 import '../lessons/data/production_lessons.dart';
+import '../lessons/lesson_detail_screen.dart';
 import '../progress/learning_passport_service.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -167,6 +169,86 @@ class _PlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dailyPlan = DailyPlanScope.maybeOf(context);
+    final progress = LessonProgressScope.maybeOf(context);
+
+    if (dailyPlan == null) {
+      return const _PlanMessageCard(
+        title: 'Your next lesson',
+        body: 'Personalised planning will appear here.',
+      );
+    }
+
+    if (dailyPlan.loading ||
+        (dailyPlan.plan == null && dailyPlan.error == null)) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(18),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              SizedBox(width: 12),
+              Expanded(child: Text('Preparing today’s personalised plan…')),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (dailyPlan.error != null || dailyPlan.plan == null) {
+      return const _PlanMessageCard(
+        title: 'Today’s plan is unavailable',
+        body:
+            'Your saved assessment and training data were not changed. '
+            'You can still train from Journey or Categories.',
+      );
+    }
+
+    final plan = dailyPlan.plan!;
+    if (progress == null || progress.loading || progress.dogId != plan.dogId) {
+      return const _PlanMessageCard(
+        title: 'Loading today’s plan',
+        body: 'Checking this dog’s completed training sessions.',
+      );
+    }
+
+    final completedLessonIds = progress.sessions
+        .where(
+          (record) =>
+              record.dailyPlanId == plan.id && record.completedAt != null,
+        )
+        .map((record) => record.lessonId)
+        .toSet();
+    final remaining = plan.items
+        .where((item) => !completedLessonIds.contains(item.lessonId))
+        .toList(growable: false);
+
+    if (remaining.isEmpty) {
+      return const _PlanMessageCard(
+        title: 'Today’s plan complete',
+        body:
+            'Nice work. Today’s personalised training items have been recorded.',
+        progress: 1,
+      );
+    }
+
+    final next = remaining.first;
+    final matches = productionLessons.where(
+      (candidate) => candidate.id == next.lessonId,
+    );
+    final lesson = matches.isEmpty ? null : matches.first;
+    if (lesson == null) {
+      return const _PlanMessageCard(
+        title: 'Today’s plan needs refreshing',
+        body: 'The recommended lesson is no longer in the current catalogue.',
+      );
+    }
+
+    final completedCount = plan.items.length - remaining.length;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(18),
@@ -175,34 +257,38 @@ class _PlanCard extends StatelessWidget {
           children: [
             const Row(
               children: [
-                Icon(Icons.calendar_today_rounded, color: GdaColors.primary),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Your next lesson',
-                    style: TextStyle(
-                      color: GdaColors.text,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                    ),
+                Icon(Icons.auto_awesome_rounded, color: GdaColors.primary),
+                SizedBox(width: 8),
+                Text(
+                  'PERSONALISED FOR TODAY',
+                  style: TextStyle(
+                    color: GdaColors.forest,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 10),
-            const Text(
-              'Your existing Daily Plan logic will be migrated into this card.',
-              style: TextStyle(
-                color: GdaColors.muted,
-                fontSize: 13,
-                height: 1.45,
+            Text(
+              lesson.title,
+              style: const TextStyle(
+                color: GdaColors.text,
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 6),
+            Text(
+              '${plan.estimatedMinutes} min plan · '
+              'Focus: ${_homeSkillLabel(plan.focusSkill)}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 14),
             ClipRRect(
               borderRadius: BorderRadius.circular(999),
-              child: const LinearProgressIndicator(
-                value: 0,
+              child: LinearProgressIndicator(
+                value: completedCount / plan.items.length,
                 minHeight: 7,
                 backgroundColor: GdaColors.subtle,
                 color: GdaColors.primary,
@@ -212,8 +298,19 @@ class _PlanCard extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: null,
-                child: const Text('Continue Lesson'),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => LessonDetailScreen(
+                        lessonId: lesson.id,
+                        dailyPlanId: plan.id,
+                      ),
+                    ),
+                  );
+                },
+                child: Text(
+                  completedCount == 0 ? 'Start Today’s Plan' : 'Continue Plan',
+                ),
               ),
             ),
           ],
@@ -222,6 +319,56 @@ class _PlanCard extends StatelessWidget {
     );
   }
 }
+
+class _PlanMessageCard extends StatelessWidget {
+  const _PlanMessageCard({
+    required this.title,
+    required this.body,
+    this.progress = 0,
+  });
+
+  final String title;
+  final String body;
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: GdaColors.text,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(body, style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height: 14),
+          LinearProgressIndicator(
+            value: progress,
+            minHeight: 7,
+            backgroundColor: GdaColors.subtle,
+            color: GdaColors.primary,
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+String _homeSkillLabel(String skill) => skill
+    .split('-')
+    .map(
+      (part) => part.isEmpty
+          ? part
+          : '${part[0].toUpperCase()}${part.substring(1)}',
+    )
+    .join(' ');
 
 class _LessonCard extends StatelessWidget {
   const _LessonCard({

@@ -6,6 +6,8 @@ import 'core/theme/gda_theme.dart';
 import 'features/lessons/progress/lesson_progress_controller.dart';
 import 'features/assessment/assessment_controller.dart';
 import 'features/assessment/assessment_repository.dart';
+import 'features/daily_plan/daily_plan_controller.dart';
+import 'features/daily_plan/daily_plan_repository.dart';
 import 'features/lessons/progress/lesson_progress_repository.dart';
 import 'navigation/main_shell.dart';
 import 'features/identity/app_identity_controller.dart';
@@ -31,6 +33,11 @@ void main() {
       storage: SharedPreferencesAssessmentStorage(),
     ),
   );
+  final dailyPlanController = DailyPlanController(
+    repository: const DailyPlanRepository(
+      storage: SharedPreferencesDailyPlanStorage(),
+    ),
+  );
   unawaited(identityController.load());
 
   runApp(
@@ -38,6 +45,7 @@ void main() {
       progressController: progressController,
       identityController: identityController,
       assessmentController: assessmentController,
+      dailyPlanController: dailyPlanController,
     ),
   );
 }
@@ -48,11 +56,13 @@ class GoodDogAcademyApp extends StatefulWidget {
     this.progressController,
     this.identityController,
     this.assessmentController,
+    this.dailyPlanController,
   });
 
   final LessonProgressController? progressController;
   final AppIdentityController? identityController;
   final AssessmentController? assessmentController;
+  final DailyPlanController? dailyPlanController;
 
   @override
   State<GoodDogAcademyApp> createState() => _GoodDogAcademyAppState();
@@ -61,6 +71,7 @@ class GoodDogAcademyApp extends StatefulWidget {
 class _GoodDogAcademyAppState extends State<GoodDogAcademyApp> {
   ActiveDogBinding? _binding;
   ActiveDogAssessmentBinding? _assessmentBinding;
+  DailyPlanBinding? _dailyPlanBinding;
 
   @override
   void initState() {
@@ -77,10 +88,22 @@ class _GoodDogAcademyAppState extends State<GoodDogAcademyApp> {
         widget.assessmentController!,
       );
     }
+    if (widget.identityController != null &&
+        widget.assessmentController != null &&
+        widget.progressController != null &&
+        widget.dailyPlanController != null) {
+      _dailyPlanBinding = DailyPlanBinding(
+        identity: widget.identityController!,
+        assessment: widget.assessmentController!,
+        progress: widget.progressController!,
+        dailyPlan: widget.dailyPlanController!,
+      );
+    }
   }
 
   @override
   void dispose() {
+    _dailyPlanBinding?.dispose();
     _assessmentBinding?.dispose();
     _binding?.dispose();
     super.dispose();
@@ -113,6 +136,14 @@ class _GoodDogAcademyAppState extends State<GoodDogAcademyApp> {
     if (assessmentController != null) {
       scopedApp = AssessmentScope(
         controller: assessmentController,
+        child: scopedApp,
+      );
+    }
+
+    final dailyPlanController = widget.dailyPlanController;
+    if (dailyPlanController != null) {
+      scopedApp = DailyPlanScope(
+        controller: dailyPlanController,
         child: scopedApp,
       );
     }
