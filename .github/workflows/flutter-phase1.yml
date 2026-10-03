@@ -64,6 +64,8 @@ jobs:
           rm -rf /tmp/gda_flutter/test
           cp -R flutter_app/lib /tmp/gda_flutter/lib
           cp -R flutter_app/test /tmp/gda_flutter/test
+          rm -rf /tmp/gda_flutter/assets
+          cp -R flutter_app/assets /tmp/gda_flutter/assets
 
       - name: Get dependencies
         working-directory: /tmp/gda_flutter

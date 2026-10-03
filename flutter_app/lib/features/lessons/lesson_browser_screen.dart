@@ -5,6 +5,7 @@ import 'data/lesson_collections.dart';
 import 'data/production_lessons.dart';
 import 'domain/lesson_models.dart';
 import 'logic/lesson_unlock_service.dart';
+import 'lesson_detail_screen.dart';
 import 'progress/lesson_progress_controller.dart';
 
 enum LessonBrowserScopeType { skill, collection }
@@ -144,7 +145,20 @@ class _LessonBrowserScreenState extends State<LessonBrowserScreen> {
             ),
             const SizedBox(height: 20),
             for (var index = 0; index < visibleLessons.length; index++) ...[
-              _LessonRow(number: index + 1, item: visibleLessons[index]),
+              _LessonRow(
+                number: index + 1,
+                item: visibleLessons[index],
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => LessonDetailScreen(
+                        lessonId: visibleLessons[index].definition.id,
+                        allowSelfDirectedStart: true,
+                      ),
+                    ),
+                  );
+                },
+              ),
               if (index != visibleLessons.length - 1)
                 const SizedBox(height: 10),
             ],
@@ -223,96 +237,112 @@ class _ProgressLoadError extends StatelessWidget {
 }
 
 class _LessonRow extends StatelessWidget {
-  const _LessonRow({required this.number, required this.item});
+  const _LessonRow({
+    required this.number,
+    required this.item,
+    required this.onTap,
+  });
 
   final int number;
   final LessonLibraryItem item;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final lesson = item.definition;
 
     return Semantics(
+      button: true,
       label:
           '$number. ${lesson.title}. ${_difficultyLabel(lesson.difficulty)}. '
           '${lesson.estimatedMinutes} minutes. ${_stateLabel(item.state)}.',
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: GdaColors.surface,
+      child: Material(
+        color: GdaColors.surface,
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: GdaColors.border),
+          side: const BorderSide(color: GdaColors.border),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: GdaColors.selected,
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                '$number',
-                style: const TextStyle(
-                  color: GdaColors.forest,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    lesson.title,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                    color: GdaColors.selected,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    '$number',
                     style: const TextStyle(
-                      color: GdaColors.text,
-                      fontSize: 14,
+                      color: GdaColors.forest,
+                      fontSize: 12,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${_difficultyLabel(lesson.difficulty)} · '
-                    '${lesson.estimatedMinutes} min',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 7),
-                  Row(
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        _stateIcon(item.state),
-                        size: 16,
-                        color: _stateColor(item.state),
-                      ),
-                      const SizedBox(width: 5),
                       Text(
-                        _stateLabel(item.state),
-                        style: TextStyle(
-                          color: _stateColor(item.state),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
+                        lesson.title,
+                        style: const TextStyle(
+                          color: GdaColors.text,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${_difficultyLabel(lesson.difficulty)} · '
+                        '${lesson.estimatedMinutes} min',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 7),
+                      Row(
+                        children: [
+                          Icon(
+                            _stateIcon(item.state),
+                            size: 16,
+                            color: _stateColor(item.state),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            _stateLabel(item.state),
+                            style: TextStyle(
+                              color: _stateColor(item.state),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (item.state == LessonState.locked &&
+                          item.lockReason != null) ...[
+                        const SizedBox(height: 5),
+                        Text(
+                          item.lockReason!,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
                     ],
                   ),
-                  if (item.state == LessonState.locked &&
-                      item.lockReason != null) ...[
-                    const SizedBox(height: 5),
-                    Text(
-                      item.lockReason!,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ],
-              ),
+                ),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: GdaColors.muted,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

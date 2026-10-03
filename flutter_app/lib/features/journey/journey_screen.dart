@@ -4,6 +4,7 @@ import '../../core/theme/gda_theme.dart';
 import '../lessons/data/production_lessons.dart';
 import '../lessons/domain/lesson_models.dart';
 import '../lessons/logic/lesson_unlock_service.dart';
+import '../lessons/lesson_detail_screen.dart';
 import '../lessons/progress/lesson_progress_controller.dart';
 
 class JourneyScreen extends StatefulWidget {
@@ -348,53 +349,70 @@ class _JourneyLessonRow extends StatelessWidget {
     final stateLabel = _journeyStateLabel(lesson.state);
 
     return Semantics(
+      button: true,
       label:
           '${lesson.definition.title}. $stateLabel. '
           '${lesson.definition.estimatedMinutes} minutes. '
           'Level ${lesson.definition.difficulty}.',
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(15, 12, 15, 12),
-        child: Row(
-          children: [
-            Container(
-              width: 28,
-              height: 28,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _markerBackground(lesson.state),
-                border: Border.all(color: _markerBorder(lesson.state)),
-              ),
-              child: Icon(
-                _markerIcon(lesson.state),
-                size: 15,
-                color: _markerForeground(lesson.state),
+      child: InkWell(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => LessonDetailScreen(
+                lessonId: lesson.definition.id,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    lesson.definition.title,
-                    style: const TextStyle(
-                      color: GdaColors.text,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(15, 12, 15, 12),
+          child: Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _markerBackground(lesson.state),
+                  border: Border.all(color: _markerBorder(lesson.state)),
+                ),
+                child: Icon(
+                  _markerIcon(lesson.state),
+                  size: 15,
+                  color: _markerForeground(lesson.state),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lesson.definition.title,
+                      style: const TextStyle(
+                        color: GdaColors.text,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    '${lesson.definition.estimatedMinutes} min · '
-                    'Level ${lesson.definition.difficulty} · '
-                    '$stateLabel',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
+                    const SizedBox(height: 3),
+                    Text(
+                      '${lesson.definition.estimatedMinutes} min · '
+                      'Level ${lesson.definition.difficulty} · '
+                      '$stateLabel',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+              const Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: GdaColors.muted,
+              ),
+            ],
+          ),
         ),
       ),
     );
