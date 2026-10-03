@@ -93,6 +93,93 @@ TrainingSessionRecord _session({
   notes: '',
 );
 
+TrainingRepRecord _cameraRep(
+  int number, {
+  TrainingOutcome outcome = TrainingOutcome.success,
+  int cueCount = 1,
+  int responseSeconds = 1,
+  String? signal,
+}) {
+  return TrainingRepRecord(
+    id: 'camera-rep-$number',
+    repNumber: number,
+    evidence: RepEvidenceRecord(
+      source: TrainingEvidenceSource.cameraAuto,
+      confidence: 0.9,
+      observedOutcome: outcome,
+      observedAt: '2026-10-03T12:00:0$number.000Z',
+      cueAt: '2026-10-03T12:00:00.000Z',
+      responseAt:
+          '2026-10-03T12:00:0$responseSeconds.000Z',
+      markerAt: null,
+      rewardAt: null,
+      cueCount: cueCount,
+      signal: signal,
+      posture: StoredDogPosture.standLike,
+      poseConfidence: 0.9,
+      notes: null,
+    ),
+    correction: null,
+  );
+}
+
+TrainingSessionRecord _cameraSession({
+  required String id,
+  required String completedAt,
+  List<TrainingRepRecord>? reps,
+  bool endedEarly = false,
+  CameraCoachEndReason? endReason = CameraCoachEndReason.targetReached,
+}) {
+  final storedReps = reps ??
+      <TrainingRepRecord>[
+        _cameraRep(1),
+        _cameraRep(2),
+      ];
+  return TrainingSessionRecord(
+    id: id,
+    dogId: 'dog-1',
+    lessonId: 'recall-short-distance',
+    dailyPlanId: null,
+    startedAt: '2026-10-03T12:00:00.000Z',
+    completedAt: completedAt,
+    durationMinutes: 5,
+    outcome: TrainingOutcome.partialSuccess,
+    notes: 'Camera Coach',
+    reps: storedReps,
+    cameraCoach: CameraCoachSessionMetadataRecord(
+      endedEarly: endedEarly,
+      endReason: endReason,
+      startingDifficulty: const TrainingDifficultyRecord(
+        distance: 2,
+        duration: 1,
+        distraction: 1,
+      ),
+      endingDifficulty: const TrainingDifficultyRecord(
+        distance: 2,
+        duration: 1,
+        distraction: 1,
+      ),
+    ),
+  );
+}
+
+List<LessonProgressRecord> _recallProgressForAdaptivePlan() {
+  return <LessonProgressRecord>[
+    _progress(
+      lessonId: 'recall-name-response',
+      status: LessonProgressStatus.completed,
+      attempts: 1,
+      completions: 1,
+      lastCompletedAt: '2026-10-02T00:00:00Z',
+    ),
+    _progress(
+      lessonId: 'recall-short-distance',
+      attempts: 3,
+      completions: 0,
+    ),
+  ];
+}
+
 void main() {
   test('weak in-progress skill is prioritised deterministically', () async {
     final assessed = await _assessed();
@@ -291,6 +378,201 @@ void main() {
     expect(
       plan.items.first.reasonCodes,
       contains('RECENT_SESSION_STEP_DOWN'),
+    );
+  });
+
+  test('Camera Coach stress evidence overrides normal plan with safer recall lesson', () async {
+    final assessed = await _assessed();
+    final service = DailyPlanGenerationService(
+      repository: DailyPlanRepository(storage: _PlanStorage()),
+    );
+
+    final plan = await service.getOrCreate(
+      owner: ownerRecord(),
+      dog: dogRecord(),
+      profile: assessed.$1,
+      assessment: assessed.$2,
+      progress: _recallProgressForAdaptivePlan(),
+      now: DateTime.parse('2026-10-06T12:00:00Z'),
+      trainingSessions: <TrainingSessionRecord>[
+        _cameraSession(
+          id: 'stress-1',
+          completedAt: '2026-10-05T12:05:00Z',
+          endedEarly: true,
+          endReason: CameraCoachEndReason.stress,
+          reps: <TrainingRepRecord>[
+            _cameraRep(1, signal: 'stress_signal'),
+          ],
+        ),
+        _cameraSession(
+          id: 'stress-2',
+          completedAt: '2026-10-04T12:05:00Z',
+          reps: <TrainingRepRecord>[
+            _cameraRep(1),
+          ],
+        ),
+      ],
+    );
+
+    expect(plan.items.first.lessonId, 'recall-name-response');
+    expect(
+      plan.items.first.reasonCodes,
+      contains('ADAPTIVE_SAFETY_OVERRIDE'),
+    );
+    expect(
+      plan.items.first.reasonCodes,
+      contains('CAMERA_COACH_EVIDENCE'),
+    );
+  });
+
+  test('low Camera Coach clean-rep rate steps Daily Plan down', () async {
+    final assessed = await _assessed();
+    final service = DailyPlanGenerationService(
+      repository: DailyPlanRepository(storage: _PlanStorage()),
+    );
+    final failingReps = <TrainingRepRecord>[
+      _cameraRep(1, outcome: TrainingOutcome.unsuccessful),
+      _cameraRep(2, outcome: TrainingOutcome.unsuccessful),
+    ];
+
+    final plan = await service.getOrCreate(
+      owner: ownerRecord(),
+      dog: dogRecord(),
+      profile: assessed.$1,
+      assessment: assessed.$2,
+      progress: _recallProgressForAdaptivePlan(),
+      now: DateTime.parse('2026-10-07T12:00:00Z'),
+      trainingSessions: <TrainingSessionRecord>[
+        _cameraSession(
+          id: 'low-1',
+          completedAt: '2026-10-06T12:05:00Z',
+          reps: failingReps,
+        ),
+        _cameraSession(
+          id: 'low-2',
+          completedAt: '2026-10-05T12:05:00Z',
+          reps: failingReps,
+        ),
+      ],
+    );
+
+    expect(plan.items.first.lessonId, 'recall-name-response');
+    expect(
+      plan.items.first.reasonCodes,
+      contains('ADAPTIVE_DECLINING_PERFORMANCE'),
+    );
+    expect(
+      plan.items.first.reasonCodes,
+      isNot(contains('RECENT_SESSION_STEP_DOWN')),
+    );
+  });
+
+  test('repeated Camera Coach cues can step Daily Plan down', () async {
+    final assessed = await _assessed();
+    final service = DailyPlanGenerationService(
+      repository: DailyPlanRepository(storage: _PlanStorage()),
+    );
+    final repeated = <TrainingRepRecord>[
+      _cameraRep(1, cueCount: 2),
+      _cameraRep(2, cueCount: 2),
+    ];
+
+    final plan = await service.getOrCreate(
+      owner: ownerRecord(),
+      dog: dogRecord(),
+      profile: assessed.$1,
+      assessment: assessed.$2,
+      progress: _recallProgressForAdaptivePlan(),
+      now: DateTime.parse('2026-10-08T12:00:00Z'),
+      trainingSessions: <TrainingSessionRecord>[
+        _cameraSession(
+          id: 'repeat-1',
+          completedAt: '2026-10-07T12:05:00Z',
+          reps: repeated,
+        ),
+        _cameraSession(
+          id: 'repeat-2',
+          completedAt: '2026-10-06T12:05:00Z',
+          reps: repeated,
+        ),
+      ],
+    );
+
+    expect(plan.items.first.lessonId, 'recall-name-response');
+    expect(
+      plan.items.first.reasonCodes,
+      contains('ADAPTIVE_CUE_REPETITION'),
+    );
+  });
+
+  test('slow Camera Coach responses can step Daily Plan down', () async {
+    final assessed = await _assessed();
+    final service = DailyPlanGenerationService(
+      repository: DailyPlanRepository(storage: _PlanStorage()),
+    );
+    final slow = <TrainingRepRecord>[
+      _cameraRep(1, responseSeconds: 5),
+      _cameraRep(2, responseSeconds: 5),
+    ];
+
+    final plan = await service.getOrCreate(
+      owner: ownerRecord(),
+      dog: dogRecord(),
+      profile: assessed.$1,
+      assessment: assessed.$2,
+      progress: _recallProgressForAdaptivePlan(),
+      now: DateTime.parse('2026-10-09T12:00:00Z'),
+      trainingSessions: <TrainingSessionRecord>[
+        _cameraSession(
+          id: 'slow-1',
+          completedAt: '2026-10-08T12:05:00Z',
+          reps: slow,
+        ),
+        _cameraSession(
+          id: 'slow-2',
+          completedAt: '2026-10-07T12:05:00Z',
+          reps: slow,
+        ),
+      ],
+    );
+
+    expect(plan.items.first.lessonId, 'recall-name-response');
+    expect(
+      plan.items.first.reasonCodes,
+      contains('ADAPTIVE_SLOW_RESPONSE'),
+    );
+  });
+
+  test('one Camera Coach session is insufficient for adaptive switching', () async {
+    final assessed = await _assessed();
+    final service = DailyPlanGenerationService(
+      repository: DailyPlanRepository(storage: _PlanStorage()),
+    );
+
+    final plan = await service.getOrCreate(
+      owner: ownerRecord(),
+      dog: dogRecord(),
+      profile: assessed.$1,
+      assessment: assessed.$2,
+      progress: _recallProgressForAdaptivePlan(),
+      now: DateTime.parse('2026-10-10T12:00:00Z'),
+      trainingSessions: <TrainingSessionRecord>[
+        _cameraSession(
+          id: 'only-one',
+          completedAt: '2026-10-09T12:05:00Z',
+          reps: <TrainingRepRecord>[
+            _cameraRep(1, outcome: TrainingOutcome.unsuccessful),
+          ],
+        ),
+      ],
+    );
+
+    expect(plan.items.first.lessonId, 'recall-short-distance');
+    expect(
+      plan.items.first.reasonCodes.where(
+        (reason) => reason.startsWith('ADAPTIVE_'),
+      ),
+      isEmpty,
     );
   });
 
