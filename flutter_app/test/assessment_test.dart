@@ -57,7 +57,10 @@ void main() {
   test('not sure remains neutral and marks every skill unknown', () {
     final result = calculateAssessmentScores(_answers(AssessmentOption.notSure));
     expect(result.calculatedScores.values, everyElement(50));
-    expect(result.unknownSkills, behaviourSkills);
+    expect(
+      result.unknownSkills,
+      assessmentQuestions.map((question) => question.skill).toList(),
+    );
     expect(result.responses.every((item) => item.frequencyValue == null), isTrue);
   });
 

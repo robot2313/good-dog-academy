@@ -94,11 +94,10 @@ void main() {
     for (var section = 0; section < 3; section++) {
       final questions = questionsForSection(AssessmentSection.values[section]);
       for (final question in questions) {
-        await tester.ensureVisible(find.text(question.text));
         final option = find.byKey(
           ValueKey('${question.id}-sometimes'),
         );
-        await tester.ensureVisible(option);
+        await tester.scrollUntilVisible(option, 180);
         await tester.tap(option);
         await tester.pump();
       }
