@@ -42,6 +42,8 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
   int? selectedRating;
   String? saveError;
   _CheckInSnapshot? undoSnapshot;
+  String? startedAt;
+  String? sessionId;
 
   LessonDefinition get lesson =>
       productionLessons.firstWhere((item) => item.id == widget.lessonId);
@@ -63,7 +65,11 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
   }
 
   void startTraining() {
+    final started = DateTime.now().toUtc();
     setState(() {
+      startedAt ??= started.toIso8601String();
+      sessionId ??=
+          'training-session-${widget.dogId}-${started.microsecondsSinceEpoch}';
       phase = _SessionPhase.training;
       running = true;
     });
@@ -180,6 +186,12 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
         lessonId: widget.lessonId,
         rating: rating,
         attemptedAt: DateTime.now().toUtc().toIso8601String(),
+        startedAt: startedAt,
+        sessionId: sessionId,
+        notes:
+            'Guided check-ins: $successfulRepetitions successful; '
+            '$needsHelpRepetitions needed help. '
+            'Reached step ${currentStep + 1} of ${content.steps.length}.',
         allowPrerequisiteBypass: widget.allowPrerequisiteBypass,
       );
       if (!mounted) return;

@@ -5,6 +5,7 @@ import '../data/production_lessons.dart';
 import '../logic/lesson_unlock_service.dart';
 import 'lesson_progress_record.dart';
 import 'lesson_progress_repository.dart';
+import '../session/training_session_record.dart';
 
 class LessonProgressController extends ChangeNotifier {
   LessonProgressController({required this.repository});
@@ -16,6 +17,7 @@ class LessonProgressController extends ChangeNotifier {
   String? _ownerId;
   String? _dogId;
   List<LessonProgressRecord> _records = const <LessonProgressRecord>[];
+  List<TrainingSessionRecord> _sessions = const <TrainingSessionRecord>[];
 
   bool get loading => _loading;
 
@@ -26,6 +28,8 @@ class LessonProgressController extends ChangeNotifier {
   String? get dogId => _dogId;
 
   List<LessonProgressRecord> get records => _records;
+
+  List<TrainingSessionRecord> get sessions => _sessions;
 
   List<LessonProgressSnapshot> get snapshots {
     return _records
@@ -41,6 +45,7 @@ class LessonProgressController extends ChangeNotifier {
     _ownerId = null;
     _dogId = null;
     _records = const [];
+    _sessions = const [];
     _error = null;
     _loading = false;
     if (!_disposed) notifyListeners();
@@ -63,7 +68,7 @@ class LessonProgressController extends ChangeNotifier {
           'Explicit owner and dog are required.',
         );
       }
-      final records = await repository.loadForDog(
+      final data = await repository.loadTrainingDataForDog(
         ownerId: ownerId,
         dogId: dogId,
       );
@@ -71,8 +76,9 @@ class LessonProgressController extends ChangeNotifier {
       // Reject catalogue inconsistencies here, so screens show a recoverable
       // error instead of throwing while resolving unlock states during build.
       const LessonUnlockService(productionLessons)
-          .resolve(records.map((r) => r.toSnapshot()));
-      _records = List.unmodifiable(records);
+          .resolve(data.records.map((r) => r.toSnapshot()));
+      _records = List.unmodifiable(data.records);
+      _sessions = List.unmodifiable(data.sessions);
     } catch (cause) {
       if (_disposed || generation != _generation) return;
       _error = cause;
@@ -90,6 +96,9 @@ class LessonProgressController extends ChangeNotifier {
     required String lessonId,
     required int rating,
     required String attemptedAt,
+    String? startedAt,
+    String? sessionId,
+    String notes = '',
     bool allowPrerequisiteBypass = false,
   }) async {
     if (ownerId != _ownerId || dogId != _dogId) {
@@ -177,7 +186,38 @@ class LessonProgressController extends ChangeNotifier {
       updatedAt: attemptedAt,
     );
 
-    await repository.save(record);
+    final completed = DateTime.parse(attemptedAt).toUtc();
+    final started = DateTime.tryParse(startedAt ?? attemptedAt)?.toUtc();
+    if (started == null || started.isAfter(completed)) {
+      throw const LessonProgressSelectionException(
+        'Training session start time is invalid.',
+      );
+    }
+    final resolvedSessionId =
+        sessionId ??
+        'training-session-$dogId-$lessonId-${started.microsecondsSinceEpoch}';
+    final elapsedMilliseconds = completed.difference(started).inMilliseconds;
+    final session = TrainingSessionRecord(
+      id: resolvedSessionId,
+      dogId: dogId,
+      lessonId: lessonId,
+      dailyPlanId: null,
+      startedAt: started.toIso8601String(),
+      completedAt: completed.toIso8601String(),
+      durationMinutes: (elapsedMilliseconds / 60000).round().clamp(0, 1440),
+      outcome: rating >= 4
+          ? TrainingOutcome.success
+          : rating == 3
+          ? TrainingOutcome.partialSuccess
+          : TrainingOutcome.unsuccessful,
+      notes: notes,
+    );
+
+    await repository.saveCompletedSessionWithProgress(
+      ownerId: ownerId,
+      progress: record,
+      session: session,
+    );
     await loadForDog(ownerId: ownerId, dogId: dogId);
     if (_error != null) {
       throw LessonProgressSelectionException(

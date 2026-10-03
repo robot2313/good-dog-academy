@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../session/training_session_record.dart';
 import 'lesson_progress_record.dart';
 
 abstract interface class LessonProgressStringStorage {
@@ -35,6 +36,30 @@ class SharedPreferencesLessonProgressStorage
   }
 }
 
+class LessonTrainingData {
+  const LessonTrainingData({
+    required this.records,
+    required this.sessions,
+  });
+
+  const LessonTrainingData.empty()
+      : records = const <LessonProgressRecord>[],
+        sessions = const <TrainingSessionRecord>[];
+
+  final List<LessonProgressRecord> records;
+  final List<TrainingSessionRecord> sessions;
+}
+
+class LessonSessionSaveResult {
+  const LessonSessionSaveResult({
+    required this.idempotent,
+    required this.data,
+  });
+
+  final bool idempotent;
+  final LessonTrainingData data;
+}
+
 class LessonProgressRepository {
   const LessonProgressRepository({
     required this.storage,
@@ -44,13 +69,186 @@ class LessonProgressRepository {
   final LessonProgressStringStorage storage;
   final String storageKey;
 
-  static const int schemaVersion = 1;
+  static const int schemaVersion = 2;
 
   Future<List<LessonProgressRecord>> loadAll() async {
+    return (await _loadStore()).records;
+  }
+
+  Future<LessonTrainingData> loadTrainingDataForDog({
+    required String ownerId,
+    required String dogId,
+  }) async {
+    final store = await _loadStore();
+
+    final dogRecords = store.records
+        .where((record) => record.dogId == dogId)
+        .toList(growable: false);
+
+    if (dogRecords.any((record) => record.ownerId != ownerId)) {
+      throw const LessonProgressPersistenceException(
+        'Stored lesson progress ownership is inconsistent.',
+      );
+    }
+
+    final dogSessions = store.sessions
+        .where((session) => session.dogId == dogId)
+        .toList(growable: false)
+      ..sort((left, right) => right.startedAt.compareTo(left.startedAt));
+
+    return LessonTrainingData(
+      records: List.unmodifiable(dogRecords),
+      sessions: List.unmodifiable(dogSessions),
+    );
+  }
+
+  Future<List<LessonProgressRecord>> loadForDog({
+    required String ownerId,
+    required String dogId,
+  }) async {
+    return (await loadTrainingDataForDog(
+      ownerId: ownerId,
+      dogId: dogId,
+    )).records;
+  }
+
+  Future<List<TrainingSessionRecord>> loadSessionsForDog({
+    required String ownerId,
+    required String dogId,
+  }) async {
+    return (await loadTrainingDataForDog(
+      ownerId: ownerId,
+      dogId: dogId,
+    )).sessions;
+  }
+
+  Future<void> save(LessonProgressRecord record) async {
+    record.validate();
+
+    final store = await _loadStore();
+
+    for (final existing in store.records) {
+      final sameDogLesson =
+          existing.dogId == record.dogId &&
+          existing.lessonId == record.lessonId;
+
+      if (sameDogLesson && existing.id != record.id) {
+        throw const LessonProgressPersistenceException(
+          'Duplicate progress exists for this dog and lesson.',
+        );
+      }
+    }
+
+    final nextRecords = <LessonProgressRecord>[
+      for (final existing in store.records)
+        if (existing.id != record.id) existing,
+      record,
+    ];
+
+    await _writeStore(
+      LessonTrainingData(records: nextRecords, sessions: store.sessions),
+    );
+  }
+
+  Future<LessonSessionSaveResult> saveCompletedSessionWithProgress({
+    required String ownerId,
+    required LessonProgressRecord progress,
+    required TrainingSessionRecord session,
+  }) async {
+    progress.validate();
+    session.validate();
+
+    if (progress.ownerId != ownerId ||
+        progress.dogId != session.dogId ||
+        progress.lessonId != session.lessonId ||
+        session.completedAt == null ||
+        session.outcome == null) {
+      throw const LessonProgressPersistenceException(
+        'Completed session and lesson progress do not match.',
+      );
+    }
+
+    final store = await _loadStore();
+
+    final existingSession = store.sessions
+        .where((candidate) => candidate.id == session.id)
+        .toList(growable: false);
+
+    if (existingSession.isNotEmpty) {
+      final existing = existingSession.single;
+      if (!_sameSessionIdentity(existing, session)) {
+        throw const LessonProgressPersistenceException(
+          'Training session id conflicts with existing history.',
+        );
+      }
+      return LessonSessionSaveResult(
+        idempotent: true,
+        data: _dogData(store, ownerId: ownerId, dogId: session.dogId),
+      );
+    }
+
+    final nextRecords = <LessonProgressRecord>[
+      for (final existing in store.records)
+        if (existing.id != progress.id &&
+            !(existing.dogId == progress.dogId &&
+                existing.lessonId == progress.lessonId))
+          existing,
+      progress,
+    ];
+    final nextSessions = <TrainingSessionRecord>[
+      ...store.sessions,
+      session,
+    ];
+
+    final next = LessonTrainingData(
+      records: nextRecords,
+      sessions: nextSessions,
+    );
+    await _writeStore(next);
+
+    return LessonSessionSaveResult(
+      idempotent: false,
+      data: _dogData(next, ownerId: ownerId, dogId: session.dogId),
+    );
+  }
+
+  Future<void> replaceForDog({
+    required String ownerId,
+    required String dogId,
+    required Iterable<LessonProgressRecord> records,
+  }) async {
+    final replacement = records.toList(growable: false);
+
+    for (final record in replacement) {
+      record.validate();
+
+      if (record.ownerId != ownerId || record.dogId != dogId) {
+        throw const LessonProgressPersistenceException(
+          'Replacement lesson progress ownership is invalid.',
+        );
+      }
+    }
+
+    _validateUniqueRecords(replacement);
+
+    final store = await _loadStore();
+
+    final next = <LessonProgressRecord>[
+      for (final record in store.records)
+        if (record.dogId != dogId) record,
+      ...replacement,
+    ];
+
+    await _writeStore(
+      LessonTrainingData(records: next, sessions: store.sessions),
+    );
+  }
+
+  Future<LessonTrainingData> _loadStore() async {
     final raw = await storage.read(storageKey);
 
     if (raw == null) {
-      return const <LessonProgressRecord>[];
+      return const LessonTrainingData.empty();
     }
 
     Object? decoded;
@@ -72,7 +270,7 @@ class LessonProgressRepository {
 
     final version = decoded['schemaVersion'];
 
-    if (version != schemaVersion) {
+    if (version != 1 && version != schemaVersion) {
       throw LessonProgressPersistenceException(
         'Unsupported lesson progress schema: $version.',
       );
@@ -107,99 +305,92 @@ class LessonProgressRepository {
       }
     }
 
-    _validateUniqueRecords(records);
-
-    return List<LessonProgressRecord>.unmodifiable(records);
-  }
-
-  Future<List<LessonProgressRecord>> loadForDog({
-    required String ownerId,
-    required String dogId,
-  }) async {
-    final all = await loadAll();
-
-    final dogRecords = all
-        .where((record) => record.dogId == dogId)
-        .toList(growable: false);
-
-    if (dogRecords.any((record) => record.ownerId != ownerId)) {
-      throw const LessonProgressPersistenceException(
-        'Stored lesson progress ownership is inconsistent.',
-      );
-    }
-
-    return dogRecords;
-  }
-
-  Future<void> save(LessonProgressRecord record) async {
-    record.validate();
-
-    final all = await loadAll();
-
-    for (final existing in all) {
-      final sameDogLesson =
-          existing.dogId == record.dogId &&
-          existing.lessonId == record.lessonId;
-
-      if (sameDogLesson && existing.id != record.id) {
+    final sessions = <TrainingSessionRecord>[];
+    if (version == schemaVersion) {
+      final sessionsValue = decoded['sessions'];
+      if (sessionsValue is! List<dynamic>) {
         throw const LessonProgressPersistenceException(
-          'Duplicate progress exists for this dog and lesson.',
+          'Stored training sessions must be a list.',
         );
+      }
+      for (final item in sessionsValue) {
+        if (item is! Map<String, dynamic>) {
+          throw const LessonProgressPersistenceException(
+            'Stored training session must be an object.',
+          );
+        }
+        try {
+          sessions.add(
+            TrainingSessionRecord.fromJson(item.cast<String, Object?>()),
+          );
+        } on TrainingSessionDataException catch (cause) {
+          throw LessonProgressPersistenceException(
+            'Stored training session failed validation.',
+            cause: cause,
+          );
+        }
       }
     }
 
-    final next = <LessonProgressRecord>[
-      for (final existing in all)
-        if (existing.id != record.id) existing,
-      record,
-    ];
-
-    await _writeAll(next);
+    final store = LessonTrainingData(
+      records: List.unmodifiable(records),
+      sessions: List.unmodifiable(sessions),
+    );
+    _validateStore(store);
+    return store;
   }
 
-  Future<void> replaceForDog({
-    required String ownerId,
-    required String dogId,
-    required Iterable<LessonProgressRecord> records,
-  }) async {
-    final replacement = records.toList(growable: false);
-
-    for (final record in replacement) {
-      record.validate();
-
-      if (record.ownerId != ownerId || record.dogId != dogId) {
-        throw const LessonProgressPersistenceException(
-          'Replacement lesson progress ownership is invalid.',
-        );
-      }
-    }
-
-    _validateUniqueRecords(replacement);
-
-    final current = await loadAll();
-
-    final next = <LessonProgressRecord>[
-      for (final record in current)
-        if (record.dogId != dogId) record,
-      ...replacement,
-    ];
-
-    _validateUniqueRecords(next);
-
-    await _writeAll(next);
-  }
-
-  Future<void> _writeAll(List<LessonProgressRecord> records) async {
-    _validateUniqueRecords(records);
+  Future<void> _writeStore(LessonTrainingData store) async {
+    _validateStore(store);
 
     final encoded = jsonEncode(<String, Object?>{
       'schemaVersion': schemaVersion,
-      'records': records
+      'records': store.records
           .map((record) => record.toJson())
+          .toList(growable: false),
+      'sessions': store.sessions
+          .map((session) => session.toJson())
           .toList(growable: false),
     });
 
     await storage.write(storageKey, encoded);
+  }
+
+  LessonTrainingData _dogData(
+    LessonTrainingData store, {
+    required String ownerId,
+    required String dogId,
+  }) {
+    final records = store.records
+        .where((record) => record.dogId == dogId)
+        .toList(growable: false);
+    if (records.any((record) => record.ownerId != ownerId)) {
+      throw const LessonProgressPersistenceException(
+        'Stored lesson progress ownership is inconsistent.',
+      );
+    }
+    final sessions = store.sessions
+        .where((session) => session.dogId == dogId)
+        .toList(growable: false)
+      ..sort((left, right) => right.startedAt.compareTo(left.startedAt));
+    return LessonTrainingData(
+      records: List.unmodifiable(records),
+      sessions: List.unmodifiable(sessions),
+    );
+  }
+
+  void _validateStore(LessonTrainingData store) {
+    _validateUniqueRecords(store.records);
+
+    final sessionIds = <String>{};
+    for (final session in store.sessions) {
+      session.validate();
+      if (!sessionIds.add(session.id)) {
+        throw const LessonProgressPersistenceException(
+          'Duplicate training session id.',
+        );
+      }
+    }
   }
 
   void _validateUniqueRecords(Iterable<LessonProgressRecord> records) {
@@ -221,6 +412,20 @@ class LessonProgressRepository {
         );
       }
     }
+  }
+
+  bool _sameSessionIdentity(
+    TrainingSessionRecord left,
+    TrainingSessionRecord right,
+  ) {
+    return left.dogId == right.dogId &&
+        left.lessonId == right.lessonId &&
+        left.dailyPlanId == right.dailyPlanId &&
+        left.startedAt == right.startedAt &&
+        left.completedAt == right.completedAt &&
+        left.durationMinutes == right.durationMinutes &&
+        left.outcome == right.outcome &&
+        left.notes == right.notes;
   }
 }
 
