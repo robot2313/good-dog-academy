@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/gda_theme.dart';
+import '../lessons/lesson_browser_screen.dart';
 import 'discovery_data.dart';
 
 class CategoriesScreen extends StatelessWidget {
@@ -37,68 +38,100 @@ class CategoriesScreen extends StatelessWidget {
 }
 
 class _CategoryCard extends StatelessWidget {
-  const _CategoryCard({required this.category});
+  const _CategoryCard({
+    required this.category,
+  });
 
   final TrainingCategoryData category;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
+      button: true,
       label:
           '${category.label}. ${category.lessonCount} lessons. ${category.description}',
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: GdaColors.surface,
+      child: Material(
+        color: GdaColors.surface,
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: GdaColors.border),
+          side: const BorderSide(
+            color: GdaColors.border,
+          ),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: category.backgroundColor,
-                borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => LessonBrowserScreen.skill(
+                  title: category.label,
+                  intro: category.description,
+                  skill: category.id,
+                ),
               ),
-              child: Icon(
-                category.icon,
-                size: 23,
-                color: category.iconColor,
-              ),
-            ),
-            const SizedBox(width: 13),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    category.label,
-                    style: const TextStyle(
-                      color: GdaColors.text,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: category.backgroundColor,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    category.icon,
+                    size: 23,
+                    color: category.iconColor,
+                  ),
+                ),
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        category.label,
+                        style: const TextStyle(
+                          color: GdaColors.text,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        category.description,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${category.lessonCount} lessons',
+                      style: const TextStyle(
+                        color: GdaColors.muted,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    category.description,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
+                    const SizedBox(height: 4),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: GdaColors.muted,
+                    ),
+                  ],
+                ),
+              ],
             ),
-            const SizedBox(width: 10),
-            Text(
-              '${category.lessonCount} lessons',
-              style: const TextStyle(
-                color: GdaColors.muted,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

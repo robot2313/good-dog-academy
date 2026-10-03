@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/gda_theme.dart';
+import '../lessons/data/lesson_collections.dart';
+import '../lessons/lesson_browser_screen.dart';
 import 'discovery_data.dart';
 
 class DogStagesScreen extends StatelessWidget {
@@ -34,69 +36,97 @@ class DogStagesScreen extends StatelessWidget {
 }
 
 class _DogStageCard extends StatelessWidget {
-  const _DogStageCard({required this.stage});
+  const _DogStageCard({
+    required this.stage,
+  });
 
   final DogStageData stage;
 
   @override
   Widget build(BuildContext context) {
+    final collection = lessonCollectionById(stage.id);
+
     return Semantics(
+      button: true,
       label:
           '${stage.label}. ${stage.age}. ${stage.lessonCount} lessons. ${stage.summary}',
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: GdaColors.surface,
+      child: Material(
+        color: GdaColors.surface,
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: GdaColors.border),
+          side: const BorderSide(
+            color: GdaColors.border,
+          ),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: 70,
-              height: 70,
-              decoration: BoxDecoration(
-                color: GdaColors.selected,
-                borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => LessonBrowserScreen.collection(
+                  title: collection.label,
+                  intro: '${collection.ageLabel}. ${collection.description}',
+                  collectionId: collection.id,
+                ),
               ),
-              child: Icon(
-                stage.icon,
-                size: 32,
-                color: GdaColors.forest,
-              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: GdaColors.selected,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    stage.icon,
+                    size: 32,
+                    color: GdaColors.forest,
+                  ),
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        stage.label,
+                        style: const TextStyle(
+                          color: GdaColors.text,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        stage.age,
+                        style: const TextStyle(
+                          color: GdaColors.forest,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        stage.summary,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: GdaColors.muted,
+                ),
+              ],
             ),
-            const SizedBox(width: 15),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    stage.label,
-                    style: const TextStyle(
-                      color: GdaColors.text,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    stage.age,
-                    style: const TextStyle(
-                      color: GdaColors.forest,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    stage.summary,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
