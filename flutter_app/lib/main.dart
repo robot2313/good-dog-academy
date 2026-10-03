@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'core/theme/gda_theme.dart';
 import 'features/lessons/progress/lesson_progress_controller.dart';
+import 'features/assessment/assessment_controller.dart';
+import 'features/assessment/assessment_repository.dart';
 import 'features/lessons/progress/lesson_progress_repository.dart';
 import 'navigation/main_shell.dart';
 import 'features/identity/app_identity_controller.dart';
@@ -24,12 +26,18 @@ void main() {
       storage: SharedPreferencesAppIdentityStorage(),
     ),
   );
+  final assessmentController = AssessmentController(
+    repository: const AssessmentRepository(
+      storage: SharedPreferencesAssessmentStorage(),
+    ),
+  );
   unawaited(identityController.load());
 
   runApp(
     GoodDogAcademyApp(
       progressController: progressController,
       identityController: identityController,
+      assessmentController: assessmentController,
     ),
   );
 }
@@ -39,10 +47,12 @@ class GoodDogAcademyApp extends StatefulWidget {
     super.key,
     this.progressController,
     this.identityController,
+    this.assessmentController,
   });
 
   final LessonProgressController? progressController;
   final AppIdentityController? identityController;
+  final AssessmentController? assessmentController;
 
   @override
   State<GoodDogAcademyApp> createState() => _GoodDogAcademyAppState();
@@ -50,19 +60,28 @@ class GoodDogAcademyApp extends StatefulWidget {
 
 class _GoodDogAcademyAppState extends State<GoodDogAcademyApp> {
   ActiveDogBinding? _binding;
+  ActiveDogAssessmentBinding? _assessmentBinding;
+
   @override
   void initState() {
     super.initState();
-    if (widget.identityController != null) {
+    if (widget.identityController != null && widget.progressController != null) {
       _binding = ActiveDogBinding(
         widget.identityController!,
         widget.progressController!,
+      );
+    }
+    if (widget.identityController != null && widget.assessmentController != null) {
+      _assessmentBinding = ActiveDogAssessmentBinding(
+        widget.identityController!,
+        widget.assessmentController!,
       );
     }
   }
 
   @override
   void dispose() {
+    _assessmentBinding?.dispose();
     _binding?.dispose();
     super.dispose();
   }
@@ -86,9 +105,18 @@ class _GoodDogAcademyAppState extends State<GoodDogAcademyApp> {
       return app;
     }
 
-    final scopedApp = identityController == null
+    Widget scopedApp = identityController == null
         ? app
         : AppIdentityScope(controller: identityController, child: app);
+
+    final assessmentController = widget.assessmentController;
+    if (assessmentController != null) {
+      scopedApp = AssessmentScope(
+        controller: assessmentController,
+        child: scopedApp,
+      );
+    }
+
     return LessonProgressScope(controller: controller, child: scopedApp);
   }
 }
