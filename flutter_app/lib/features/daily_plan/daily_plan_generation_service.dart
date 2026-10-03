@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import '../assessment/assessment_models.dart';
 import '../identity/app_identity_record.dart';
 import '../lessons/data/production_lessons.dart';
+import '../lessons/domain/lesson_models.dart';
 import '../lessons/progress/lesson_progress_record.dart';
 import 'daily_plan_models.dart';
 import 'daily_plan_recommendation_service.dart';
@@ -18,7 +21,7 @@ class DailyPlanGenerationService {
   });
 
   final DailyPlanRepository repository;
-  final List catalogue;
+  final List<LessonDefinition> catalogue;
 
   Future<DailyPlanRecord> getOrCreate({
     required AppOwnerRecord owner,
@@ -64,7 +67,7 @@ class DailyPlanGenerationService {
     );
 
     final recommendations = DailyPlanRecommendationService(
-      catalogue.cast(),
+      catalogue,
     ).recommend(
       dogAgeMonths: _dogAgeMonths(dog, localNow),
       behaviourProfile: profile,
@@ -94,7 +97,7 @@ class DailyPlanGenerationService {
         lessonId: primary.lessonId,
         skill: primary.skill,
         role: 'primary',
-        plannedMinutes: primary.estimatedMinutes.clamp(1, targetMinutes),
+        plannedMinutes: math.min(primary.estimatedMinutes, targetMinutes),
         reasonCodes: primary.reasons,
         order: 1,
       ),
@@ -145,12 +148,12 @@ class DailyPlanGenerationService {
   int _dogAgeMonths(AppDogRecord dog, DateTime localNow) {
     final date = dog.dateOfBirth;
     if (date == null) {
-      return ((dog.estimatedAgeYears ?? 0) * 12).round().clamp(0, 360);
+      return math.min(360, math.max(0, ((dog.estimatedAgeYears ?? 0) * 12).round()));
     }
     final parts = date.split('-').map(int.parse).toList(growable: false);
     var months =
         (localNow.year - parts[0]) * 12 + localNow.month - parts[1];
     if (localNow.day < parts[2]) months--;
-    return months.clamp(0, 360);
+    return math.min(360, math.max(0, months));
   }
 }

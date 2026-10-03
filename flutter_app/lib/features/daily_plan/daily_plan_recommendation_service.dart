@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../assessment/assessment_models.dart';
 import '../lessons/domain/lesson_models.dart';
 import '../lessons/logic/lesson_unlock_service.dart';
@@ -105,15 +107,15 @@ class DailyPlanRecommendationService {
             (progress?.successfulCompletions ?? 0);
         if (practiceGap > 0) {
           reasons.add('NEEDS_PRACTICE');
-          priority += (practiceGap * 3).clamp(0, 15);
+          priority += math.min(15, math.max(0, practiceGap * 3));
         }
       } else {
         kind = 'reinforcement';
         reasons.add('REINFORCEMENT_DUE');
-        priority += _daysSince(
-          progress?.lastCompletedAt,
-          now,
-        ).clamp(0, 20);
+        priority += math.min(
+          20,
+          math.max(0, _daysSince(progress?.lastCompletedAt, now)),
+        );
       }
 
       priority -= (lesson.difficulty - 1) * 2;

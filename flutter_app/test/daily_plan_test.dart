@@ -101,7 +101,7 @@ void main() {
   test('completed lessons are reinforcement candidates', () async {
     final assessed = await _assessed();
     final first = productionLessons.first;
-    final service = DailyPlanRecommendationService(<dynamic>[first].cast());
+    final service = DailyPlanRecommendationService([first]);
 
     final result = service.recommend(
       dogAgeMonths: 36,
@@ -182,7 +182,7 @@ void main() {
       progressRecords: const <LessonProgressRecord>[],
       now: DateTime.parse('2026-10-04T00:00:00Z'),
       maximumLessons: 1,
-      recentPlans: <dynamic>[recent].cast(),
+      recentPlans: [recent],
     );
 
     if (recent.items.any((item) => item.lessonId == candidate.lessonId)) {
