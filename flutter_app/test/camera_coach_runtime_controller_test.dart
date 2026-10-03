@@ -240,6 +240,49 @@ void main() {
     await controller.shutdown();
   });
 
+  test('pause and resume preserve pending owner confirmation', () async {
+    final source = _FakeFrameSource();
+    final controller = _controller(source: source);
+
+    await controller.start();
+    expect(
+      await controller.beginCue(
+        now: DateTime.parse('2026-10-04T10:00:00Z'),
+      ),
+      isTrue,
+    );
+    await controller.processFrame(_frame(1));
+
+    expect(
+      controller.status,
+      CameraCoachRuntimeStatus.awaitingOwnerConfirmation,
+    );
+    expect(controller.orchestrator.getPendingConfirmation(), isNotNull);
+
+    await controller.pause();
+    expect(controller.status, CameraCoachRuntimeStatus.paused);
+
+    await controller.resume();
+    expect(
+      controller.status,
+      CameraCoachRuntimeStatus.awaitingOwnerConfirmation,
+    );
+    expect(controller.orchestrator.getPendingConfirmation(), isNotNull);
+    expect(await controller.beginCue(), isFalse);
+
+    expect(
+      await controller.confirmPending(
+        TrainingOutcome.success,
+        now: DateTime.parse('2026-10-04T10:00:02Z'),
+      ),
+      isTrue,
+    );
+    expect(controller.session.reps, hasLength(1));
+    expect(controller.status, CameraCoachRuntimeStatus.ready);
+
+    await controller.shutdown();
+  });
+
   test('resume failure moves runtime to recoverable error state', () async {
     final source = _FailingResumeFrameSource();
     final controller = _controller(cue: _sitCue(), source: source);
