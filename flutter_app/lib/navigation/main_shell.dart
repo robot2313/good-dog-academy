@@ -4,6 +4,7 @@ import '../core/theme/gda_theme.dart';
 import '../features/discovery/categories_screen.dart';
 import '../features/discovery/dog_stages_screen.dart';
 import '../features/home/home_screen.dart';
+import '../features/journey/journey_screen.dart';
 import '../features/shared/placeholder_tab.dart';
 
 class MainShell extends StatefulWidget {
@@ -18,11 +19,7 @@ class _MainShellState extends State<MainShell> {
 
   static const screens = [
     HomeScreen(),
-    PlaceholderTab(
-      title: 'Journey',
-      description: 'Your training journey will be migrated here.',
-      icon: Icons.route_rounded,
-    ),
+    JourneyScreen(),
     CategoriesScreen(),
     DogStagesScreen(),
     PlaceholderTab(
