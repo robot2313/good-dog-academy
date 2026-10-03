@@ -67,9 +67,24 @@ jobs:
           rm -rf /tmp/gda_flutter/assets
           cp -R flutter_app/assets /tmp/gda_flutter/assets
 
+      - name: Configure Android camera support
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('/tmp/gda_flutter/android/app/build.gradle.kts')
+          text = path.read_text()
+          needle = 'minSdk = flutter.minSdkVersion'
+          if needle not in text:
+              raise SystemExit('Could not find generated Flutter minSdk setting')
+          path.write_text(text.replace(needle, 'minSdk = 24'))
+          PY
+
       - name: Get dependencies
         working-directory: /tmp/gda_flutter
         run: flutter pub get
+
+      - name: Verify Flutter lockfile is current
+        run: cmp flutter_app/pubspec.lock /tmp/gda_flutter/pubspec.lock
 
       - name: Upload resolved Flutter lockfile
         uses: actions/upload-artifact@v4
