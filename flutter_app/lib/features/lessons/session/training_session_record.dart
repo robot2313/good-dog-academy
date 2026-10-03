@@ -278,7 +278,7 @@ class TrainingRepRecord {
       correction: correctionValue == null
           ? null
           : EvidenceCorrectionRecord.fromJson(
-              correctionValue.cast<String, Object?>(),
+              (correctionValue as Map).cast<String, Object?>(),
             ),
     );
     record.validate();
