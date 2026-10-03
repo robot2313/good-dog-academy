@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/gda_theme.dart';
+import '../identity/app_identity_controller.dart';
+import '../identity/dog_selector.dart';
+import '../identity/dog_avatar.dart';
+import '../lessons/progress/lesson_progress_controller.dart';
+import '../lessons/data/production_lessons.dart';
+import '../progress/learning_passport_service.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -28,11 +34,7 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 24),
           _sectionTitle(context, 'Jump Back In', 'See all'),
           const SizedBox(height: 9),
-          const _LessonCard(
-            icon: Icons.play_circle_outline_rounded,
-            title: 'Continue training',
-            subtitle: 'In-progress lesson state will connect here.',
-          ),
+          _progressCard(context),
           const SizedBox(height: 24),
           _sectionTitle(context, 'Browse by Category', 'See all'),
           const SizedBox(height: 12),
@@ -44,7 +46,53 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  Widget _progressCard(BuildContext context) {
+    final identity = AppIdentityScope.maybeOf(context);
+    final progress = LessonProgressScope.maybeOf(context);
+    if (identity?.selectedDog == null || identity?.owner == null) {
+      return const _LessonCard(
+        icon: Icons.pets,
+        title: 'Choose your dog',
+        subtitle: 'Your dog’s lesson progress will appear here.',
+      );
+    }
+    if (progress == null ||
+        progress.loading ||
+        progress.dogId != identity!.selectedDogId ||
+        progress.ownerId != identity.owner!.id) {
+      return const LinearProgressIndicator(
+        semanticsLabel: 'Loading training progress',
+      );
+    }
+    if (progress.error != null) {
+      return const _LessonCard(
+        icon: Icons.error_outline,
+        title: 'Training progress could not be loaded safely.',
+        subtitle: 'Open Journey to try again.',
+      );
+    }
+    try {
+      final passport = const LearningPassportService().query(
+        owner: identity.owner!,
+        dog: identity.selectedDog!,
+        catalogue: productionLessons,
+        progress: progress.records,
+      );
+      return _LessonCard(
+        icon: Icons.school_outlined,
+        title:
+            '${passport.dogName}: ${passport.completed} of ${passport.total} lessons complete',
+        subtitle: passport.continueLessons.isEmpty
+            ? 'Browse Categories to explore lesson paths.'
+            : 'In progress: ${passport.continueLessons.first.title}',
+      );
+    } catch (_) {
+      return const Text('Training progress could not be loaded safely.');
+    }
+  }
+
   Widget _header(BuildContext context) {
+    final identity = AppIdentityScope.maybeOf(context);
     return Row(
       children: [
         Container(
@@ -54,10 +102,7 @@ class HomeScreen extends StatelessWidget {
             color: GdaColors.selected,
             shape: BoxShape.circle,
           ),
-          child: const Icon(
-            Icons.pets_rounded,
-            color: GdaColors.forest,
-          ),
+          child: DogAvatar(photoUri: identity?.selectedDog?.photoUri),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -65,38 +110,44 @@ class HomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Good Dog Academy',
+                identity?.owner == null
+                    ? 'Good Dog Academy'
+                    : 'Hello, ${identity!.owner!.displayName}',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 2),
               Text(
-                'Training that adapts with you',
+                identity?.selectedDog == null
+                    ? 'Training that adapts with you'
+                    : 'Training with ${identity!.selectedDog!.name}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
           ),
         ),
-        IconButton(
-          onPressed: () {},
-          tooltip: 'Notifications',
-          icon: const Icon(Icons.notifications_none_rounded),
-        ),
+        if (identity != null)
+          IconButton(
+            tooltip: 'Choose active dog',
+            icon: const Icon(Icons.swap_horiz),
+            onPressed: () => showModalBottomSheet<void>(
+              context: context,
+              builder: (_) => AppIdentityScope(
+                controller: identity,
+                child: const SafeArea(
+                  child: SingleChildScrollView(child: DogSelector()),
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
 
-  Widget _sectionTitle(
-    BuildContext context,
-    String title,
-    String action,
-  ) {
+  Widget _sectionTitle(BuildContext context, String title, String action) {
     return Row(
       children: [
         Expanded(
-          child: Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          child: Text(title, style: Theme.of(context).textTheme.titleMedium),
         ),
         Text(
           action,
@@ -124,10 +175,7 @@ class _PlanCard extends StatelessWidget {
           children: [
             const Row(
               children: [
-                Icon(
-                  Icons.calendar_today_rounded,
-                  color: GdaColors.primary,
-                ),
+                Icon(Icons.calendar_today_rounded, color: GdaColors.primary),
                 SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -216,10 +264,7 @@ class _LessonCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 5),
-                  Text(
-                    subtitle,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
+                  Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
             ),
@@ -295,10 +340,7 @@ class _HelpCard extends StatelessWidget {
       ),
       child: const Row(
         children: [
-          Icon(
-            Icons.support_agent_rounded,
-            color: Color(0xFF835B0E),
-          ),
+          Icon(Icons.support_agent_rounded, color: Color(0xFF835B0E)),
           SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -314,10 +356,7 @@ class _HelpCard extends StatelessWidget {
                 SizedBox(height: 4),
                 Text(
                   'Get one safe next step for the behaviour you are seeing.',
-                  style: TextStyle(
-                    color: GdaColors.muted,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: GdaColors.muted, fontSize: 12),
                 ),
               ],
             ),

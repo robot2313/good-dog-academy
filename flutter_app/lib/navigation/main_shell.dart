@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../core/theme/gda_theme.dart';
+import '../features/identity/app_identity_controller.dart';
 import '../features/discovery/categories_screen.dart';
 import '../features/discovery/dog_stages_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/journey/journey_screen.dart';
-import '../features/shared/placeholder_tab.dart';
+import '../features/progress/progress_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -22,11 +23,7 @@ class _MainShellState extends State<MainShell> {
     JourneyScreen(),
     CategoriesScreen(),
     DogStagesScreen(),
-    PlaceholderTab(
-      title: 'Progress',
-      description: 'Training history and progress will be migrated here.',
-      icon: Icons.bar_chart,
-    ),
+    ProgressScreen(),
   ];
 
   @override
@@ -34,7 +31,16 @@ class _MainShellState extends State<MainShell> {
     return Scaffold(
       body: IndexedStack(
         index: currentIndex,
-        children: screens,
+        children: [
+          for (var index = 0; index < screens.length; index++)
+            KeyedSubtree(
+              key: ValueKey((
+                AppIdentityScope.maybeOf(context)?.selectedDogId,
+                index,
+              )),
+              child: screens[index],
+            ),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,

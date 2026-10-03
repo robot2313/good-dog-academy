@@ -21,7 +21,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text('Training history and progress will be migrated here.'),
+      find.text('Choose a dog to view their Learning Passport.'),
       findsOneWidget,
     );
   });
