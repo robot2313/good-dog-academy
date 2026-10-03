@@ -53,10 +53,11 @@ class TemporalRepGate {
     return TemporalRepGateResult(
       stablePosture: stablePosture,
       readyToScore: readyToScore,
+      // Any held expected posture that cannot score yet is waiting for a real
+      // departure/re-entry. This also prevents duplicate scoring on the same
+      // cue after the first rep has already been accepted.
       waitingForTransition:
-          stablePosture == expectedPosture &&
-          !readyToScore &&
-          !_scoredForCue,
+          stablePosture == expectedPosture && !readyToScore,
     );
   }
 
