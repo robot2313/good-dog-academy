@@ -131,6 +131,37 @@ void main() {
     expect(orchestrator.getSession().reps, hasLength(1));
   });
 
+  test('posture held before cue requires departure before scoring', () async {
+    final orchestrator = CameraCoachOrchestrator.withDefaults(
+      session: createLiveCoachSession(
+        id: 'pre-cue',
+        dogId: 'dog-1',
+        lessonId: 'sit',
+      ),
+      visionEngine: _FakeVisionEngine(_vision()),
+      minFrameIntervalMs: 0,
+    );
+
+    for (var index = 1; index <= 3; index++) {
+      await orchestrator.processFrame(
+        _frame('pre-$index', '2026-10-04T09:59:5$index.000Z'),
+        _observation(
+          cueAt: null,
+          responseAt: null,
+          observedAt: '2026-10-04T09:59:5$index.000Z',
+        ),
+      );
+    }
+
+    final afterCue = await orchestrator.processFrame(
+      _frame('cue', '2026-10-04T10:00:01.000Z'),
+      _observation(),
+    );
+
+    expect(afterCue.kind, CameraCoachFrameKind.waitingForTransition);
+    expect(orchestrator.getSession().reps, isEmpty);
+  });
+
   test('held posture cannot be counted twice on the same cue', () async {
     final orchestrator = CameraCoachOrchestrator.withDefaults(
       session: createLiveCoachSession(

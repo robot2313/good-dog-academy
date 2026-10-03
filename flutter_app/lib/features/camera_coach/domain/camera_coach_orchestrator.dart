@@ -168,12 +168,19 @@ class CameraCoachOrchestrator {
       }
 
       if (cueAt == null) {
-        _postureBuffer.push(
+        final temporal = _postureBuffer.push(
           PostureObservation(
             posture: vision.posture,
             confidence: vision.postureConfidence,
           ),
         );
+        if (expected != null && temporal.stablePosture != null) {
+          // Track the dog's stable pre-cue posture without scoring it. When a
+          // new cue begins, TemporalRepGate can then require a real departure
+          // and re-entry instead of counting a posture the dog was already
+          // holding before the cue.
+          _repGate.observe(temporal.stablePosture, expected);
+        }
         return CameraCoachFrameResult(
           kind: CameraCoachFrameKind.waitingForTemporal,
           session: _session,
