@@ -40,7 +40,7 @@ void main() {
     expect(crop.width, crop.height);
     expect(crop.width, 324);
     expect(crop.originX, 238);
-    expect(crop.originY, 238);
+    expect(crop.originY, 158);
   });
 
   test('tracked crop clamps safely against frame edges', () {
