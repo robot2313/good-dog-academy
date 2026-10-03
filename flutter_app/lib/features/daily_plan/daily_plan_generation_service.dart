@@ -5,6 +5,7 @@ import '../identity/app_identity_record.dart';
 import '../lessons/data/production_lessons.dart';
 import '../lessons/domain/lesson_models.dart';
 import '../lessons/progress/lesson_progress_record.dart';
+import '../lessons/session/training_session_record.dart';
 import 'daily_plan_models.dart';
 import 'daily_plan_recommendation_service.dart';
 import 'daily_plan_repository.dart';
@@ -30,6 +31,8 @@ class DailyPlanGenerationService {
     required BehaviourAssessmentRecord assessment,
     required List<LessonProgressRecord> progress,
     required DateTime now,
+    List<TrainingSessionRecord> trainingSessions =
+        const <TrainingSessionRecord>[],
     int targetMinutes = 15,
   }) async {
     owner.validate();
@@ -76,11 +79,18 @@ class DailyPlanGenerationService {
       targetMinutes: 30,
       maximumLessons: 2,
       recentPlans: recentPlans,
+      trainingSessions: trainingSessions,
     ).recommendations;
 
     DailyPlanRecommendation? primary;
     for (final item in recommendations) {
-      if (item.kind == 'new-learning') {
+      if (item.reasons.contains('RECENT_SESSION_STEP_DOWN')) {
+        primary = item;
+        break;
+      }
+    }
+    for (final item in recommendations) {
+      if (primary == null && item.kind == 'new-learning') {
         primary = item;
         break;
       }

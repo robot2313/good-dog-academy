@@ -66,6 +66,7 @@ class DailyPlanController extends ChangeNotifier {
         assessment: assessment,
         progress: progressRecords,
         now: effectiveNow,
+        trainingSessions: sessions,
       );
       final reconciled = await _reconcileCompletion(
         result,

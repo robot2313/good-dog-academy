@@ -4,6 +4,7 @@ import '../assessment/assessment_models.dart';
 import '../lessons/domain/lesson_models.dart';
 import '../lessons/logic/lesson_unlock_service.dart';
 import '../lessons/progress/lesson_progress_record.dart';
+import '../lessons/session/training_session_record.dart';
 import 'daily_plan_models.dart';
 
 class DailyPlanRecommendation {
@@ -49,6 +50,8 @@ class DailyPlanRecommendationService {
     int targetMinutes = 15,
     int maximumLessons = 2,
     List<DailyPlanRecord> recentPlans = const <DailyPlanRecord>[],
+    List<TrainingSessionRecord> trainingSessions =
+        const <TrainingSessionRecord>[],
   }) {
     if (!const <int>{5, 10, 15, 20, 30}.contains(targetMinutes)) {
       throw RangeError('targetMinutes must be one of 5, 10, 15, 20, or 30');
@@ -63,6 +66,9 @@ class DailyPlanRecommendationService {
 
     final progressByLesson = <String, LessonProgressRecord>{
       for (final progress in progressRecords) progress.lessonId: progress,
+    };
+    final lessonById = <String, LessonDefinition>{
+      for (final lesson in catalogue) lesson.id: lesson,
     };
     final resolved = LessonUnlockService(catalogue).resolve(
       progressRecords.map((progress) => progress.toSnapshot()),
@@ -120,6 +126,26 @@ class DailyPlanRecommendationService {
 
       priority -= (lesson.difficulty - 1) * 2;
 
+      final supportDifficulty = _recentSupportDifficulty(
+        skill: lesson.skill,
+        dogId: behaviourProfile.dogId,
+        trainingSessions: trainingSessions,
+        lessonById: lessonById,
+        now: now,
+      );
+      if (supportDifficulty != null) {
+        if (lesson.difficulty < supportDifficulty) {
+          reasons.add('RECENT_SESSION_STEP_DOWN');
+          priority += 70;
+        } else if (lesson.difficulty == supportDifficulty) {
+          reasons.add('RECENT_SESSION_NEEDS_SUPPORT');
+          priority += 10;
+        } else {
+          reasons.add('RECENT_SESSION_HOLD_CHALLENGE');
+          priority -= 30;
+        }
+      }
+
       var recentOccurrences = 0;
       for (final plan in recentPlans) {
         for (final item in plan.items) {
@@ -171,6 +197,47 @@ class DailyPlanRecommendationService {
       totalEstimatedMinutes: totalMinutes,
       targetMinutes: targetMinutes,
     );
+  }
+
+  int? _recentSupportDifficulty({
+    required String skill,
+    required String dogId,
+    required List<TrainingSessionRecord> trainingSessions,
+    required Map<String, LessonDefinition> lessonById,
+    required DateTime now,
+  }) {
+    final cutoff = now.toUtc().subtract(const Duration(days: 14));
+    final recent = trainingSessions.where((session) {
+      if (session.dogId != dogId ||
+          session.completedAt == null ||
+          session.outcome == null) {
+        return false;
+      }
+      final lesson = lessonById[session.lessonId];
+      if (lesson == null || lesson.skill != skill) return false;
+      final completed = DateTime.tryParse(session.completedAt!);
+      if (completed == null) return false;
+      final utc = completed.toUtc();
+      return !utc.isBefore(cutoff) && !utc.isAfter(now.toUtc());
+    }).toList(growable: false)
+      ..sort((left, right) {
+        return right.completedAt!.compareTo(left.completedAt!);
+      });
+
+    if (recent.length < 2) return null;
+    final latest = recent.take(2).toList(growable: false);
+    if (latest.any((session) => session.outcome == TrainingOutcome.success)) {
+      return null;
+    }
+
+    var difficulty = 1;
+    for (final session in latest) {
+      final lesson = lessonById[session.lessonId];
+      if (lesson != null) {
+        difficulty = math.max(difficulty, lesson.difficulty);
+      }
+    }
+    return difficulty;
   }
 
   int _daysSince(String? timestamp, DateTime now) {
