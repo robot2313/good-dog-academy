@@ -611,7 +611,10 @@ class _SessionControls extends StatelessWidget {
   Widget build(BuildContext context) {
     final paused = runtime.status == CameraCoachRuntimeStatus.paused;
     final watching = runtime.status == CameraCoachRuntimeStatus.cueActive;
-    final ready = runtime.status == CameraCoachRuntimeStatus.ready;
+    final ready = cameraCoachCanBeginRep(
+      runtime.status,
+      runtime.framing?.ready ?? false,
+    );
 
     return Column(
       children: [
@@ -807,4 +810,12 @@ String _saveMessage(CameraCoachSaveState state) {
     CameraCoachSaveState.error =>
       'Your session is still on this screen. Retry before leaving if you want this evidence saved.',
   };
+}
+
+
+bool cameraCoachCanBeginRep(
+  CameraCoachRuntimeStatus status,
+  bool framingReady,
+) {
+  return status == CameraCoachRuntimeStatus.ready && framingReady;
 }
