@@ -86,13 +86,6 @@ jobs:
       - name: Verify Flutter lockfile is current
         run: cmp flutter_app/pubspec.lock /tmp/gda_flutter/pubspec.lock
 
-      - name: Upload resolved Flutter lockfile
-        uses: actions/upload-artifact@v4
-        with:
-          name: good-dog-academy-flutter-resolved-lock
-          path: /tmp/gda_flutter/pubspec.lock
-          retention-days: 1
-
       - name: Format Flutter source
         working-directory: /tmp/gda_flutter
         run: dart format lib test
