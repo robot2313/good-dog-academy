@@ -58,22 +58,34 @@ void main() {
       );
 
       expect(
+        find.text('0 of 60 lessons complete'),
+        findsOneWidget,
+      );
+
+      await tester.scrollUntilVisible(
+        find.text('Stage 2: Building Skills'),
+        300,
+      );
+      expect(
         find.text('Stage 2: Building Skills'),
         findsOneWidget,
       );
 
+      await tester.scrollUntilVisible(
+        find.text('Stage 3: Real World'),
+        300,
+      );
       expect(
         find.text('Stage 3: Real World'),
         findsOneWidget,
       );
 
+      await tester.scrollUntilVisible(
+        find.text('Stage 4: Lifelong Skills'),
+        300,
+      );
       expect(
         find.text('Stage 4: Lifelong Skills'),
-        findsOneWidget,
-      );
-
-      expect(
-        find.text('0 of 60 lessons complete'),
         findsOneWidget,
       );
     },
