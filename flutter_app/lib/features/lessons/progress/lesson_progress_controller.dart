@@ -160,7 +160,7 @@ class LessonProgressController extends ChangeNotifier {
     final bestRating =
         previousBest == null || rating > previousBest ? rating : previousBest;
     final minimumRating = lesson.minimumPerformanceRating;
-    final completed =
+    final lessonCompleted =
         successfulCompletions >= lesson.minimumSuccessfulCompletions &&
         (minimumRating == null || bestRating >= minimumRating);
 
@@ -169,7 +169,7 @@ class LessonProgressController extends ChangeNotifier {
       ownerId: ownerId,
       dogId: dogId,
       lessonId: lessonId,
-      status: completed
+      status: lessonCompleted
           ? LessonProgressStatus.completed
           : LessonProgressStatus.inProgress,
       attempts: attempts,
@@ -186,9 +186,9 @@ class LessonProgressController extends ChangeNotifier {
       updatedAt: attemptedAt,
     );
 
-    final completed = DateTime.parse(attemptedAt).toUtc();
+    final completedAtDate = DateTime.parse(attemptedAt).toUtc();
     final started = DateTime.tryParse(startedAt ?? attemptedAt)?.toUtc();
-    if (started == null || started.isAfter(completed)) {
+    if (started == null || started.isAfter(completedAtDate)) {
       throw const LessonProgressSelectionException(
         'Training session start time is invalid.',
       );
@@ -196,14 +196,14 @@ class LessonProgressController extends ChangeNotifier {
     final resolvedSessionId =
         sessionId ??
         'training-session-$dogId-$lessonId-${started.microsecondsSinceEpoch}';
-    final elapsedMilliseconds = completed.difference(started).inMilliseconds;
+    final elapsedMilliseconds = completedAtDate.difference(started).inMilliseconds;
     final session = TrainingSessionRecord(
       id: resolvedSessionId,
       dogId: dogId,
       lessonId: lessonId,
       dailyPlanId: null,
       startedAt: started.toIso8601String(),
-      completedAt: completed.toIso8601String(),
+      completedAt: completedAtDate.toIso8601String(),
       durationMinutes: (elapsedMilliseconds / 60000).round().clamp(0, 1440),
       outcome: rating >= 4
           ? TrainingOutcome.success
