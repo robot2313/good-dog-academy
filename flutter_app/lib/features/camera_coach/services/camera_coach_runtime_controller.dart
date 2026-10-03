@@ -52,6 +52,7 @@ class CameraCoachRuntimeController extends ChangeNotifier {
   String? _activeCueAt;
   bool _disposed = false;
   bool _started = false;
+  bool _confirmationPendingWhilePaused = false;
 
   bool get automaticScoringEnabled => cueResponse != null;
   bool get hasActiveCue => _activeCueAt != null;
@@ -176,7 +177,11 @@ class CameraCoachRuntimeController extends ChangeNotifier {
     }
 
     // A paused cue is cancelled rather than allowing its response window to
-    // continue silently in the background.
+    // continue silently in the background. Evidence already awaiting an owner
+    // decision must survive pause/resume so a new rep cannot start over it.
+    _confirmationPendingWhilePaused =
+        status == CameraCoachRuntimeStatus.awaitingOwnerConfirmation &&
+        orchestrator.getPendingConfirmation() != null;
     _activeCueAt = null;
     status = CameraCoachRuntimeStatus.paused;
     _notify();
@@ -190,7 +195,10 @@ class CameraCoachRuntimeController extends ChangeNotifier {
     error = null;
     try {
       await _startFrameSource();
-      status = CameraCoachRuntimeStatus.ready;
+      status = _confirmationPendingWhilePaused
+          ? CameraCoachRuntimeStatus.awaitingOwnerConfirmation
+          : CameraCoachRuntimeStatus.ready;
+      _confirmationPendingWhilePaused = false;
       _notify();
       await spokenCoach?.announce(const SessionResumedCoachEvent());
     } catch (cause) {
@@ -214,6 +222,7 @@ class CameraCoachRuntimeController extends ChangeNotifier {
     if (status == CameraCoachRuntimeStatus.complete) return;
 
     _activeCueAt = null;
+    _confirmationPendingWhilePaused = false;
     orchestrator.stopByOwner();
     status = CameraCoachRuntimeStatus.complete;
     _notify();
@@ -224,6 +233,7 @@ class CameraCoachRuntimeController extends ChangeNotifier {
 
   Future<void> shutdown() async {
     _activeCueAt = null;
+    _confirmationPendingWhilePaused = false;
     await _stopFrameSource();
     await spokenCoach?.stop();
     await orchestrator.dispose();
