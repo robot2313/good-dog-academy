@@ -69,7 +69,7 @@ class LessonProgressRepository {
   final LessonProgressStringStorage storage;
   final String storageKey;
 
-  static const int schemaVersion = 2;
+  static const int schemaVersion = 3;
 
   Future<List<LessonProgressRecord>> loadAll() async {
     return (await _loadStore()).records;
@@ -270,7 +270,7 @@ class LessonProgressRepository {
 
     final version = decoded['schemaVersion'];
 
-    if (version != 1 && version != schemaVersion) {
+    if (version != 1 && version != 2 && version != schemaVersion) {
       throw LessonProgressPersistenceException(
         'Unsupported lesson progress schema: $version.',
       );
@@ -306,7 +306,7 @@ class LessonProgressRepository {
     }
 
     final sessions = <TrainingSessionRecord>[];
-    if (version == schemaVersion) {
+    if (version != 1) {
       final sessionsValue = decoded['sessions'];
       if (sessionsValue is! List<dynamic>) {
         throw const LessonProgressPersistenceException(
@@ -418,14 +418,7 @@ class LessonProgressRepository {
     TrainingSessionRecord left,
     TrainingSessionRecord right,
   ) {
-    return left.dogId == right.dogId &&
-        left.lessonId == right.lessonId &&
-        left.dailyPlanId == right.dailyPlanId &&
-        left.startedAt == right.startedAt &&
-        left.completedAt == right.completedAt &&
-        left.durationMinutes == right.durationMinutes &&
-        left.outcome == right.outcome &&
-        left.notes == right.notes;
+    return jsonEncode(left.toJson()) == jsonEncode(right.toJson());
   }
 }
 

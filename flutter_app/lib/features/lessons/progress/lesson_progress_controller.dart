@@ -100,6 +100,7 @@ class LessonProgressController extends ChangeNotifier {
     String? sessionId,
     String? dailyPlanId,
     String notes = '',
+    List<TrainingRepRecord> reps = const <TrainingRepRecord>[],
     bool allowPrerequisiteBypass = false,
   }) async {
     if (ownerId != _ownerId || dogId != _dogId) {
@@ -212,6 +213,7 @@ class LessonProgressController extends ChangeNotifier {
           ? TrainingOutcome.partialSuccess
           : TrainingOutcome.unsuccessful,
       notes: notes,
+      reps: reps,
     );
 
     await repository.saveCompletedSessionWithProgress(

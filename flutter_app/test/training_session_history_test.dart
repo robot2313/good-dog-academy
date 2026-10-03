@@ -72,6 +72,26 @@ void main() {
     expect(data.sessions, isEmpty);
   });
 
+  test('schema v2 session history migrates with empty rep evidence', () async {
+    final storage = _MemoryStorage();
+    const key = 'good_dog_academy.flutter.lesson_progress.v1';
+    final legacySession = _session().toJson()..remove('reps');
+    storage.values[key] = jsonEncode(<String, Object?>{
+      'schemaVersion': 2,
+      'records': <Object?>[_progress().toJson()],
+      'sessions': <Object?>[legacySession],
+    });
+    final repository = LessonProgressRepository(storage: storage);
+
+    final data = await repository.loadTrainingDataForDog(
+      ownerId: 'owner-1',
+      dogId: 'dog-1',
+    );
+
+    expect(data.sessions, hasLength(1));
+    expect(data.sessions.single.reps, isEmpty);
+  });
+
   test('progress and completed session are committed in one store write', () async {
     final storage = _MemoryStorage();
     final repository = LessonProgressRepository(storage: storage);
@@ -87,7 +107,7 @@ void main() {
     expect(result.data.sessions, hasLength(1));
 
     final raw = jsonDecode(storage.values.values.single) as Map<String, dynamic>;
-    expect(raw['schemaVersion'], 2);
+    expect(raw['schemaVersion'], 3);
     expect(raw['records'], hasLength(1));
     expect(raw['sessions'], hasLength(1));
   });
