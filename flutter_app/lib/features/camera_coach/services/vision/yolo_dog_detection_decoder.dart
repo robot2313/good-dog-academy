@@ -45,7 +45,7 @@ List<DogDetection> decodeYoloDogDetections(
       detections.add(
         DogDetection(
           box: box,
-          confidence: confidence.clamp(0.0, 1.0),
+          confidence: confidence.clamp(0.0, 1.0).toDouble(),
           source: DogDetectionSource.dedicatedDetector,
         ),
       );
@@ -139,8 +139,8 @@ double _intersectionOverUnion(
   final bBottom = b.top + b.height;
   final bottom = aBottom < bBottom ? aBottom : bBottom;
 
-  final intersectionWidth = (right - left).clamp(0.0, 1.0);
-  final intersectionHeight = (bottom - top).clamp(0.0, 1.0);
+  final intersectionWidth = (right - left).clamp(0.0, 1.0).toDouble();
+  final intersectionHeight = (bottom - top).clamp(0.0, 1.0).toDouble();
   final intersection = intersectionWidth * intersectionHeight;
   final union = a.width * a.height + b.width * b.height - intersection;
   return union > 0 ? intersection / union : 0;
@@ -157,10 +157,10 @@ NormalizedDogBox? _normalizedBox(
   final rightPx = x1 > x2 ? x1 : x2;
   final bottomPx = y1 > y2 ? y1 : y2;
 
-  final left = (leftPx / yoloDetectorInputSize).clamp(0.0, 1.0);
-  final top = (topPx / yoloDetectorInputSize).clamp(0.0, 1.0);
-  final right = (rightPx / yoloDetectorInputSize).clamp(0.0, 1.0);
-  final bottom = (bottomPx / yoloDetectorInputSize).clamp(0.0, 1.0);
+  final left = (leftPx / yoloDetectorInputSize).clamp(0.0, 1.0).toDouble();
+  final top = (topPx / yoloDetectorInputSize).clamp(0.0, 1.0).toDouble();
+  final right = (rightPx / yoloDetectorInputSize).clamp(0.0, 1.0).toDouble();
+  final bottom = (bottomPx / yoloDetectorInputSize).clamp(0.0, 1.0).toDouble();
   final width = right - left;
   final height = bottom - top;
 
