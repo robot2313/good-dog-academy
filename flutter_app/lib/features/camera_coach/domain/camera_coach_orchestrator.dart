@@ -4,28 +4,8 @@ import 'camera_evidence.dart';
 import 'live_coach_engine.dart';
 import 'posture_buffer.dart';
 import 'temporal_rep_gate.dart';
-
-class CameraFrame {
-  const CameraFrame({
-    required this.id,
-    required this.capturedAt,
-    required this.width,
-    required this.height,
-    required this.rotationDegrees,
-  });
-
-  final String id;
-  final String capturedAt;
-  final int width;
-  final int height;
-  final int rotationDegrees;
-}
-
-abstract interface class DogVisionEngine {
-  Future<void> warmup();
-  Future<DogVisionResult> detect(CameraFrame frame);
-  Future<void> dispose();
-}
+import '../services/camera/camera_frame_source.dart';
+import '../services/vision/dog_vision_engine.dart';
 
 enum CameraCoachFrameKind {
   throttled,

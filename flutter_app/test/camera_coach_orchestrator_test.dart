@@ -4,6 +4,8 @@ import 'package:good_dog_academy/features/camera_coach/domain/camera_coach_orche
 import 'package:good_dog_academy/features/camera_coach/domain/camera_evidence.dart';
 import 'package:good_dog_academy/features/camera_coach/domain/live_coach_engine.dart';
 import 'package:good_dog_academy/features/camera_coach/domain/dog_tracking.dart';
+import 'package:good_dog_academy/features/camera_coach/services/camera/camera_frame_source.dart';
+import 'package:good_dog_academy/features/camera_coach/services/vision/dog_vision_engine.dart';
 import 'package:good_dog_academy/features/lessons/session/training_session_record.dart';
 
 CameraFrame _frame(String id, String capturedAt) => CameraFrame(
