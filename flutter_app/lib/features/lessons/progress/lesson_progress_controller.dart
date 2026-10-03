@@ -84,6 +84,108 @@ class LessonProgressController extends ChangeNotifier {
     }
   }
 
+  Future<void> recordLessonAttempt({
+    required String ownerId,
+    required String dogId,
+    required String lessonId,
+    required int rating,
+    required String attemptedAt,
+    bool allowPrerequisiteBypass = false,
+  }) async {
+    if (ownerId != _ownerId || dogId != _dogId) {
+      throw const LessonProgressSelectionException(
+        'The selected dog changed before this session could be saved.',
+      );
+    }
+    if (rating < 1 || rating > 5) {
+      throw const LessonProgressSelectionException(
+        'Performance rating must be between 1 and 5.',
+      );
+    }
+    if (DateTime.tryParse(attemptedAt) == null) {
+      throw const LessonProgressSelectionException(
+        'Attempt time must be a valid timestamp.',
+      );
+    }
+
+    LessonDefinition? lesson;
+    for (final candidate in productionLessons) {
+      if (candidate.id == lessonId) {
+        lesson = candidate;
+        break;
+      }
+    }
+    if (lesson == null || !lesson.isActive) {
+      throw const LessonProgressSelectionException(
+        'This lesson is not currently available.',
+      );
+    }
+
+    final resolved = const LessonUnlockService(productionLessons)
+        .resolve(snapshots);
+    final item = resolved[lessonId];
+    if (item == null) {
+      throw const LessonProgressSelectionException(
+        'This lesson could not be resolved.',
+      );
+    }
+    if (item.state == LessonState.locked && !allowPrerequisiteBypass) {
+      throw LessonProgressSelectionException(
+        item.lockReason ?? 'This lesson is still locked.',
+      );
+    }
+
+    LessonProgressRecord? existing;
+    for (final record in _records) {
+      if (record.lessonId == lessonId) {
+        existing = record;
+        break;
+      }
+    }
+
+    final successful = rating >= 3;
+    final attempts = (existing?.attempts ?? 0) + 1;
+    final successfulCompletions =
+        (existing?.successfulCompletions ?? 0) + (successful ? 1 : 0);
+    final previousBest = existing?.bestPerformanceRating;
+    final bestRating =
+        previousBest == null || rating > previousBest ? rating : previousBest;
+    final minimumRating = lesson.minimumPerformanceRating;
+    final completed =
+        successfulCompletions >= lesson.minimumSuccessfulCompletions &&
+        (minimumRating == null || bestRating >= minimumRating);
+
+    final record = LessonProgressRecord(
+      id: existing?.id ?? 'progress-$dogId-$lessonId',
+      ownerId: ownerId,
+      dogId: dogId,
+      lessonId: lessonId,
+      status: completed
+          ? LessonProgressStatus.completed
+          : LessonProgressStatus.inProgress,
+      attempts: attempts,
+      successfulCompletions: successfulCompletions,
+      lastAttemptedAt: attemptedAt,
+      lastCompletedAt: successful
+          ? attemptedAt
+          : existing?.lastCompletedAt,
+      bestPerformanceRating: bestRating,
+      currentDifficultyAdjustment:
+          existing?.currentDifficultyAdjustment ?? 0,
+      unlockedAt: existing?.unlockedAt ?? attemptedAt,
+      createdAt: existing?.createdAt ?? attemptedAt,
+      updatedAt: attemptedAt,
+    );
+
+    await repository.save(record);
+    await loadForDog(ownerId: ownerId, dogId: dogId);
+    if (_error != null) {
+      throw LessonProgressSelectionException(
+        'The lesson was saved but progress could not be refreshed: $_error',
+      );
+    }
+  }
+
   Future<void> reload() async {
     final owner = _ownerId;
     final dog = _dogId;

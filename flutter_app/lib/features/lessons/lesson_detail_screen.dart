@@ -274,6 +274,8 @@ class LessonDetailScreen extends StatelessWidget {
                           MaterialPageRoute<void>(
                             builder: (_) => LessonSessionScreen(
                               lessonId: lesson.id,
+                              ownerId: identity!.owner!.id,
+                              dogId: identity.selectedDog!.id,
                               allowPrerequisiteBypass: selfDirected,
                             ),
                           ),
