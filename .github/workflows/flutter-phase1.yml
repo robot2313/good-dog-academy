@@ -58,6 +58,7 @@ jobs:
       - name: Install Good Dog Academy Flutter source
         run: |
           cp flutter_app/pubspec.yaml /tmp/gda_flutter/pubspec.yaml
+          cp flutter_app/pubspec.lock /tmp/gda_flutter/pubspec.lock
           cp flutter_app/analysis_options.yaml /tmp/gda_flutter/analysis_options.yaml
           rm -rf /tmp/gda_flutter/lib
           rm -rf /tmp/gda_flutter/test
