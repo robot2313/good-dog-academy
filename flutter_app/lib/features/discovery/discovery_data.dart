@@ -164,8 +164,7 @@ const dogStages = <DogStageData>[
     id: 'senior',
     label: 'Senior Dog',
     age: '7+ years',
-    summary:
-        'Keep minds active and support confidence with gentle training.',
+    summary: 'Keep minds active and support confidence with gentle training.',
     lessonCount: 15,
     icon: Icons.favorite_outline_rounded,
   ),

@@ -21,8 +21,7 @@ const lessonCollections = <LessonCollectionData>[
     id: 'puppy',
     label: 'Puppy',
     ageLabel: 'Up to about 12 months',
-    description:
-        'Short foundation lessons for toilet training, chewing, focus, greetings and early recall.',
+    description: 'Short foundation lessons for toilet training, chewing, focus, greetings and early recall.',
     anchorLessonId: 'chewing-puppy-teething-plan',
     lessonIds: <String>[
       'recall-name-response',
@@ -49,8 +48,7 @@ const lessonCollections = <LessonCollectionData>[
     id: 'adult',
     label: 'Adult Dog',
     ageLabel: 'About 1 to 7 years',
-    description:
-        'Build reliable everyday skills, solve current problems and maintain good habits.',
+    description: 'Build reliable everyday skills, solve current problems and maintain good habits.',
     anchorLessonId: 'loose-lead-longer-routes',
     lessonIds: <String>[
       'recall-around-distractions',
@@ -77,8 +75,7 @@ const lessonCollections = <LessonCollectionData>[
     id: 'senior',
     label: 'Senior Dog',
     ageLabel: 'Usually 7+ years',
-    description:
-        'Gentle, lower-pressure lessons that support comfort, confidence and familiar routines.',
+    description: 'Gentle, lower-pressure lessons that support comfort, confidence and familiar routines.',
     anchorLessonId: 'confidence-consent-based-handling',
     lessonIds: <String>[
       'recall-name-response',
@@ -102,8 +99,7 @@ const lessonCollections = <LessonCollectionData>[
     id: 'rescue',
     label: 'Rescue Dog',
     ageLabel: 'Any age',
-    description:
-        'Patient, choice-led lessons for settling in, trust, safety, confidence and everyday routines.',
+    description: 'Patient, choice-led lessons for settling in, trust, safety, confidence and everyday routines.',
     anchorLessonId: 'confidence-recovery-after-surprise',
     lessonIds: <String>[
       'recall-name-response',

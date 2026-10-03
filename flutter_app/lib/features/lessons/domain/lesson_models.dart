@@ -1,9 +1,4 @@
-enum LessonState {
-  available,
-  locked,
-  inProgress,
-  completed,
-}
+enum LessonState { available, locked, inProgress, completed }
 
 class LessonPrerequisite {
   const LessonPrerequisite({

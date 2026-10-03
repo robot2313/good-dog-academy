@@ -7,10 +7,7 @@ import 'lesson_progress_record.dart';
 abstract interface class LessonProgressStringStorage {
   Future<String?> read(String key);
 
-  Future<void> write(
-    String key,
-    String value,
-  );
+  Future<void> write(String key, String value);
 }
 
 class SharedPreferencesLessonProgressStorage
@@ -19,24 +16,16 @@ class SharedPreferencesLessonProgressStorage
 
   @override
   Future<String?> read(String key) async {
-    final preferences =
-        await SharedPreferences.getInstance();
+    final preferences = await SharedPreferences.getInstance();
 
     return preferences.getString(key);
   }
 
   @override
-  Future<void> write(
-    String key,
-    String value,
-  ) async {
-    final preferences =
-        await SharedPreferences.getInstance();
+  Future<void> write(String key, String value) async {
+    final preferences = await SharedPreferences.getInstance();
 
-    final saved = await preferences.setString(
-      key,
-      value,
-    );
+    final saved = await preferences.setString(key, value);
 
     if (!saved) {
       throw const LessonProgressPersistenceException(
@@ -49,8 +38,7 @@ class SharedPreferencesLessonProgressStorage
 class LessonProgressRepository {
   const LessonProgressRepository({
     required this.storage,
-    this.storageKey =
-        'good_dog_academy.flutter.lesson_progress.v1',
+    this.storageKey = 'good_dog_academy.flutter.lesson_progress.v1',
   });
 
   final LessonProgressStringStorage storage;
@@ -109,9 +97,7 @@ class LessonProgressRepository {
 
       try {
         records.add(
-          LessonProgressRecord.fromJson(
-            item.cast<String, Object?>(),
-          ),
+          LessonProgressRecord.fromJson(item.cast<String, Object?>()),
         );
       } on LessonProgressDataException catch (cause) {
         throw LessonProgressPersistenceException(
@@ -123,9 +109,7 @@ class LessonProgressRepository {
 
     _validateUniqueRecords(records);
 
-    return List<LessonProgressRecord>.unmodifiable(
-      records,
-    );
+    return List<LessonProgressRecord>.unmodifiable(records);
   }
 
   Future<List<LessonProgressRecord>> loadForDog({
@@ -138,9 +122,7 @@ class LessonProgressRepository {
         .where((record) => record.dogId == dogId)
         .toList(growable: false);
 
-    if (dogRecords.any(
-      (record) => record.ownerId != ownerId,
-    )) {
+    if (dogRecords.any((record) => record.ownerId != ownerId)) {
       throw const LessonProgressPersistenceException(
         'Stored lesson progress ownership is inconsistent.',
       );
@@ -149,9 +131,7 @@ class LessonProgressRepository {
     return dogRecords;
   }
 
-  Future<void> save(
-    LessonProgressRecord record,
-  ) async {
+  Future<void> save(LessonProgressRecord record) async {
     record.validate();
 
     final all = await loadAll();
@@ -161,8 +141,7 @@ class LessonProgressRepository {
           existing.dogId == record.dogId &&
           existing.lessonId == record.lessonId;
 
-      if (sameDogLesson &&
-          existing.id != record.id) {
+      if (sameDogLesson && existing.id != record.id) {
         throw const LessonProgressPersistenceException(
           'Duplicate progress exists for this dog and lesson.',
         );
@@ -183,15 +162,12 @@ class LessonProgressRepository {
     required String dogId,
     required Iterable<LessonProgressRecord> records,
   }) async {
-    final replacement = records.toList(
-      growable: false,
-    );
+    final replacement = records.toList(growable: false);
 
     for (final record in replacement) {
       record.validate();
 
-      if (record.ownerId != ownerId ||
-          record.dogId != dogId) {
+      if (record.ownerId != ownerId || record.dogId != dogId) {
         throw const LessonProgressPersistenceException(
           'Replacement lesson progress ownership is invalid.',
         );
@@ -213,29 +189,20 @@ class LessonProgressRepository {
     await _writeAll(next);
   }
 
-  Future<void> _writeAll(
-    List<LessonProgressRecord> records,
-  ) async {
+  Future<void> _writeAll(List<LessonProgressRecord> records) async {
     _validateUniqueRecords(records);
 
-    final encoded = jsonEncode(
-      <String, Object?>{
-        'schemaVersion': schemaVersion,
-        'records': records
-            .map((record) => record.toJson())
-            .toList(growable: false),
-      },
-    );
+    final encoded = jsonEncode(<String, Object?>{
+      'schemaVersion': schemaVersion,
+      'records': records
+          .map((record) => record.toJson())
+          .toList(growable: false),
+    });
 
-    await storage.write(
-      storageKey,
-      encoded,
-    );
+    await storage.write(storageKey, encoded);
   }
 
-  void _validateUniqueRecords(
-    Iterable<LessonProgressRecord> records,
-  ) {
+  void _validateUniqueRecords(Iterable<LessonProgressRecord> records) {
     final ids = <String>{};
     final dogLessons = <String>{};
 
@@ -246,8 +213,7 @@ class LessonProgressRepository {
         );
       }
 
-      final dogLesson =
-          '${record.dogId}\u0000${record.lessonId}';
+      final dogLesson = '${record.dogId}\u0000${record.lessonId}';
 
       if (!dogLessons.add(dogLesson)) {
         throw const LessonProgressPersistenceException(
@@ -258,17 +224,12 @@ class LessonProgressRepository {
   }
 }
 
-class LessonProgressPersistenceException
-    implements Exception {
-  const LessonProgressPersistenceException(
-    this.message, {
-    this.cause,
-  });
+class LessonProgressPersistenceException implements Exception {
+  const LessonProgressPersistenceException(this.message, {this.cause});
 
   final String message;
   final Object? cause;
 
   @override
-  String toString() =>
-      'LessonProgressPersistenceException: $message';
+  String toString() => 'LessonProgressPersistenceException: $message';
 }

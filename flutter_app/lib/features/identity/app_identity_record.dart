@@ -1,8 +1,4 @@
-enum TrainingExperience {
-  beginner,
-  intermediate,
-  experienced,
-}
+enum TrainingExperience { beginner, intermediate, experienced }
 
 enum PrimaryGoal {
   familyCompanion,
@@ -12,22 +8,11 @@ enum PrimaryGoal {
   dogSport,
 }
 
-enum DogSex {
-  female,
-  male,
-  unknown,
-}
+enum DogSex { female, male, unknown }
 
-enum WeightUnit {
-  kg,
-  lb,
-}
+enum WeightUnit { kg, lb }
 
-enum DogEnergyLevel {
-  low,
-  medium,
-  high,
-}
+enum DogEnergyLevel { low, medium, high }
 
 class AppOwnerRecord {
   const AppOwnerRecord({
@@ -60,9 +45,7 @@ class AppOwnerRecord {
     };
   }
 
-  factory AppOwnerRecord.fromJson(
-    Map<String, Object?> json,
-  ) {
+  factory AppOwnerRecord.fromJson(Map<String, Object?> json) {
     final record = AppOwnerRecord(
       id: _requiredString(json, 'id'),
       email: _nullableString(json, 'email'),
@@ -83,9 +66,7 @@ class AppOwnerRecord {
 
   void validate() {
     if (id.trim().isEmpty) {
-      throw const AppIdentityDataException(
-        'Owner id must not be empty.',
-      );
+      throw const AppIdentityDataException('Owner id must not be empty.');
     }
 
     if (displayName.trim().isEmpty) {
@@ -98,9 +79,7 @@ class AppOwnerRecord {
 
     if (ownerEmail != null) {
       if (ownerEmail.trim().isEmpty ||
-          !RegExp(
-            r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
-          ).hasMatch(ownerEmail)) {
+          !RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(ownerEmail)) {
         throw const AppIdentityDataException(
           'Owner email must be valid or null.',
         );
@@ -167,47 +146,23 @@ class AppDogRecord {
     };
   }
 
-  factory AppDogRecord.fromJson(
-    Map<String, Object?> json,
-  ) {
+  factory AppDogRecord.fromJson(Map<String, Object?> json) {
     final record = AppDogRecord(
       id: _requiredString(json, 'id'),
       ownerId: _requiredString(json, 'ownerId'),
       name: _requiredString(json, 'name'),
       breed: _requiredString(json, 'breed'),
-      breedUnknown: _requiredBool(
-        json,
-        'breedUnknown',
-      ),
-      dateOfBirth: _nullableString(
-        json,
-        'dateOfBirth',
-      ),
-      birthdayEstimated: _requiredBool(
-        json,
-        'birthdayEstimated',
-      ),
-      estimatedAgeYears: _nullableDouble(
-        json,
-        'estimatedAgeYears',
-      ),
-      sex: _dogSexFromStorage(
-        _requiredString(json, 'sex'),
-      ),
-      weightKg: _nullableDouble(
-        json,
-        'weightKg',
-      ),
-      weightUnit: _weightUnitFromStorage(
-        _requiredString(json, 'weightUnit'),
-      ),
+      breedUnknown: _requiredBool(json, 'breedUnknown'),
+      dateOfBirth: _nullableString(json, 'dateOfBirth'),
+      birthdayEstimated: _requiredBool(json, 'birthdayEstimated'),
+      estimatedAgeYears: _nullableDouble(json, 'estimatedAgeYears'),
+      sex: _dogSexFromStorage(_requiredString(json, 'sex')),
+      weightKg: _nullableDouble(json, 'weightKg'),
+      weightUnit: _weightUnitFromStorage(_requiredString(json, 'weightUnit')),
       energyLevel: _energyLevelFromStorage(
         _requiredString(json, 'energyLevel'),
       ),
-      photoUri: _nullableString(
-        json,
-        'photoUri',
-      ),
+      photoUri: _nullableString(json, 'photoUri'),
       createdAt: _requiredString(json, 'createdAt'),
       updatedAt: _requiredString(json, 'updatedAt'),
     );
@@ -217,9 +172,7 @@ class AppDogRecord {
   }
 
   void validate() {
-    if (id.trim().isEmpty ||
-        ownerId.trim().isEmpty ||
-        name.trim().isEmpty) {
+    if (id.trim().isEmpty || ownerId.trim().isEmpty || name.trim().isEmpty) {
       throw const AppIdentityDataException(
         'Dog identity fields must not be empty.',
       );
@@ -240,16 +193,10 @@ class AppDogRecord {
         );
       }
 
-      final parsed = DateTime.parse(
-        '${birthday}T00:00:00.000Z',
-      );
+      final parsed = DateTime.parse('${birthday}T00:00:00.000Z');
 
       final now = DateTime.now().toUtc();
-      final today = DateTime.utc(
-        now.year,
-        now.month,
-        now.day,
-      );
+      final today = DateTime.utc(now.year, now.month, now.day);
 
       if (parsed.isAfter(today)) {
         throw const AppIdentityDataException(
@@ -260,8 +207,7 @@ class AppDogRecord {
 
     final age = estimatedAgeYears;
 
-    if (age != null &&
-        (!age.isFinite || age <= 0 || age > 30)) {
+    if (age != null && (!age.isFinite || age <= 0 || age > 30)) {
       throw const AppIdentityDataException(
         'Estimated dog age must be greater than 0 '
         'and at most 30 years.',
@@ -282,8 +228,7 @@ class AppDogRecord {
 
     final weight = weightKg;
 
-    if (weight != null &&
-        (!weight.isFinite || weight <= 0)) {
+    if (weight != null && (!weight.isFinite || weight <= 0)) {
       throw const AppIdentityDataException(
         'Dog weight must be positive or null.',
       );
@@ -310,9 +255,9 @@ class AppIdentityState {
   });
 
   const AppIdentityState.empty()
-      : owner = null,
-        dogs = const <AppDogRecord>[],
-        selectedDogId = null;
+    : owner = null,
+      dogs = const <AppDogRecord>[],
+      selectedDogId = null;
 
   final AppOwnerRecord? owner;
   final List<AppDogRecord> dogs;
@@ -337,9 +282,7 @@ class AppIdentityState {
   Map<String, Object?> toJson() {
     return <String, Object?>{
       'owner': owner?.toJson(),
-      'dogs': dogs
-          .map((dog) => dog.toJson())
-          .toList(growable: false),
+      'dogs': dogs.map((dog) => dog.toJson()).toList(growable: false),
       'selectedDogId': selectedDogId,
     };
   }
@@ -371,18 +314,14 @@ class AppIdentityState {
       }
 
       if (!ids.add(dog.id)) {
-        throw const AppIdentityDataException(
-          'Duplicate dog id.',
-        );
+        throw const AppIdentityDataException('Duplicate dog id.');
       }
     }
 
     final selected = selectedDogId;
 
     if (selected != null && !ids.contains(selected)) {
-      throw const AppIdentityDataException(
-        'Selected dog does not exist.',
-      );
+      throw const AppIdentityDataException('Selected dog does not exist.');
     }
   }
 }
@@ -393,13 +332,10 @@ class AppIdentityDataException implements Exception {
   final String message;
 
   @override
-  String toString() =>
-      'AppIdentityDataException: $message';
+  String toString() => 'AppIdentityDataException: $message';
 }
 
-String _primaryGoalStorageValue(
-  PrimaryGoal goal,
-) {
+String _primaryGoalStorageValue(PrimaryGoal goal) {
   switch (goal) {
     case PrimaryGoal.familyCompanion:
       return 'family-companion';
@@ -414,9 +350,7 @@ String _primaryGoalStorageValue(
   }
 }
 
-PrimaryGoal _primaryGoalFromStorage(
-  String value,
-) {
+PrimaryGoal _primaryGoalFromStorage(String value) {
   switch (value) {
     case 'family-companion':
       return PrimaryGoal.familyCompanion;
@@ -430,86 +364,60 @@ PrimaryGoal _primaryGoalFromStorage(
       return PrimaryGoal.dogSport;
   }
 
-  throw AppIdentityDataException(
-    'Unknown primary goal: $value',
-  );
+  throw AppIdentityDataException('Unknown primary goal: $value');
 }
 
-TrainingExperience _trainingExperienceFromStorage(
-  String value,
-) {
+TrainingExperience _trainingExperienceFromStorage(String value) {
   for (final item in TrainingExperience.values) {
     if (item.name == value) {
       return item;
     }
   }
 
-  throw AppIdentityDataException(
-    'Unknown training experience: $value',
-  );
+  throw AppIdentityDataException('Unknown training experience: $value');
 }
 
-DogSex _dogSexFromStorage(
-  String value,
-) {
+DogSex _dogSexFromStorage(String value) {
   for (final item in DogSex.values) {
     if (item.name == value) {
       return item;
     }
   }
 
-  throw AppIdentityDataException(
-    'Unknown dog sex: $value',
-  );
+  throw AppIdentityDataException('Unknown dog sex: $value');
 }
 
-WeightUnit _weightUnitFromStorage(
-  String value,
-) {
+WeightUnit _weightUnitFromStorage(String value) {
   for (final item in WeightUnit.values) {
     if (item.name == value) {
       return item;
     }
   }
 
-  throw AppIdentityDataException(
-    'Unknown weight unit: $value',
-  );
+  throw AppIdentityDataException('Unknown weight unit: $value');
 }
 
-DogEnergyLevel _energyLevelFromStorage(
-  String value,
-) {
+DogEnergyLevel _energyLevelFromStorage(String value) {
   for (final item in DogEnergyLevel.values) {
     if (item.name == value) {
       return item;
     }
   }
 
-  throw AppIdentityDataException(
-    'Unknown dog energy level: $value',
-  );
+  throw AppIdentityDataException('Unknown dog energy level: $value');
 }
 
-String _requiredString(
-  Map<String, Object?> json,
-  String key,
-) {
+String _requiredString(Map<String, Object?> json, String key) {
   final value = json[key];
 
   if (value is! String) {
-    throw AppIdentityDataException(
-      '$key must be a string.',
-    );
+    throw AppIdentityDataException('$key must be a string.');
   }
 
   return value;
 }
 
-String? _nullableString(
-  Map<String, Object?> json,
-  String key,
-) {
+String? _nullableString(Map<String, Object?> json, String key) {
   final value = json[key];
 
   if (value == null) {
@@ -517,33 +425,23 @@ String? _nullableString(
   }
 
   if (value is! String) {
-    throw AppIdentityDataException(
-      '$key must be a string or null.',
-    );
+    throw AppIdentityDataException('$key must be a string or null.');
   }
 
   return value;
 }
 
-bool _requiredBool(
-  Map<String, Object?> json,
-  String key,
-) {
+bool _requiredBool(Map<String, Object?> json, String key) {
   final value = json[key];
 
   if (value is! bool) {
-    throw AppIdentityDataException(
-      '$key must be a boolean.',
-    );
+    throw AppIdentityDataException('$key must be a boolean.');
   }
 
   return value;
 }
 
-double? _nullableDouble(
-  Map<String, Object?> json,
-  String key,
-) {
+double? _nullableDouble(Map<String, Object?> json, String key) {
   final value = json[key];
 
   if (value == null) {
@@ -551,31 +449,20 @@ double? _nullableDouble(
   }
 
   if (value is! num) {
-    throw AppIdentityDataException(
-      '$key must be a number or null.',
-    );
+    throw AppIdentityDataException('$key must be a number or null.');
   }
 
   return value.toDouble();
 }
 
-void _validateTimestamp(
-  String value,
-  String field,
-) {
+void _validateTimestamp(String value, String field) {
   if (DateTime.tryParse(value) == null) {
-    throw AppIdentityDataException(
-      '$field must be a valid timestamp.',
-    );
+    throw AppIdentityDataException('$field must be a valid timestamp.');
   }
 }
 
-bool _isValidDateOnly(
-  String value,
-) {
-  final match = RegExp(
-    r'^(\d{4})-(\d{2})-(\d{2})$',
-  ).firstMatch(value);
+bool _isValidDateOnly(String value) {
+  final match = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$').firstMatch(value);
 
   if (match == null) {
     return false;
@@ -585,13 +472,7 @@ bool _isValidDateOnly(
   final month = int.parse(match.group(2)!);
   final day = int.parse(match.group(3)!);
 
-  final parsed = DateTime.utc(
-    year,
-    month,
-    day,
-  );
+  final parsed = DateTime.utc(year, month, day);
 
-  return parsed.year == year &&
-      parsed.month == month &&
-      parsed.day == day;
+  return parsed.year == year && parsed.month == month && parsed.day == day;
 }

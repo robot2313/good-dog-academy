@@ -7,25 +7,16 @@ void main() {
   test('production catalogue matches the verified migration baseline', () {
     expect(productionLessons, hasLength(60));
 
-    final ids = productionLessons
-        .map((lesson) => lesson.id)
-        .toSet();
+    final ids = productionLessons.map((lesson) => lesson.id).toSet();
 
     expect(ids, hasLength(60));
 
     final skillCounts = <String, int>{};
 
     for (final lesson in productionLessons) {
-      skillCounts.update(
-        lesson.skill,
-        (count) => count + 1,
-        ifAbsent: () => 1,
-      );
+      skillCounts.update(lesson.skill, (count) => count + 1, ifAbsent: () => 1);
 
-      expect(
-        lesson.difficulty,
-        inInclusiveRange(1, 5),
-      );
+      expect(lesson.difficulty, inInclusiveRange(1, 5));
 
       for (final prerequisite in lesson.prerequisites) {
         expect(
@@ -38,21 +29,18 @@ void main() {
       }
     }
 
-    expect(
-      skillCounts,
-      <String, int>{
-        'barking': 6,
-        'chewing': 6,
-        'confidence': 6,
-        'focus': 6,
-        'house-training': 6,
-        'impulse-control': 6,
-        'jumping': 6,
-        'loose-lead-walking': 6,
-        'reactivity': 6,
-        'recall': 6,
-      },
-    );
+    expect(skillCounts, <String, int>{
+      'barking': 6,
+      'chewing': 6,
+      'confidence': 6,
+      'focus': 6,
+      'house-training': 6,
+      'impulse-control': 6,
+      'jumping': 6,
+      'loose-lead-walking': 6,
+      'reactivity': 6,
+      'recall': 6,
+    });
 
     final difficultyCounts = <int, int>{};
 
@@ -74,34 +62,24 @@ void main() {
   test('recall prerequisite chain resolves like the React Native service', () {
     const service = LessonUnlockService(productionLessons);
 
-    final initial = service.resolve(
-      const <LessonProgressSnapshot>[],
-    );
+    final initial = service.resolve(const <LessonProgressSnapshot>[]);
 
-    expect(
-      initial['recall-name-response']?.state,
-      LessonState.available,
-    );
+    expect(initial['recall-name-response']?.state, LessonState.available);
 
-    expect(
-      initial['recall-short-distance']?.state,
-      LessonState.locked,
-    );
+    expect(initial['recall-short-distance']?.state, LessonState.locked);
 
     expect(
       initial['recall-short-distance']?.lockReason,
       contains('Name Response'),
     );
 
-    final afterNameResponse = service.resolve(
-      const <LessonProgressSnapshot>[
-        LessonProgressSnapshot(
-          lessonId: 'recall-name-response',
-          attempts: 1,
-          successfulCompletions: 1,
-        ),
-      ],
-    );
+    final afterNameResponse = service.resolve(const <LessonProgressSnapshot>[
+      LessonProgressSnapshot(
+        lessonId: 'recall-name-response',
+        attempts: 1,
+        successfulCompletions: 1,
+      ),
+    ]);
 
     expect(
       afterNameResponse['recall-name-response']?.state,
@@ -118,16 +96,10 @@ void main() {
     const service = LessonUnlockService(productionLessons);
 
     expect(
-      () => service.resolve(
-        const <LessonProgressSnapshot>[
-          LessonProgressSnapshot(
-            lessonId: 'recall-name-response',
-          ),
-          LessonProgressSnapshot(
-            lessonId: 'recall-name-response',
-          ),
-        ],
-      ),
+      () => service.resolve(const <LessonProgressSnapshot>[
+        LessonProgressSnapshot(lessonId: 'recall-name-response'),
+        LessonProgressSnapshot(lessonId: 'recall-name-response'),
+      ]),
       throwsStateError,
     );
   });

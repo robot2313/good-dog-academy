@@ -22,9 +22,7 @@ class LessonUnlockService {
       }
 
       if (progressByLesson.containsKey(progress.lessonId)) {
-        throw StateError(
-          'Duplicate progress for lesson ${progress.lessonId}.',
-        );
+        throw StateError('Duplicate progress for lesson ${progress.lessonId}.');
       }
 
       progressByLesson[progress.lessonId] = progress;
@@ -65,15 +63,15 @@ class LessonUnlockService {
       );
     }
 
-    final missingPrerequisites = definition.prerequisites.where(
-      (prerequisite) {
-        final progress = progressByLesson[prerequisite.lessonId];
+    final missingPrerequisites = definition.prerequisites
+        .where((prerequisite) {
+          final progress = progressByLesson[prerequisite.lessonId];
 
-        return progress == null ||
-            progress.successfulCompletions <
-                prerequisite.minimumSuccessfulCompletions;
-      },
-    ).toList(growable: false);
+          return progress == null ||
+              progress.successfulCompletions <
+                  prerequisite.minimumSuccessfulCompletions;
+        })
+        .toList(growable: false);
 
     if (missingPrerequisites.isNotEmpty) {
       final names = missingPrerequisites
@@ -91,8 +89,7 @@ class LessonUnlockService {
       );
     }
 
-    if (current != null &&
-        (current.attempts > 0 || current.isInProgress)) {
+    if (current != null && (current.attempts > 0 || current.isInProgress)) {
       return LessonLibraryItem(
         definition: definition,
         state: LessonState.inProgress,

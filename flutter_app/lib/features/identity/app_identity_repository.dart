@@ -7,36 +7,24 @@ import 'app_identity_record.dart';
 abstract interface class AppIdentityStringStorage {
   Future<String?> read(String key);
 
-  Future<void> write(
-    String key,
-    String value,
-  );
+  Future<void> write(String key, String value);
 }
 
-class SharedPreferencesAppIdentityStorage
-    implements AppIdentityStringStorage {
+class SharedPreferencesAppIdentityStorage implements AppIdentityStringStorage {
   const SharedPreferencesAppIdentityStorage();
 
   @override
   Future<String?> read(String key) async {
-    final preferences =
-        await SharedPreferences.getInstance();
+    final preferences = await SharedPreferences.getInstance();
 
     return preferences.getString(key);
   }
 
   @override
-  Future<void> write(
-    String key,
-    String value,
-  ) async {
-    final preferences =
-        await SharedPreferences.getInstance();
+  Future<void> write(String key, String value) async {
+    final preferences = await SharedPreferences.getInstance();
 
-    final saved = await preferences.setString(
-      key,
-      value,
-    );
+    final saved = await preferences.setString(key, value);
 
     if (!saved) {
       throw const AppIdentityPersistenceException(
@@ -49,8 +37,7 @@ class SharedPreferencesAppIdentityStorage
 class AppIdentityRepository {
   const AppIdentityRepository({
     required this.storage,
-    this.storageKey =
-        'good_dog_academy.flutter.identity.v1',
+    this.storageKey = 'good_dog_academy.flutter.identity.v1',
   });
 
   final AppIdentityStringStorage storage;
@@ -100,39 +87,28 @@ class AppIdentityRepository {
           );
         }
 
-        owner = AppOwnerRecord.fromJson(
-          ownerValue.cast<String, Object?>(),
-        );
+        owner = AppOwnerRecord.fromJson(ownerValue.cast<String, Object?>());
       }
 
       final dogsValue = decoded['dogs'];
 
       if (dogsValue is! List<dynamic>) {
-        throw const AppIdentityDataException(
-          'Stored dogs must be a list.',
-        );
+        throw const AppIdentityDataException('Stored dogs must be a list.');
       }
 
       final dogs = <AppDogRecord>[];
 
       for (final item in dogsValue) {
         if (item is! Map<String, dynamic>) {
-          throw const AppIdentityDataException(
-            'Stored dog must be an object.',
-          );
+          throw const AppIdentityDataException('Stored dog must be an object.');
         }
 
-        dogs.add(
-          AppDogRecord.fromJson(
-            item.cast<String, Object?>(),
-          ),
-        );
+        dogs.add(AppDogRecord.fromJson(item.cast<String, Object?>()));
       }
 
       final selectedValue = decoded['selectedDogId'];
 
-      if (selectedValue != null &&
-          selectedValue is! String) {
+      if (selectedValue != null && selectedValue is! String) {
         throw const AppIdentityDataException(
           'Selected dog id must be a string or null.',
         );
@@ -154,9 +130,7 @@ class AppIdentityRepository {
     }
   }
 
-  Future<void> save(
-    AppIdentityState state,
-  ) async {
+  Future<void> save(AppIdentityState state) async {
     try {
       state.validate();
     } on AppIdentityDataException catch (cause) {
@@ -166,22 +140,15 @@ class AppIdentityRepository {
       );
     }
 
-    final encoded = jsonEncode(
-      <String, Object?>{
-        'schemaVersion': schemaVersion,
-        ...state.toJson(),
-      },
-    );
+    final encoded = jsonEncode(<String, Object?>{
+      'schemaVersion': schemaVersion,
+      ...state.toJson(),
+    });
 
-    await storage.write(
-      storageKey,
-      encoded,
-    );
+    await storage.write(storageKey, encoded);
   }
 
-  Future<void> selectDog(
-    String dogId,
-  ) async {
+  Future<void> selectDog(String dogId) async {
     final state = await load();
 
     if (state.owner == null) {
@@ -190,9 +157,7 @@ class AppIdentityRepository {
       );
     }
 
-    final exists = state.dogs.any(
-      (dog) => dog.id == dogId,
-    );
+    final exists = state.dogs.any((dog) => dog.id == dogId);
 
     if (!exists) {
       throw const AppIdentityPersistenceException(
@@ -210,17 +175,12 @@ class AppIdentityRepository {
   }
 }
 
-class AppIdentityPersistenceException
-    implements Exception {
-  const AppIdentityPersistenceException(
-    this.message, {
-    this.cause,
-  });
+class AppIdentityPersistenceException implements Exception {
+  const AppIdentityPersistenceException(this.message, {this.cause});
 
   final String message;
   final Object? cause;
 
   @override
-  String toString() =>
-      'AppIdentityPersistenceException: $message';
+  String toString() => 'AppIdentityPersistenceException: $message';
 }

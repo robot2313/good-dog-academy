@@ -20,7 +20,8 @@ const productionLessons = <LessonDefinition>[
   LessonDefinition(
     id: "chewing-appropriate-items",
     title: "Choose Appropriate Chews",
-    description: "Make safe, suitable chewing options easy and rewarding to choose.",
+    description:
+        "Make safe, suitable chewing options easy and rewarding to choose.",
     skill: "chewing",
     difficulty: 1,
     estimatedMinutes: 6,
@@ -72,7 +73,8 @@ const productionLessons = <LessonDefinition>[
   LessonDefinition(
     id: "impulse-control-wait-for-reward",
     title: "Wait for a Reward",
-    description: "Teach a very brief pause before access to something your dog wants.",
+    description:
+        "Teach a very brief pause before access to something your dog wants.",
     skill: "impulse-control",
     difficulty: 1,
     estimatedMinutes: 5,
@@ -98,7 +100,8 @@ const productionLessons = <LessonDefinition>[
   LessonDefinition(
     id: "loose-lead-reward-zone",
     title: "Find the Reward Zone",
-    description: "Show your dog that staying near you on a loose lead pays well.",
+    description:
+        "Show your dog that staying near you on a loose lead pays well.",
     skill: "loose-lead-walking",
     difficulty: 1,
     estimatedMinutes: 6,
@@ -124,7 +127,8 @@ const productionLessons = <LessonDefinition>[
   LessonDefinition(
     id: "recall-name-response",
     title: "Name Response",
-    description: "Build a quick, happy turn towards you when your dog hears their name.",
+    description:
+        "Build a quick, happy turn towards you when your dog hears their name.",
     skill: "recall",
     difficulty: 1,
     estimatedMinutes: 6,
@@ -141,7 +145,12 @@ const productionLessons = <LessonDefinition>[
     skill: "barking",
     difficulty: 2,
     estimatedMinutes: 8,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "barking-identify-triggers", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "barking-identify-triggers",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["barking", "home", "foundation"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -154,7 +163,12 @@ const productionLessons = <LessonDefinition>[
     skill: "barking",
     difficulty: 2,
     estimatedMinutes: 8,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "barking-identify-triggers", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "barking-identify-triggers",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["barking", "home", "focus"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -167,7 +181,12 @@ const productionLessons = <LessonDefinition>[
     skill: "chewing",
     difficulty: 2,
     estimatedMinutes: 8,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "chewing-appropriate-items", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "chewing-appropriate-items",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["chewing", "home", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -180,7 +199,12 @@ const productionLessons = <LessonDefinition>[
     skill: "chewing",
     difficulty: 2,
     estimatedMinutes: 8,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "chewing-appropriate-items", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "chewing-appropriate-items",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["chewing", "home", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -193,7 +217,12 @@ const productionLessons = <LessonDefinition>[
     skill: "confidence",
     difficulty: 2,
     estimatedMinutes: 9,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "confidence-choice-and-exploration", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "confidence-choice-and-exploration",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["confidence", "home", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -202,11 +231,17 @@ const productionLessons = <LessonDefinition>[
   LessonDefinition(
     id: "confidence-new-surfaces-and-sounds",
     title: "New Surfaces and Sounds",
-    description: "Introduce gentle sensory changes through choice and gradual exposure.",
+    description:
+        "Introduce gentle sensory changes through choice and gradual exposure.",
     skill: "confidence",
     difficulty: 2,
     estimatedMinutes: 9,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "confidence-choice-and-exploration", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "confidence-choice-and-exploration",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["confidence", "home", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -219,7 +254,12 @@ const productionLessons = <LessonDefinition>[
     skill: "focus",
     difficulty: 2,
     estimatedMinutes: 8,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "focus-check-in", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "focus-check-in",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["focus", "outdoors", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -232,7 +272,12 @@ const productionLessons = <LessonDefinition>[
     skill: "focus",
     difficulty: 2,
     estimatedMinutes: 8,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "focus-check-in", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "focus-check-in",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["focus", "home", "impulse-control"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -245,7 +290,12 @@ const productionLessons = <LessonDefinition>[
     skill: "house-training",
     difficulty: 2,
     estimatedMinutes: 8,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "house-training-routine", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "house-training-routine",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["house-training", "home", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -258,7 +308,12 @@ const productionLessons = <LessonDefinition>[
     skill: "house-training",
     difficulty: 2,
     estimatedMinutes: 8,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "house-training-routine", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "house-training-routine",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["house-training", "home", "focus"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -271,7 +326,12 @@ const productionLessons = <LessonDefinition>[
     skill: "impulse-control",
     difficulty: 2,
     estimatedMinutes: 8,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "impulse-control-wait-for-reward", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "impulse-control-wait-for-reward",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["impulse-control", "home", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -284,7 +344,12 @@ const productionLessons = <LessonDefinition>[
     skill: "impulse-control",
     difficulty: 2,
     estimatedMinutes: 8,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "impulse-control-wait-for-reward", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "impulse-control-wait-for-reward",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["impulse-control", "home", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -293,11 +358,17 @@ const productionLessons = <LessonDefinition>[
   LessonDefinition(
     id: "jumping-calm-greetings",
     title: "Calm Greetings",
-    description: "Practise a repeatable greeting routine with one familiar helper.",
+    description:
+        "Practise a repeatable greeting routine with one familiar helper.",
     skill: "jumping",
     difficulty: 2,
     estimatedMinutes: 9,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "jumping-four-paws-down", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "jumping-four-paws-down",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["jumping", "home", "impulse-control"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -310,7 +381,12 @@ const productionLessons = <LessonDefinition>[
     skill: "jumping",
     difficulty: 2,
     estimatedMinutes: 9,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "jumping-four-paws-down", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "jumping-four-paws-down",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["jumping", "home", "impulse-control"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -319,11 +395,17 @@ const productionLessons = <LessonDefinition>[
   LessonDefinition(
     id: "loose-lead-direction-changes",
     title: "Calm Direction Changes",
-    description: "Teach your dog to notice and follow smooth changes of direction.",
+    description:
+        "Teach your dog to notice and follow smooth changes of direction.",
     skill: "loose-lead-walking",
     difficulty: 2,
     estimatedMinutes: 9,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "loose-lead-reward-zone", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "loose-lead-reward-zone",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["walking", "outdoors", "focus"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -336,7 +418,12 @@ const productionLessons = <LessonDefinition>[
     skill: "loose-lead-walking",
     difficulty: 2,
     estimatedMinutes: 8,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "loose-lead-reward-zone", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "loose-lead-reward-zone",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["loose-lead-walking", "walking", "outdoors"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -349,7 +436,12 @@ const productionLessons = <LessonDefinition>[
     skill: "reactivity",
     difficulty: 2,
     estimatedMinutes: 9,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "reactivity-safe-distance", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "reactivity-safe-distance",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["reactivity", "outdoors", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -362,7 +454,12 @@ const productionLessons = <LessonDefinition>[
     skill: "reactivity",
     difficulty: 2,
     estimatedMinutes: 10,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "reactivity-safe-distance", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "reactivity-safe-distance",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["reactivity", "focus", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -375,7 +472,12 @@ const productionLessons = <LessonDefinition>[
     skill: "recall",
     difficulty: 2,
     estimatedMinutes: 8,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "recall-name-response", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "recall-name-response",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["recall", "home", "foundation"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -388,7 +490,12 @@ const productionLessons = <LessonDefinition>[
     skill: "recall",
     difficulty: 2,
     estimatedMinutes: 9,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "recall-name-response", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "recall-name-response",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["recall", "home", "outdoors"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -401,7 +508,16 @@ const productionLessons = <LessonDefinition>[
     skill: "barking",
     difficulty: 3,
     estimatedMinutes: 12,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "barking-quiet-reinforcement", minimumSuccessfulCompletions: 1), LessonPrerequisite(lessonId: "barking-meet-needs-first", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "barking-quiet-reinforcement",
+        minimumSuccessfulCompletions: 1,
+      ),
+      LessonPrerequisite(
+        lessonId: "barking-meet-needs-first",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["barking", "home", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -414,7 +530,12 @@ const productionLessons = <LessonDefinition>[
     skill: "barking",
     difficulty: 3,
     estimatedMinutes: 12,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "barking-quiet-reinforcement", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "barking-quiet-reinforcement",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["barking", "home", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -427,7 +548,12 @@ const productionLessons = <LessonDefinition>[
     skill: "chewing",
     difficulty: 3,
     estimatedMinutes: 11,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "chewing-redirection-routine", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "chewing-redirection-routine",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["chewing", "home", "confidence"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -440,7 +566,16 @@ const productionLessons = <LessonDefinition>[
     skill: "chewing",
     difficulty: 3,
     estimatedMinutes: 11,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "chewing-redirection-routine", minimumSuccessfulCompletions: 1), LessonPrerequisite(lessonId: "chewing-puppy-teething-plan", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "chewing-redirection-routine",
+        minimumSuccessfulCompletions: 1,
+      ),
+      LessonPrerequisite(
+        lessonId: "chewing-puppy-teething-plan",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["chewing", "home", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -453,7 +588,12 @@ const productionLessons = <LessonDefinition>[
     skill: "confidence",
     difficulty: 3,
     estimatedMinutes: 12,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "confidence-new-surfaces-and-sounds", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "confidence-new-surfaces-and-sounds",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["confidence", "outdoors", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -466,7 +606,16 @@ const productionLessons = <LessonDefinition>[
     skill: "confidence",
     difficulty: 3,
     estimatedMinutes: 11,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "confidence-new-surfaces-and-sounds", minimumSuccessfulCompletions: 1), LessonPrerequisite(lessonId: "confidence-consent-based-handling", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "confidence-new-surfaces-and-sounds",
+        minimumSuccessfulCompletions: 1,
+      ),
+      LessonPrerequisite(
+        lessonId: "confidence-consent-based-handling",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["confidence", "home", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -475,11 +624,17 @@ const productionLessons = <LessonDefinition>[
   LessonDefinition(
     id: "focus-around-distractions",
     title: "Focus Around Distractions",
-    description: "Help your dog reconnect with you around manageable everyday activity.",
+    description:
+        "Help your dog reconnect with you around manageable everyday activity.",
     skill: "focus",
     difficulty: 3,
     estimatedMinutes: 11,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "focus-hold-attention", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "focus-hold-attention",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["focus", "outdoors", "confidence"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -492,7 +647,16 @@ const productionLessons = <LessonDefinition>[
     skill: "focus",
     difficulty: 3,
     estimatedMinutes: 11,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "focus-hold-attention", minimumSuccessfulCompletions: 1), LessonPrerequisite(lessonId: "focus-disengage-and-reset", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "focus-hold-attention",
+        minimumSuccessfulCompletions: 1,
+      ),
+      LessonPrerequisite(
+        lessonId: "focus-disengage-and-reset",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["focus", "walking", "outdoors"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -505,7 +669,16 @@ const productionLessons = <LessonDefinition>[
     skill: "house-training",
     difficulty: 3,
     estimatedMinutes: 10,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "house-training-signal-and-reward", minimumSuccessfulCompletions: 1), LessonPrerequisite(lessonId: "house-training-accident-reset", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "house-training-signal-and-reward",
+        minimumSuccessfulCompletions: 1,
+      ),
+      LessonPrerequisite(
+        lessonId: "house-training-accident-reset",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["house-training", "home", "foundation"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -518,7 +691,12 @@ const productionLessons = <LessonDefinition>[
     skill: "house-training",
     difficulty: 3,
     estimatedMinutes: 12,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "house-training-signal-and-reward", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "house-training-signal-and-reward",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["house-training", "home", "confidence"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -531,7 +709,12 @@ const productionLessons = <LessonDefinition>[
     skill: "impulse-control",
     difficulty: 3,
     estimatedMinutes: 11,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "impulse-control-doorways", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "impulse-control-doorways",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["impulse-control", "outdoors", "focus"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -544,7 +727,16 @@ const productionLessons = <LessonDefinition>[
     skill: "impulse-control",
     difficulty: 3,
     estimatedMinutes: 12,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "impulse-control-doorways", minimumSuccessfulCompletions: 1), LessonPrerequisite(lessonId: "impulse-control-leave-it", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "impulse-control-doorways",
+        minimumSuccessfulCompletions: 1,
+      ),
+      LessonPrerequisite(
+        lessonId: "impulse-control-leave-it",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["impulse-control", "home", "foundation"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -557,7 +749,16 @@ const productionLessons = <LessonDefinition>[
     skill: "jumping",
     difficulty: 3,
     estimatedMinutes: 12,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "jumping-calm-greetings", minimumSuccessfulCompletions: 1), LessonPrerequisite(lessonId: "jumping-station-on-a-mat", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "jumping-calm-greetings",
+        minimumSuccessfulCompletions: 1,
+      ),
+      LessonPrerequisite(
+        lessonId: "jumping-station-on-a-mat",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["jumping", "home", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -570,7 +771,12 @@ const productionLessons = <LessonDefinition>[
     skill: "jumping",
     difficulty: 3,
     estimatedMinutes: 12,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "jumping-calm-greetings", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "jumping-calm-greetings",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["jumping", "home", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -579,11 +785,17 @@ const productionLessons = <LessonDefinition>[
   LessonDefinition(
     id: "loose-lead-real-world-distractions",
     title: "Loose Lead in the Real World",
-    description: "Practise relaxed walking near manageable everyday distractions.",
+    description:
+        "Practise relaxed walking near manageable everyday distractions.",
     skill: "loose-lead-walking",
     difficulty: 3,
     estimatedMinutes: 13,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "loose-lead-direction-changes", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "loose-lead-direction-changes",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["walking", "outdoors", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -596,7 +808,16 @@ const productionLessons = <LessonDefinition>[
     skill: "loose-lead-walking",
     difficulty: 3,
     estimatedMinutes: 11,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "loose-lead-direction-changes", minimumSuccessfulCompletions: 1), LessonPrerequisite(lessonId: "loose-lead-stop-and-reset", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "loose-lead-direction-changes",
+        minimumSuccessfulCompletions: 1,
+      ),
+      LessonPrerequisite(
+        lessonId: "loose-lead-stop-and-reset",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["loose-lead-walking", "walking", "outdoors"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -609,7 +830,12 @@ const productionLessons = <LessonDefinition>[
     skill: "reactivity",
     difficulty: 3,
     estimatedMinutes: 14,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "reactivity-look-and-disengage", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "reactivity-look-and-disengage",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["reactivity", "outdoors", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -622,7 +848,16 @@ const productionLessons = <LessonDefinition>[
     skill: "reactivity",
     difficulty: 3,
     estimatedMinutes: 12,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "reactivity-look-and-disengage", minimumSuccessfulCompletions: 1), LessonPrerequisite(lessonId: "reactivity-emergency-u-turn", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "reactivity-look-and-disengage",
+        minimumSuccessfulCompletions: 1,
+      ),
+      LessonPrerequisite(
+        lessonId: "reactivity-emergency-u-turn",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["reactivity", "outdoors", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -635,7 +870,12 @@ const productionLessons = <LessonDefinition>[
     skill: "recall",
     difficulty: 3,
     estimatedMinutes: 12,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "recall-short-distance", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "recall-short-distance",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["recall", "outdoors", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -648,7 +888,16 @@ const productionLessons = <LessonDefinition>[
     skill: "recall",
     difficulty: 3,
     estimatedMinutes: 11,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "recall-short-distance", minimumSuccessfulCompletions: 1), LessonPrerequisite(lessonId: "recall-reward-reset", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "recall-short-distance",
+        minimumSuccessfulCompletions: 1,
+      ),
+      LessonPrerequisite(
+        lessonId: "recall-reward-reset",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["recall", "home", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -661,7 +910,16 @@ const productionLessons = <LessonDefinition>[
     skill: "barking",
     difficulty: 4,
     estimatedMinutes: 15,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "barking-real-world-management", minimumSuccessfulCompletions: 1), LessonPrerequisite(lessonId: "barking-doorbell-routine", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "barking-real-world-management",
+        minimumSuccessfulCompletions: 1,
+      ),
+      LessonPrerequisite(
+        lessonId: "barking-doorbell-routine",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["barking", "home", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -674,7 +932,16 @@ const productionLessons = <LessonDefinition>[
     skill: "chewing",
     difficulty: 4,
     estimatedMinutes: 14,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "chewing-independence-and-prevention", minimumSuccessfulCompletions: 1), LessonPrerequisite(lessonId: "chewing-leave-and-trade", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "chewing-independence-and-prevention",
+        minimumSuccessfulCompletions: 1,
+      ),
+      LessonPrerequisite(
+        lessonId: "chewing-leave-and-trade",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["chewing", "home", "impulse-control"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -687,7 +954,16 @@ const productionLessons = <LessonDefinition>[
     skill: "confidence",
     difficulty: 4,
     estimatedMinutes: 15,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "confidence-new-environments", minimumSuccessfulCompletions: 1), LessonPrerequisite(lessonId: "confidence-recovery-after-surprise", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "confidence-new-environments",
+        minimumSuccessfulCompletions: 1,
+      ),
+      LessonPrerequisite(
+        lessonId: "confidence-recovery-after-surprise",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["confidence", "outdoors", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -700,7 +976,16 @@ const productionLessons = <LessonDefinition>[
     skill: "focus",
     difficulty: 4,
     estimatedMinutes: 14,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "focus-around-distractions", minimumSuccessfulCompletions: 1), LessonPrerequisite(lessonId: "focus-predictable-patterns", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "focus-around-distractions",
+        minimumSuccessfulCompletions: 1,
+      ),
+      LessonPrerequisite(
+        lessonId: "focus-predictable-patterns",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["focus", "outdoors", "walking"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -713,7 +998,16 @@ const productionLessons = <LessonDefinition>[
     skill: "house-training",
     difficulty: 4,
     estimatedMinutes: 14,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "house-training-reliability", minimumSuccessfulCompletions: 1), LessonPrerequisite(lessonId: "house-training-clear-outdoor-signal", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "house-training-reliability",
+        minimumSuccessfulCompletions: 1,
+      ),
+      LessonPrerequisite(
+        lessonId: "house-training-clear-outdoor-signal",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["house-training", "outdoors", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -726,7 +1020,16 @@ const productionLessons = <LessonDefinition>[
     skill: "impulse-control",
     difficulty: 4,
     estimatedMinutes: 14,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "impulse-control-real-world-distractions", minimumSuccessfulCompletions: 1), LessonPrerequisite(lessonId: "impulse-control-settle-on-mat", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "impulse-control-real-world-distractions",
+        minimumSuccessfulCompletions: 1,
+      ),
+      LessonPrerequisite(
+        lessonId: "impulse-control-settle-on-mat",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["impulse-control", "home", "outdoors", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -739,7 +1042,16 @@ const productionLessons = <LessonDefinition>[
     skill: "jumping",
     difficulty: 4,
     estimatedMinutes: 15,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "jumping-visitors-and-excitement", minimumSuccessfulCompletions: 1), LessonPrerequisite(lessonId: "jumping-greetings-with-movement", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "jumping-visitors-and-excitement",
+        minimumSuccessfulCompletions: 1,
+      ),
+      LessonPrerequisite(
+        lessonId: "jumping-greetings-with-movement",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["jumping", "outdoors", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -752,7 +1064,16 @@ const productionLessons = <LessonDefinition>[
     skill: "loose-lead-walking",
     difficulty: 4,
     estimatedMinutes: 15,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "loose-lead-real-world-distractions", minimumSuccessfulCompletions: 1), LessonPrerequisite(lessonId: "loose-lead-sniffing-rewards", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "loose-lead-real-world-distractions",
+        minimumSuccessfulCompletions: 1,
+      ),
+      LessonPrerequisite(
+        lessonId: "loose-lead-sniffing-rewards",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["loose-lead-walking", "walking", "outdoors", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -765,7 +1086,16 @@ const productionLessons = <LessonDefinition>[
     skill: "reactivity",
     difficulty: 4,
     estimatedMinutes: 15,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "reactivity-controlled-exposure", minimumSuccessfulCompletions: 1), LessonPrerequisite(lessonId: "reactivity-recovery-after-trigger", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "reactivity-controlled-exposure",
+        minimumSuccessfulCompletions: 1,
+      ),
+      LessonPrerequisite(
+        lessonId: "reactivity-recovery-after-trigger",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["reactivity", "outdoors", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,
@@ -778,7 +1108,16 @@ const productionLessons = <LessonDefinition>[
     skill: "recall",
     difficulty: 4,
     estimatedMinutes: 15,
-    prerequisites: <LessonPrerequisite>[LessonPrerequisite(lessonId: "recall-around-distractions", minimumSuccessfulCompletions: 1), LessonPrerequisite(lessonId: "recall-collar-touch-and-release", minimumSuccessfulCompletions: 1)],
+    prerequisites: <LessonPrerequisite>[
+      LessonPrerequisite(
+        lessonId: "recall-around-distractions",
+        minimumSuccessfulCompletions: 1,
+      ),
+      LessonPrerequisite(
+        lessonId: "recall-collar-touch-and-release",
+        minimumSuccessfulCompletions: 1,
+      ),
+    ],
     tags: <String>["recall", "outdoors", "safety"],
     isActive: true,
     minimumSuccessfulCompletions: 1,

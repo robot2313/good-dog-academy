@@ -18,8 +18,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final progress =
-        LessonProgressScope.maybeOf(context);
+    final progress = LessonProgressScope.maybeOf(context);
 
     if (progress?.loading == true) {
       return const SafeArea(
@@ -35,32 +34,25 @@ class _JourneyScreenState extends State<JourneyScreen> {
     if (progress?.error != null) {
       return SafeArea(
         bottom: false,
-        child: _JourneyProgressLoadError(
-          onRetry: progress!.reload,
-        ),
+        child: _JourneyProgressLoadError(onRetry: progress!.reload),
       );
     }
 
-    final lessons = const LessonUnlockService(
-      productionLessons,
-    ).resolve(
-      progress?.snapshots ??
-          const <LessonProgressSnapshot>[],
-    ).values.toList(growable: false);
+    final lessons = const LessonUnlockService(productionLessons)
+        .resolve(progress?.snapshots ?? const <LessonProgressSnapshot>[])
+        .values
+        .toList(growable: false);
 
     final stages = createJourneyStages(lessons);
 
     final firstIncompleteStage = stages.firstWhere(
-      (stage) => stage.lessons.any(
-        (lesson) => lesson.state != LessonState.completed,
-      ),
+      (stage) =>
+          stage.lessons.any((lesson) => lesson.state != LessonState.completed),
       orElse: () => stages.first,
     );
 
     final completedCount = lessons
-        .where(
-          (lesson) => lesson.state == LessonState.completed,
-        )
+        .where((lesson) => lesson.state == LessonState.completed)
         .length;
 
     return SafeArea(
@@ -89,20 +81,17 @@ class _JourneyScreenState extends State<JourneyScreen> {
             _JourneyStageCard(
               stage: stages[index],
               expanded:
-                  expandedStage == 'all' ||
-                  expandedStage == stages[index].id,
+                  expandedStage == 'all' || expandedStage == stages[index].id,
               active: stages[index].id == firstIncompleteStage.id,
               onToggle: () {
                 setState(() {
-                  expandedStage =
-                      expandedStage == stages[index].id
-                          ? ''
-                          : stages[index].id;
+                  expandedStage = expandedStage == stages[index].id
+                      ? ''
+                      : stages[index].id;
                 });
               },
             ),
-            if (index != stages.length - 1)
-              const SizedBox(height: 12),
+            if (index != stages.length - 1) const SizedBox(height: 12),
           ],
           const SizedBox(height: 18),
           FilledButton(
@@ -114,18 +103,14 @@ class _JourneyScreenState extends State<JourneyScreen> {
             style: FilledButton.styleFrom(
               backgroundColor: GdaColors.primary,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                vertical: 15,
-              ),
+              padding: const EdgeInsets.symmetric(vertical: 15),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
             child: const Text(
               'View Full Journey',
-              style: TextStyle(
-                fontWeight: FontWeight.w800,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w800),
             ),
           ),
           const SizedBox(height: 10),
@@ -152,9 +137,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
 }
 
 class _JourneyProgressLoadError extends StatelessWidget {
-  const _JourneyProgressLoadError({
-    required this.onRetry,
-  });
+  const _JourneyProgressLoadError({required this.onRetry});
 
   final Future<void> Function() onRetry;
 
@@ -211,18 +194,14 @@ class JourneyStage {
   final List<LessonLibraryItem> lessons;
 }
 
-List<JourneyStage> createJourneyStages(
-  List<LessonLibraryItem> lessons,
-) {
+List<JourneyStage> createJourneyStages(List<LessonLibraryItem> lessons) {
   final stages = <JourneyStage>[
     JourneyStage(
       id: 'foundation',
       number: 1,
       title: 'Foundation',
       lessons: lessons
-          .where(
-            (lesson) => lesson.definition.difficulty == 1,
-          )
+          .where((lesson) => lesson.definition.difficulty == 1)
           .toList(growable: false),
     ),
     JourneyStage(
@@ -230,9 +209,7 @@ List<JourneyStage> createJourneyStages(
       number: 2,
       title: 'Building Skills',
       lessons: lessons
-          .where(
-            (lesson) => lesson.definition.difficulty == 2,
-          )
+          .where((lesson) => lesson.definition.difficulty == 2)
           .toList(growable: false),
     ),
     JourneyStage(
@@ -240,9 +217,7 @@ List<JourneyStage> createJourneyStages(
       number: 3,
       title: 'Real World',
       lessons: lessons
-          .where(
-            (lesson) => lesson.definition.difficulty == 3,
-          )
+          .where((lesson) => lesson.definition.difficulty == 3)
           .toList(growable: false),
     ),
     JourneyStage(
@@ -250,17 +225,13 @@ List<JourneyStage> createJourneyStages(
       number: 4,
       title: 'Lifelong Skills',
       lessons: lessons
-          .where(
-            (lesson) => lesson.definition.difficulty >= 4,
-          )
+          .where((lesson) => lesson.definition.difficulty >= 4)
           .toList(growable: false),
     ),
   ];
 
   return stages
-      .where(
-        (stage) => stage.lessons.isNotEmpty,
-      )
+      .where((stage) => stage.lessons.isNotEmpty)
       .toList(growable: false);
 }
 
@@ -280,18 +251,14 @@ class _JourneyStageCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final completed = stage.lessons
-        .where(
-          (lesson) => lesson.state == LessonState.completed,
-        )
+        .where((lesson) => lesson.state == LessonState.completed)
         .length;
 
     return Container(
       decoration: BoxDecoration(
         color: GdaColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: GdaColors.border,
-        ),
+        border: Border.all(color: GdaColors.border),
       ),
       child: Column(
         children: [
@@ -313,17 +280,13 @@ class _JourneyStageCard extends StatelessWidget {
                       height: 38,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: active
-                            ? GdaColors.forest
-                            : GdaColors.subtle,
+                        color: active ? GdaColors.forest : GdaColors.subtle,
                         shape: BoxShape.circle,
                       ),
                       child: Text(
                         '${stage.number}',
                         style: TextStyle(
-                          color: active
-                              ? Colors.white
-                              : GdaColors.text,
+                          color: active ? Colors.white : GdaColors.text,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
@@ -331,8 +294,7 @@ class _JourneyStageCard extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'Stage ${stage.number}: ${stage.title}',
@@ -346,8 +308,7 @@ class _JourneyStageCard extends StatelessWidget {
                           Text(
                             '$completed / '
                             '${stage.lessons.length} completed',
-                            style:
-                                Theme.of(context).textTheme.bodySmall,
+                            style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
                       ),
@@ -364,22 +325,11 @@ class _JourneyStageCard extends StatelessWidget {
             ),
           ),
           if (expanded) ...[
-            const Divider(
-              height: 1,
-              color: GdaColors.border,
-            ),
-            for (var index = 0;
-                index < stage.lessons.length;
-                index++) ...[
-              _JourneyLessonRow(
-                lesson: stage.lessons[index],
-              ),
+            const Divider(height: 1, color: GdaColors.border),
+            for (var index = 0; index < stage.lessons.length; index++) ...[
+              _JourneyLessonRow(lesson: stage.lessons[index]),
               if (index != stage.lessons.length - 1)
-                const Divider(
-                  height: 1,
-                  indent: 58,
-                  color: GdaColors.border,
-                ),
+                const Divider(height: 1, indent: 58, color: GdaColors.border),
             ],
           ],
         ],
@@ -389,17 +339,13 @@ class _JourneyStageCard extends StatelessWidget {
 }
 
 class _JourneyLessonRow extends StatelessWidget {
-  const _JourneyLessonRow({
-    required this.lesson,
-  });
+  const _JourneyLessonRow({required this.lesson});
 
   final LessonLibraryItem lesson;
 
   @override
   Widget build(BuildContext context) {
-    final stateLabel = _journeyStateLabel(
-      lesson.state,
-    );
+    final stateLabel = _journeyStateLabel(lesson.state);
 
     return Semantics(
       label:
@@ -407,12 +353,7 @@ class _JourneyLessonRow extends StatelessWidget {
           '${lesson.definition.estimatedMinutes} minutes. '
           'Level ${lesson.definition.difficulty}.',
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          15,
-          12,
-          15,
-          12,
-        ),
+        padding: const EdgeInsets.fromLTRB(15, 12, 15, 12),
         child: Row(
           children: [
             Container(
@@ -421,30 +362,19 @@ class _JourneyLessonRow extends StatelessWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _markerBackground(
-                  lesson.state,
-                ),
-                border: Border.all(
-                  color: _markerBorder(
-                    lesson.state,
-                  ),
-                ),
+                color: _markerBackground(lesson.state),
+                border: Border.all(color: _markerBorder(lesson.state)),
               ),
               child: Icon(
-                _markerIcon(
-                  lesson.state,
-                ),
+                _markerIcon(lesson.state),
                 size: 15,
-                color: _markerForeground(
-                  lesson.state,
-                ),
+                color: _markerForeground(lesson.state),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     lesson.definition.title,
@@ -459,8 +389,7 @@ class _JourneyLessonRow extends StatelessWidget {
                     '${lesson.definition.estimatedMinutes} min · '
                     'Level ${lesson.definition.difficulty} · '
                     '$stateLabel',
-                    style:
-                        Theme.of(context).textTheme.bodySmall,
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
               ),
@@ -472,9 +401,7 @@ class _JourneyLessonRow extends StatelessWidget {
   }
 }
 
-String _journeyStateLabel(
-  LessonState state,
-) {
+String _journeyStateLabel(LessonState state) {
   switch (state) {
     case LessonState.available:
       return 'Available';
@@ -487,9 +414,7 @@ String _journeyStateLabel(
   }
 }
 
-IconData _markerIcon(
-  LessonState state,
-) {
+IconData _markerIcon(LessonState state) {
   switch (state) {
     case LessonState.completed:
       return Icons.check_rounded;
@@ -501,9 +426,7 @@ IconData _markerIcon(
   }
 }
 
-Color _markerBackground(
-  LessonState state,
-) {
+Color _markerBackground(LessonState state) {
   switch (state) {
     case LessonState.completed:
       return GdaColors.forest;
@@ -515,9 +438,7 @@ Color _markerBackground(
   }
 }
 
-Color _markerBorder(
-  LessonState state,
-) {
+Color _markerBorder(LessonState state) {
   switch (state) {
     case LessonState.completed:
       return GdaColors.forest;
@@ -529,9 +450,7 @@ Color _markerBorder(
   }
 }
 
-Color _markerForeground(
-  LessonState state,
-) {
+Color _markerForeground(LessonState state) {
   switch (state) {
     case LessonState.completed:
       return Colors.white;

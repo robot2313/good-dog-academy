@@ -36,9 +36,7 @@ class DogStagesScreen extends StatelessWidget {
 }
 
 class _DogStageCard extends StatelessWidget {
-  const _DogStageCard({
-    required this.stage,
-  });
+  const _DogStageCard({required this.stage});
 
   final DogStageData stage;
 
@@ -54,9 +52,7 @@ class _DogStageCard extends StatelessWidget {
         color: GdaColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(
-            color: GdaColors.border,
-          ),
+          side: const BorderSide(color: GdaColors.border),
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
@@ -83,11 +79,7 @@ class _DogStageCard extends StatelessWidget {
                     color: GdaColors.selected,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    stage.icon,
-                    size: 32,
-                    color: GdaColors.forest,
-                  ),
+                  child: Icon(stage.icon, size: 32, color: GdaColors.forest),
                 ),
                 const SizedBox(width: 15),
                 Expanded(
@@ -120,10 +112,7 @@ class _DogStageCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  color: GdaColors.muted,
-                ),
+                const Icon(Icons.chevron_right_rounded, color: GdaColors.muted),
               ],
             ),
           ),

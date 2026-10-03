@@ -14,19 +14,14 @@ class CategoriesScreen extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
         children: [
-          Text(
-            'Categories',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
+          Text('Categories', style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 4),
           Text(
             'Explore training topics',
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 22),
-          for (var index = 0;
-              index < trainingCategories.length;
-              index++) ...[
+          for (var index = 0; index < trainingCategories.length; index++) ...[
             _CategoryCard(category: trainingCategories[index]),
             if (index != trainingCategories.length - 1)
               const SizedBox(height: 10),
@@ -38,9 +33,7 @@ class CategoriesScreen extends StatelessWidget {
 }
 
 class _CategoryCard extends StatelessWidget {
-  const _CategoryCard({
-    required this.category,
-  });
+  const _CategoryCard({required this.category});
 
   final TrainingCategoryData category;
 
@@ -54,9 +47,7 @@ class _CategoryCard extends StatelessWidget {
         color: GdaColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(
-            color: GdaColors.border,
-          ),
+          side: const BorderSide(color: GdaColors.border),
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),

@@ -1,11 +1,6 @@
 import '../domain/lesson_models.dart';
 
-enum LessonProgressStatus {
-  locked,
-  available,
-  inProgress,
-  completed,
-}
+enum LessonProgressStatus { locked, available, inProgress, completed }
 
 class LessonProgressRecord {
   const LessonProgressRecord({
@@ -69,28 +64,22 @@ class LessonProgressRecord {
     };
   }
 
-  factory LessonProgressRecord.fromJson(
-    Map<String, Object?> json,
-  ) {
+  factory LessonProgressRecord.fromJson(Map<String, Object?> json) {
     final record = LessonProgressRecord(
       id: _requiredString(json, 'id'),
       ownerId: _requiredString(json, 'ownerId'),
       dogId: _requiredString(json, 'dogId'),
       lessonId: _requiredString(json, 'lessonId'),
-      status: _readStatus(
-        _requiredString(json, 'status'),
-      ),
+      status: _readStatus(_requiredString(json, 'status')),
       attempts: _requiredInt(json, 'attempts'),
-      successfulCompletions:
-          _requiredInt(json, 'successfulCompletions'),
-      lastAttemptedAt:
-          _nullableString(json, 'lastAttemptedAt'),
-      lastCompletedAt:
-          _nullableString(json, 'lastCompletedAt'),
-      bestPerformanceRating:
-          _nullableInt(json, 'bestPerformanceRating'),
-      currentDifficultyAdjustment:
-          _requiredInt(json, 'currentDifficultyAdjustment'),
+      successfulCompletions: _requiredInt(json, 'successfulCompletions'),
+      lastAttemptedAt: _nullableString(json, 'lastAttemptedAt'),
+      lastCompletedAt: _nullableString(json, 'lastCompletedAt'),
+      bestPerformanceRating: _nullableInt(json, 'bestPerformanceRating'),
+      currentDifficultyAdjustment: _requiredInt(
+        json,
+        'currentDifficultyAdjustment',
+      ),
       unlockedAt: _nullableString(json, 'unlockedAt'),
       createdAt: _requiredString(json, 'createdAt'),
       updatedAt: _requiredString(json, 'updatedAt'),
@@ -111,13 +100,10 @@ class LessonProgressRecord {
     }
 
     if (attempts < 0) {
-      throw const LessonProgressDataException(
-        'Attempts must not be negative.',
-      );
+      throw const LessonProgressDataException('Attempts must not be negative.');
     }
 
-    if (successfulCompletions < 0 ||
-        successfulCompletions > attempts) {
+    if (successfulCompletions < 0 || successfulCompletions > attempts) {
       throw const LessonProgressDataException(
         'Successful completions are invalid.',
       );
@@ -130,8 +116,7 @@ class LessonProgressRecord {
       );
     }
 
-    if (currentDifficultyAdjustment < -2 ||
-        currentDifficultyAdjustment > 2) {
+    if (currentDifficultyAdjustment < -2 || currentDifficultyAdjustment > 2) {
       throw const LessonProgressDataException(
         'Difficulty adjustment must be between -2 and 2.',
       );
@@ -141,24 +126,15 @@ class LessonProgressRecord {
     _validateTimestamp(updatedAt, 'updatedAt');
 
     if (lastAttemptedAt != null) {
-      _validateTimestamp(
-        lastAttemptedAt!,
-        'lastAttemptedAt',
-      );
+      _validateTimestamp(lastAttemptedAt!, 'lastAttemptedAt');
     }
 
     if (lastCompletedAt != null) {
-      _validateTimestamp(
-        lastCompletedAt!,
-        'lastCompletedAt',
-      );
+      _validateTimestamp(lastCompletedAt!, 'lastCompletedAt');
     }
 
     if (unlockedAt != null) {
-      _validateTimestamp(
-        unlockedAt!,
-        'unlockedAt',
-      );
+      _validateTimestamp(unlockedAt!, 'unlockedAt');
     }
   }
 }
@@ -169,8 +145,7 @@ class LessonProgressDataException implements Exception {
   final String message;
 
   @override
-  String toString() =>
-      'LessonProgressDataException: $message';
+  String toString() => 'LessonProgressDataException: $message';
 }
 
 LessonProgressStatus _readStatus(String value) {
@@ -180,30 +155,20 @@ LessonProgressStatus _readStatus(String value) {
     }
   }
 
-  throw LessonProgressDataException(
-    'Unknown lesson progress status: $value',
-  );
+  throw LessonProgressDataException('Unknown lesson progress status: $value');
 }
 
-String _requiredString(
-  Map<String, Object?> json,
-  String key,
-) {
+String _requiredString(Map<String, Object?> json, String key) {
   final value = json[key];
 
   if (value is! String) {
-    throw LessonProgressDataException(
-      '$key must be a string.',
-    );
+    throw LessonProgressDataException('$key must be a string.');
   }
 
   return value;
 }
 
-String? _nullableString(
-  Map<String, Object?> json,
-  String key,
-) {
+String? _nullableString(Map<String, Object?> json, String key) {
   final value = json[key];
 
   if (value == null) {
@@ -211,33 +176,23 @@ String? _nullableString(
   }
 
   if (value is! String) {
-    throw LessonProgressDataException(
-      '$key must be a string or null.',
-    );
+    throw LessonProgressDataException('$key must be a string or null.');
   }
 
   return value;
 }
 
-int _requiredInt(
-  Map<String, Object?> json,
-  String key,
-) {
+int _requiredInt(Map<String, Object?> json, String key) {
   final value = json[key];
 
   if (value is! int) {
-    throw LessonProgressDataException(
-      '$key must be an integer.',
-    );
+    throw LessonProgressDataException('$key must be an integer.');
   }
 
   return value;
 }
 
-int? _nullableInt(
-  Map<String, Object?> json,
-  String key,
-) {
+int? _nullableInt(Map<String, Object?> json, String key) {
   final value = json[key];
 
   if (value == null) {
@@ -245,21 +200,14 @@ int? _nullableInt(
   }
 
   if (value is! int) {
-    throw LessonProgressDataException(
-      '$key must be an integer or null.',
-    );
+    throw LessonProgressDataException('$key must be an integer or null.');
   }
 
   return value;
 }
 
-void _validateTimestamp(
-  String value,
-  String field,
-) {
+void _validateTimestamp(String value, String field) {
   if (DateTime.tryParse(value) == null) {
-    throw LessonProgressDataException(
-      '$field must be a valid timestamp.',
-    );
+    throw LessonProgressDataException('$field must be a valid timestamp.');
   }
 }

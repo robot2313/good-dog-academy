@@ -7,17 +7,9 @@ import 'domain/lesson_models.dart';
 import 'logic/lesson_unlock_service.dart';
 import 'progress/lesson_progress_controller.dart';
 
-enum LessonBrowserScopeType {
-  skill,
-  collection,
-}
+enum LessonBrowserScopeType { skill, collection }
 
-enum _DifficultyFilter {
-  all,
-  beginner,
-  intermediate,
-  advanced,
-}
+enum _DifficultyFilter { all, beginner, intermediate, advanced }
 
 class LessonBrowserScreen extends StatefulWidget {
   const LessonBrowserScreen.skill({
@@ -25,16 +17,16 @@ class LessonBrowserScreen extends StatefulWidget {
     required this.title,
     required this.intro,
     required String skill,
-  })  : scopeType = LessonBrowserScopeType.skill,
-        scopeId = skill;
+  }) : scopeType = LessonBrowserScopeType.skill,
+       scopeId = skill;
 
   const LessonBrowserScreen.collection({
     super.key,
     required this.title,
     required this.intro,
     required String collectionId,
-  })  : scopeType = LessonBrowserScopeType.collection,
-        scopeId = collectionId;
+  }) : scopeType = LessonBrowserScopeType.collection,
+       scopeId = collectionId;
 
   final String title;
   final String intro;
@@ -49,15 +41,10 @@ class _LessonBrowserScreenState extends State<LessonBrowserScreen> {
   _DifficultyFilter difficultyFilter = _DifficultyFilter.all;
 
   Map<String, LessonLibraryItem> get resolvedLessons {
-    final progress =
-        LessonProgressScope.maybeOf(context);
+    final progress = LessonProgressScope.maybeOf(context);
 
-    return const LessonUnlockService(
-      productionLessons,
-    ).resolve(
-      progress?.snapshots ??
-          const <LessonProgressSnapshot>[],
-    );
+    return const LessonUnlockService(productionLessons)
+        .resolve(progress?.snapshots ?? const <LessonProgressSnapshot>[]);
   }
 
   List<LessonLibraryItem> get scopedLessons {
@@ -89,8 +76,7 @@ class _LessonBrowserScreenState extends State<LessonBrowserScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final progress =
-        LessonProgressScope.maybeOf(context);
+    final progress = LessonProgressScope.maybeOf(context);
 
     if (progress?.loading == true) {
       return Scaffold(
@@ -106,9 +92,7 @@ class _LessonBrowserScreenState extends State<LessonBrowserScreen> {
     if (progress?.error != null) {
       return Scaffold(
         appBar: AppBar(),
-        body: _ProgressLoadError(
-          onRetry: progress!.reload,
-        ),
+        body: _ProgressLoadError(onRetry: progress!.reload),
       );
     }
 
@@ -136,10 +120,7 @@ class _LessonBrowserScreenState extends State<LessonBrowserScreen> {
               ),
             ),
             const SizedBox(height: 10),
-            Text(
-              widget.intro,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            Text(widget.intro, style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 20),
             Wrap(
               spacing: 8,
@@ -152,9 +133,7 @@ class _LessonBrowserScreenState extends State<LessonBrowserScreen> {
                     selectedColor: GdaColors.selected,
                     backgroundColor: GdaColors.surface,
                     showCheckmark: false,
-                    side: const BorderSide(
-                      color: GdaColors.border,
-                    ),
+                    side: const BorderSide(color: GdaColors.border),
                     onSelected: (_) {
                       setState(() {
                         difficultyFilter = filter;
@@ -164,13 +143,8 @@ class _LessonBrowserScreenState extends State<LessonBrowserScreen> {
               ],
             ),
             const SizedBox(height: 20),
-            for (var index = 0;
-                index < visibleLessons.length;
-                index++) ...[
-              _LessonRow(
-                number: index + 1,
-                item: visibleLessons[index],
-              ),
+            for (var index = 0; index < visibleLessons.length; index++) ...[
+              _LessonRow(number: index + 1, item: visibleLessons[index]),
               if (index != visibleLessons.length - 1)
                 const SizedBox(height: 10),
             ],
@@ -180,9 +154,7 @@ class _LessonBrowserScreenState extends State<LessonBrowserScreen> {
                 decoration: BoxDecoration(
                   color: GdaColors.surface,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: GdaColors.border,
-                  ),
+                  border: Border.all(color: GdaColors.border),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,9 +179,7 @@ class _LessonBrowserScreenState extends State<LessonBrowserScreen> {
 }
 
 class _ProgressLoadError extends StatelessWidget {
-  const _ProgressLoadError({
-    required this.onRetry,
-  });
+  const _ProgressLoadError({required this.onRetry});
 
   final Future<void> Function() onRetry;
 
@@ -253,10 +223,7 @@ class _ProgressLoadError extends StatelessWidget {
 }
 
 class _LessonRow extends StatelessWidget {
-  const _LessonRow({
-    required this.number,
-    required this.item,
-  });
+  const _LessonRow({required this.number, required this.item});
 
   final int number;
   final LessonLibraryItem item;
@@ -274,9 +241,7 @@ class _LessonRow extends StatelessWidget {
         decoration: BoxDecoration(
           color: GdaColors.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: GdaColors.border,
-          ),
+          border: Border.all(color: GdaColors.border),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,10 +319,7 @@ class _LessonRow extends StatelessWidget {
   }
 }
 
-bool _matchesDifficulty(
-  int difficulty,
-  _DifficultyFilter filter,
-) {
+bool _matchesDifficulty(int difficulty, _DifficultyFilter filter) {
   switch (filter) {
     case _DifficultyFilter.all:
       return true;
