@@ -247,6 +247,6 @@ TrainingOutcome _effectiveOutcome(TrainingRepRecord rep) {
 }
 
 bool _hasStress(String? signal, String? notes) {
-  final text = ((signal ?? '') + ' ' + (notes ?? '')).toLowerCase();
+  final text = '${signal ?? ''} ${notes ?? ''}'.toLowerCase();
   return text.contains('stress') || text.contains('discomfort');
 }

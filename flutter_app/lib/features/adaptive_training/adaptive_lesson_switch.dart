@@ -1,3 +1,4 @@
+import '../lessons/session/training_session_record.dart';
 import 'adaptive_training_memory.dart';
 
 enum LessonSwitchReason {
