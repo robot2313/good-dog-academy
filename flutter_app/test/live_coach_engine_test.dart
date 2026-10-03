@@ -35,13 +35,14 @@ void main() {
       lessonId: 'sit',
     );
     session = applyRepToLiveSession(session, _rep(1)).session;
-    session = applyRepToLiveSession(session, _rep(2)).session;
+    final second = applyRepToLiveSession(session, _rep(2));
+    session = second.session;
 
-    final decision = autonomousSessionDirector(session);
-    expect(decision.action, SessionDirectorAction.progress);
-    expect(decision.nextDifficulty.duration, 2);
-    expect(decision.nextDifficulty.distance, 1);
-    expect(decision.nextDifficulty.distraction, 1);
+    expect(second.decision.action, SessionDirectorAction.progress);
+    expect(second.decision.nextDifficulty.duration, 2);
+    expect(second.decision.nextDifficulty.distance, 1);
+    expect(second.decision.nextDifficulty.distraction, 1);
+    expect(session.difficulty.duration, 2);
   });
 
   test('repeated unsuccessful reps make the next rep easier', () {
