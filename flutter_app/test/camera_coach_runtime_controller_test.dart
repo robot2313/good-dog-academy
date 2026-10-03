@@ -223,15 +223,38 @@ void main() {
     await controller.shutdown();
   });
 
-  test('unconfigured production lesson cannot start automatic cue scoring', () async {
+  test('unconfigured production lesson uses owner-confirmed scoring', () async {
     final controller = _controller();
     await controller.start();
 
     expect(controller.automaticScoringEnabled, isFalse);
-    expect(await controller.beginCue(), isFalse);
+    expect(
+      await controller.beginCue(
+        now: DateTime.parse('2026-10-04T10:00:00Z'),
+      ),
+      isTrue,
+    );
 
     await controller.processFrame(_frame(1));
+
+    expect(
+      controller.status,
+      CameraCoachRuntimeStatus.awaitingOwnerConfirmation,
+    );
     expect(controller.session.reps, isEmpty);
+
+    expect(
+      await controller.confirmPending(
+        TrainingOutcome.success,
+        now: DateTime.parse('2026-10-04T10:00:02Z'),
+      ),
+      isTrue,
+    );
+    expect(controller.session.reps, hasLength(1));
+    expect(
+      controller.session.reps.single.evidence.source,
+      EvidenceSource.ownerConfirmed,
+    );
 
     await controller.shutdown();
   });

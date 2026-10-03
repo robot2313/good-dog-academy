@@ -89,7 +89,6 @@ class CameraCoachRuntimeController extends ChangeNotifier {
 
   Future<bool> beginCue({DateTime? now}) async {
     if (!_started ||
-        cueResponse == null ||
         status == CameraCoachRuntimeStatus.paused ||
         status == CameraCoachRuntimeStatus.awaitingOwnerConfirmation ||
         status == CameraCoachRuntimeStatus.complete ||
