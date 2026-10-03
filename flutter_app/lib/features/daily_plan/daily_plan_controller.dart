@@ -8,6 +8,7 @@ import '../identity/app_identity_controller.dart';
 import '../identity/app_identity_record.dart';
 import '../lessons/progress/lesson_progress_controller.dart';
 import '../lessons/progress/lesson_progress_record.dart';
+import '../lessons/session/training_session_record.dart';
 import 'daily_plan_generation_service.dart';
 import 'daily_plan_models.dart';
 import 'daily_plan_repository.dart';
@@ -44,6 +45,7 @@ class DailyPlanController extends ChangeNotifier {
     required BehaviourProfileRecord profile,
     required BehaviourAssessmentRecord assessment,
     required List<LessonProgressRecord> progressRecords,
+    required List<TrainingSessionRecord> sessions,
     DateTime? now,
   }) async {
     final generation = ++_generation;
@@ -54,6 +56,7 @@ class DailyPlanController extends ChangeNotifier {
     _notify();
 
     try {
+      final effectiveNow = now ?? DateTime.now();
       final result = await DailyPlanGenerationService(
         repository: repository,
       ).getOrCreate(
@@ -62,7 +65,12 @@ class DailyPlanController extends ChangeNotifier {
         profile: profile,
         assessment: assessment,
         progress: progressRecords,
-        now: now ?? DateTime.now(),
+        now: effectiveNow,
+      );
+      final reconciled = await _reconcileCompletion(
+        result,
+        sessions,
+        effectiveNow,
       );
       if (_disposed ||
           generation != _generation ||
@@ -70,7 +78,7 @@ class DailyPlanController extends ChangeNotifier {
           dogId != dog.id) {
         return;
       }
-      plan = result;
+      plan = reconciled;
     } catch (cause) {
       if (!_disposed && generation == _generation) {
         error = cause;
@@ -82,6 +90,49 @@ class DailyPlanController extends ChangeNotifier {
         _notify();
       }
     }
+  }
+
+  Future<DailyPlanRecord> _reconcileCompletion(
+    DailyPlanRecord current,
+    List<TrainingSessionRecord> sessions,
+    DateTime now,
+  ) async {
+    if (current.status != 'planned') return current;
+
+    final coveredLessonIds = sessions
+        .where(
+          (session) =>
+              session.dogId == current.dogId &&
+              session.dailyPlanId == current.id &&
+              session.completedAt != null,
+        )
+        .map((session) => session.lessonId)
+        .toSet();
+
+    if (!current.items.every(
+      (item) => coveredLessonIds.contains(item.lessonId),
+    )) {
+      return current;
+    }
+
+    final updated = DailyPlanRecord(
+      id: current.id,
+      ownerId: current.ownerId,
+      dogId: current.dogId,
+      localDate: current.localDate,
+      timezone: current.timezone,
+      targetMinutes: current.targetMinutes,
+      estimatedMinutes: current.estimatedMinutes,
+      focusSkill: current.focusSkill,
+      items: current.items,
+      status: 'completed',
+      sourceAssessmentId: current.sourceAssessmentId,
+      generatedAt: current.generatedAt,
+      createdAt: current.createdAt,
+      updatedAt: now.toUtc().toIso8601String(),
+    );
+    await repository.save(updated);
+    return updated;
   }
 
   @override
@@ -139,9 +190,15 @@ class DailyPlanBinding {
     final progressFingerprint = progress.records
         .map((record) => '${record.id}:${record.updatedAt}')
         .join('|');
+    final sessionFingerprint = progress.sessions
+        .map(
+          (session) =>
+              '${session.id}:${session.dailyPlanId}:${session.completedAt}',
+        )
+        .join('|');
     final fingerprint =
         '${owner.id}:${dog.id}:${assessment.assessment!.id}:'
-        '$progressFingerprint';
+        '$progressFingerprint:$sessionFingerprint';
 
     if (_fingerprint == fingerprint) return;
     _fingerprint = fingerprint;
@@ -153,6 +210,7 @@ class DailyPlanBinding {
         profile: assessment.profile!,
         assessment: assessment.assessment!,
         progressRecords: progress.records,
+        sessions: progress.sessions,
       ),
     );
   }
