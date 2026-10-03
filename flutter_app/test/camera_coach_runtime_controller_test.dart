@@ -33,14 +33,10 @@ class _FakeFrameSource implements CameraFrameSource {
 
 class _FakeVisionEngine implements DogVisionEngine {
   _FakeVisionEngine({
-    this.posture = DogPosture.sitLike,
     this.postureConfidence = 0.94,
-    this.stressSignal = VisionStressSignal.none,
   });
 
-  final DogPosture? posture;
   final double? postureConfidence;
-  final VisionStressSignal stressSignal;
   int warmups = 0;
   int detections = 0;
   int disposals = 0;
@@ -67,9 +63,9 @@ class _FakeVisionEngine implements DogVisionEngine {
       detectionSource: DogDetectionSource.dedicatedDetector,
       trackingConfidence: 0.92,
       trackingState: DogTrackingState.tracking,
-      posture: posture,
+      posture: DogPosture.sitLike,
       postureConfidence: postureConfidence,
-      stressSignal: stressSignal,
+      stressSignal: VisionStressSignal.none,
       stressConfidence: null,
     );
   }

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../lessons/session/training_session_record.dart';
 import '../domain/camera_coach_orchestrator.dart';
+import '../domain/camera_evidence.dart';
 import '../domain/expected_cue_response.dart';
 import '../domain/live_coach_engine.dart';
 import '../domain/smart_framing.dart';
