@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 
 import '../assessment/assessment_controller.dart';
+import '../assessment/assessment_models.dart';
 import '../identity/app_identity_controller.dart';
 import '../identity/app_identity_record.dart';
 import '../lessons/progress/lesson_progress_controller.dart';
