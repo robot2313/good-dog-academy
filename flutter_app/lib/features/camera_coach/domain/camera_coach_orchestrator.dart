@@ -80,6 +80,7 @@ class CameraCoachOrchestrator {
             minConfidence: evidencePolicy.minPostureConfidence,
           ),
         ),
+        _repGate = TemporalRepGate(),
         _makeRepId = makeRepId ??
             ((repNumber) => '${session.id}-rep-$repNumber');
 
