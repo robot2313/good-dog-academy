@@ -1,4 +1,4 @@
-enum DogPosture { sitLike, standLike, downLike }
+import 'camera_coach_models.dart';
 
 class TemporalRepGateResult {
   const TemporalRepGateResult({

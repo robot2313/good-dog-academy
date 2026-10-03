@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:good_dog_academy/features/camera_coach/domain/camera_coach_models.dart';
 import 'package:good_dog_academy/features/camera_coach/domain/temporal_rep_gate.dart';
 
 void main() {
