@@ -27,9 +27,9 @@ void main() {
 
   test('tracked dog crop is square padded and centred around tracked ROI', () {
     final crop = trackedDogSquareCrop(
-      frameWidth: 1000,
-      frameHeight: 800,
-      box: const NormalizedDogBox(
+      1000,
+      800,
+      const NormalizedDogBox(
         left: 0.30,
         top: 0.25,
         width: 0.20,
@@ -45,9 +45,9 @@ void main() {
 
   test('tracked crop clamps safely against frame edges', () {
     final crop = trackedDogSquareCrop(
-      frameWidth: 1000,
-      frameHeight: 800,
-      box: const NormalizedDogBox(
+      1000,
+      800,
+      const NormalizedDogBox(
         left: 0.92,
         top: 0.88,
         width: 0.30,
@@ -105,9 +105,9 @@ void main() {
     );
     expect(
       () => trackedDogSquareCrop(
-        frameWidth: 1000,
-        frameHeight: -1,
-        box: const NormalizedDogBox(
+        1000,
+        -1,
+        const NormalizedDogBox(
           left: 0.2,
           top: 0.2,
           width: 0.3,
