@@ -28,7 +28,6 @@ class CameraCoachSessionPersistenceException implements Exception {
 }
 
 abstract interface class CameraCoachSessionPersister {
-  @override
   Future<CameraCoachPersistenceResult> persistCompletedSession({
     required String ownerId,
     required String dogId,

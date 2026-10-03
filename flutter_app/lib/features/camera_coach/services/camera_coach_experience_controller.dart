@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../lessons/session/training_session_record.dart';
+
 import '../domain/camera_coach_qa_lessons.dart';
 import '../domain/live_coach_engine.dart';
 import 'camera_coach_runtime_controller.dart';
