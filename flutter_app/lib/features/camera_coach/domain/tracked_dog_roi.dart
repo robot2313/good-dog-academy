@@ -2,6 +2,8 @@ import 'dog_tracking.dart';
 import 'quadruped_pose.dart';
 
 const trackedDogRoiPadding = 1.35;
+const dogGuideWidthRatio = 0.84;
+const dogGuideTopRatio = 0.08;
 
 class PixelCropRect {
   const PixelCropRect({
@@ -17,15 +19,20 @@ class PixelCropRect {
   final int height;
 
   NormalizedCropRect normalized(int frameWidth, int frameHeight) {
-    if (frameWidth <= 0 || frameHeight <= 0) {
-      throw ArgumentError('Frame dimensions must be positive.');
-    }
+    _validateFrameSize(frameWidth, frameHeight);
     return NormalizedCropRect(
       left: originX / frameWidth,
       top: originY / frameHeight,
       width: width / frameWidth,
       height: height / frameHeight,
     );
+  }
+
+  NormalizedCropRect normalise({
+    required int frameWidth,
+    required int frameHeight,
+  }) {
+    return normalized(frameWidth, frameHeight);
   }
 }
 
@@ -43,34 +50,70 @@ class NormalizedCropRect {
   final double height;
 }
 
+PixelCropRect dogGuideSquareCrop({
+  required int frameWidth,
+  required int frameHeight,
+}) {
+  _validateFrameSize(frameWidth, frameHeight);
+
+  final shorterSide = frameWidth < frameHeight ? frameWidth : frameHeight;
+  final side = _atLeastOne((shorterSide * dogGuideWidthRatio).floor());
+  final originX = _clampInt(
+    ((frameWidth - side) / 2).floor(),
+    0,
+    frameWidth - side,
+  );
+  final originY = _clampInt(
+    (frameHeight * dogGuideTopRatio).floor(),
+    0,
+    frameHeight - side,
+  );
+
+  return PixelCropRect(
+    originX: originX,
+    originY: originY,
+    width: side,
+    height: side,
+  );
+}
+
 PixelCropRect trackedDogSquareCrop(
   int frameWidth,
   int frameHeight,
   NormalizedDogBox box,
 ) {
-  if (frameWidth <= 0 || frameHeight <= 0) {
-    throw ArgumentError('Frame dimensions must be positive.');
-  }
+  _validateFrameSize(frameWidth, frameHeight);
 
-  final centerX = (box.left + box.width / 2) * frameWidth;
-  final centerY = (box.top + box.height / 2) * frameHeight;
-  final dogWidth = box.width * frameWidth;
-  final dogHeight = box.height * frameHeight;
+  final safeLeft = _clamp01(box.left);
+  final safeTop = _clamp01(box.top);
+  final safeWidth = _clamp01(box.width);
+  final safeHeight = _clamp01(box.height);
+
+  final centerX = (safeLeft + safeWidth / 2) * frameWidth;
+  final centerY = (safeTop + safeHeight / 2) * frameHeight;
+  final dogWidth = safeWidth * frameWidth;
+  final dogHeight = safeHeight * frameHeight;
   final paddedSide =
       (dogWidth > dogHeight ? dogWidth : dogHeight) * trackedDogRoiPadding;
   final maxSide = frameWidth < frameHeight ? frameWidth : frameHeight;
-  final side = paddedSide.clamp(1.0, maxSide.toDouble());
+  final side = _clampDouble(paddedSide, 1, maxSide.toDouble()).floor();
 
-  final maxX = frameWidth - side;
-  final maxY = frameHeight - side;
-  final originX = (centerX - side / 2).clamp(0.0, maxX);
-  final originY = (centerY - side / 2).clamp(0.0, maxY);
+  final originX = _clampDouble(
+    centerX - side / 2,
+    0,
+    (frameWidth - side).toDouble(),
+  ).floor();
+  final originY = _clampDouble(
+    centerY - side / 2,
+    0,
+    (frameHeight - side).toDouble(),
+  ).floor();
 
   return PixelCropRect(
-    originX: originX.floor(),
-    originY: originY.floor(),
-    width: side.floor(),
-    height: side.floor(),
+    originX: originX,
+    originY: originY,
+    width: side,
+    height: side,
   );
 }
 
@@ -81,10 +124,32 @@ QuadrupedPose mapQuadrupedPoseFromCrop(
   final keypoints = <QuadrupedJoint, PoseKeypoint>{
     for (final joint in QuadrupedJoint.values)
       joint: PoseKeypoint(
-        x: crop.left + pose.point(joint).x * crop.width,
-        y: crop.top + pose.point(joint).y * crop.height,
-        confidence: pose.point(joint).confidence,
+        x: _clamp01(crop.left + pose.point(joint).x * crop.width),
+        y: _clamp01(crop.top + pose.point(joint).y * crop.height),
+        confidence: _clamp01(pose.point(joint).confidence),
       ),
   };
   return QuadrupedPose(keypoints: Map.unmodifiable(keypoints));
 }
+
+void _validateFrameSize(int width, int height) {
+  if (width <= 0 || height <= 0) {
+    throw ArgumentError('Frame dimensions must be positive.');
+  }
+}
+
+int _atLeastOne(int value) => value < 1 ? 1 : value;
+
+int _clampInt(int value, int minimum, int maximum) {
+  if (value < minimum) return minimum;
+  if (value > maximum) return maximum;
+  return value;
+}
+
+double _clampDouble(double value, double minimum, double maximum) {
+  if (value < minimum) return minimum;
+  if (value > maximum) return maximum;
+  return value;
+}
+
+double _clamp01(double value) => _clampDouble(value, 0, 1);
