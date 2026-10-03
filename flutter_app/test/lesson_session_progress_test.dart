@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:good_dog_academy/features/lessons/data/production_lesson_content.dart';
 import 'package:good_dog_academy/features/lessons/data/production_lessons.dart';
 import 'package:good_dog_academy/features/lessons/logic/lesson_unlock_service.dart';
+import 'package:good_dog_academy/features/lessons/domain/lesson_models.dart';
 import 'package:good_dog_academy/features/lessons/progress/lesson_progress_controller.dart';
 import 'package:good_dog_academy/features/lessons/progress/lesson_progress_record.dart';
 import 'package:good_dog_academy/features/lessons/progress/lesson_progress_repository.dart';
