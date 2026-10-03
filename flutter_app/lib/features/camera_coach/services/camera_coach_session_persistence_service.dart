@@ -27,7 +27,22 @@ class CameraCoachSessionPersistenceException implements Exception {
   String toString() => 'CameraCoachSessionPersistenceException: $message';
 }
 
-class CameraCoachSessionPersistenceService {
+abstract interface class CameraCoachSessionPersister {
+  @override
+  Future<CameraCoachPersistenceResult> persistCompletedSession({
+    required String ownerId,
+    required String dogId,
+    required LiveCoachSession session,
+    required String startedAt,
+    String? dailyPlanId,
+    DateTime? completedAt,
+    String notes,
+    bool allowPrerequisiteBypass,
+  });
+}
+
+class CameraCoachSessionPersistenceService
+    implements CameraCoachSessionPersister {
   const CameraCoachSessionPersistenceService({
     required this.progressController,
   });
