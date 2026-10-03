@@ -70,11 +70,7 @@ class CameraCoachRuntimeController extends ChangeNotifier {
 
     try {
       await orchestrator.warmup();
-      _unsubscribe = frameSource.subscribe((frame) {
-        unawaited(processFrame(frame));
-      });
-      await frameSource.start();
-      _started = true;
+      await _startFrameSource();
       status = session.status == LiveCoachSessionStatus.complete
           ? CameraCoachRuntimeStatus.complete
           : CameraCoachRuntimeStatus.ready;
@@ -184,15 +180,24 @@ class CameraCoachRuntimeController extends ChangeNotifier {
     _activeCueAt = null;
     status = CameraCoachRuntimeStatus.paused;
     _notify();
+    await _stopFrameSource();
     await spokenCoach?.announce(const SessionPausedCoachEvent());
   }
 
   Future<void> resume() async {
     if (status != CameraCoachRuntimeStatus.paused) return;
 
-    status = CameraCoachRuntimeStatus.ready;
-    _notify();
-    await spokenCoach?.announce(const SessionResumedCoachEvent());
+    error = null;
+    try {
+      await _startFrameSource();
+      status = CameraCoachRuntimeStatus.ready;
+      _notify();
+      await spokenCoach?.announce(const SessionResumedCoachEvent());
+    } catch (cause) {
+      error = cause;
+      status = CameraCoachRuntimeStatus.error;
+      _notify();
+    }
   }
 
   Future<bool> repeatLastCoachMessage() async {
@@ -280,12 +285,31 @@ class CameraCoachRuntimeController extends ChangeNotifier {
     );
   }
 
+  Future<void> _startFrameSource() async {
+    if (_started) return;
+
+    _unsubscribe ??= frameSource.subscribe((frame) {
+      unawaited(processFrame(frame));
+    });
+    try {
+      await frameSource.start();
+      _started = true;
+    } catch (_) {
+      _unsubscribe?.call();
+      _unsubscribe = null;
+      rethrow;
+    }
+  }
+
   Future<void> _stopFrameSource() async {
-    if (!_started) return;
+    if (!_started && _unsubscribe == null) return;
     _unsubscribe?.call();
     _unsubscribe = null;
-    await frameSource.stop();
-    _started = false;
+    try {
+      await frameSource.stop();
+    } finally {
+      _started = false;
+    }
   }
 
   @override

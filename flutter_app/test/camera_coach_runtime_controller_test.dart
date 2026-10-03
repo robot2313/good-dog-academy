@@ -31,6 +31,16 @@ class _FakeFrameSource implements CameraFrameSource {
   }
 }
 
+class _FailingResumeFrameSource extends _FakeFrameSource {
+  @override
+  Future<void> start() async {
+    starts++;
+    if (starts > 1) {
+      throw StateError('camera resume failed');
+    }
+  }
+}
+
 class _FakeVisionEngine implements DogVisionEngine {
   _FakeVisionEngine({
     this.postureConfidence = 0.94,
@@ -216,9 +226,31 @@ void main() {
     expect(controller.status, CameraCoachRuntimeStatus.paused);
     expect(controller.hasActiveCue, isFalse);
     expect(engine.detections, 0);
+    expect((controller.frameSource as _FakeFrameSource).stops, 1);
+    expect((controller.frameSource as _FakeFrameSource).listener, isNull);
 
     await controller.resume();
     expect(controller.status, CameraCoachRuntimeStatus.ready);
+    expect((controller.frameSource as _FakeFrameSource).starts, 2);
+    expect((controller.frameSource as _FakeFrameSource).listener, isNotNull);
+
+    await controller.processFrame(_frame(2));
+    expect(engine.detections, 1);
+
+    await controller.shutdown();
+  });
+
+  test('resume failure moves runtime to recoverable error state', () async {
+    final source = _FailingResumeFrameSource();
+    final controller = _controller(cue: _sitCue(), source: source);
+
+    await controller.start();
+    await controller.pause();
+    await controller.resume();
+
+    expect(controller.status, CameraCoachRuntimeStatus.error);
+    expect(controller.error, isA<StateError>());
+    expect(source.listener, isNull);
 
     await controller.shutdown();
   });
