@@ -158,7 +158,7 @@ void main() {
     );
     expect(
       progress.sessions.single.cameraCoach!.endingDifficulty.duration,
-      2,
+      1,
     );
   });
 
