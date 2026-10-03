@@ -46,6 +46,17 @@ SmartFramingResult analyseSmartFraming(
   final centerY = box.top + box.height / 2;
   final area = box.width * box.height;
 
+  // If the dog is clearly too large in frame, creating more distance is the
+  // most useful first correction. Otherwise edge clipping can misleadingly
+  // produce a left/right instruction for a dog that is simply too close.
+  if (area > 0.58 || box.width > 0.82 || box.height > 0.82) {
+    return const SmartFramingResult(
+      status: SmartFramingStatus.moveCameraBack,
+      instruction: 'Move the camera back.',
+      ready: false,
+    );
+  }
+
   if (_clamp01(box.left) < 0.06) {
     return const SmartFramingResult(
       status: SmartFramingStatus.moveCameraRight,
@@ -71,14 +82,6 @@ SmartFramingResult analyseSmartFraming(
     return const SmartFramingResult(
       status: SmartFramingStatus.moveCameraUp,
       instruction: 'Move the camera up.',
-      ready: false,
-    );
-  }
-
-  if (area > 0.58 || box.width > 0.82 || box.height > 0.82) {
-    return const SmartFramingResult(
-      status: SmartFramingStatus.moveCameraBack,
-      instruction: 'Move the camera back.',
       ready: false,
     );
   }
