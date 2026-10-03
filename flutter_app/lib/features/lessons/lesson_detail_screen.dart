@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/gda_theme.dart';
+import '../camera_coach/camera_coach_capability.dart';
+import '../camera_coach/camera_coach_screen.dart';
 import '../identity/app_identity_controller.dart';
 import 'data/production_lesson_content.dart';
 import 'data/production_lessons.dart';
@@ -25,6 +27,7 @@ class LessonDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final progress = LessonProgressScope.maybeOf(context);
     final identity = AppIdentityScope.maybeOf(context);
+    final cameraCoach = CameraCoachCapabilityScope.maybeOf(context);
 
     if (progress?.loading == true) {
       return const Scaffold(
@@ -268,28 +271,53 @@ class LessonDetailScreen extends StatelessWidget {
                       top: BorderSide(color: GdaColors.border),
                     ),
                   ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => LessonSessionScreen(
-                              lessonId: lesson.id,
-                              ownerId: identity!.owner!.id,
-                              dogId: identity.selectedDog!.id,
-                              dailyPlanId: dailyPlanId,
-                              allowPrerequisiteBypass: selfDirected,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      FilledButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => LessonSessionScreen(
+                                lessonId: lesson.id,
+                                ownerId: identity!.owner!.id,
+                                dogId: identity.selectedDog!.id,
+                                dailyPlanId: dailyPlanId,
+                                allowPrerequisiteBypass: selfDirected,
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        item.state == LessonState.completed
-                            ? 'Practise Again'
-                            : 'Start Lesson',
+                          );
+                        },
+                        child: Text(
+                          item.state == LessonState.completed
+                              ? 'Practise Again'
+                              : 'Start Lesson',
+                        ),
                       ),
-                    ),
+                      if (cameraCoach != null) ...[
+                        const SizedBox(height: 8),
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => CameraCoachScreen(
+                                  lessonId: lesson.id,
+                                  ownerId: identity!.owner!.id,
+                                  dogId: identity.selectedDog!.id,
+                                  dogName: identity.selectedDog!.name,
+                                  dailyPlanId: dailyPlanId,
+                                  allowPrerequisiteBypass: selfDirected,
+                                  visionEngineFactory:
+                                      cameraCoach.visionEngineFactory,
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.videocam_outlined),
+                          label: const Text('Train with Camera Coach'),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ),
