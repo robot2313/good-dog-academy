@@ -67,22 +67,6 @@ class CameraCoachFrameResult {
 }
 
 class CameraCoachOrchestrator {
-  CameraCoachOrchestrator({
-    required LiveCoachSession session,
-    required DogVisionEngine visionEngine,
-    this.minFrameIntervalMs = 500,
-    this.evidencePolicy = const CameraEvidencePolicy(),
-    String Function(int repNumber)? makeRepId,
-  })  : _session = session,
-        _visionEngine = visionEngine,
-        _postureBuffer = PostureBuffer(
-          options: PostureBufferOptions(
-            minConfidence: evidencePolicy.minPostureConfidence,
-          ),
-        ),
-        _repGate = TemporalRepGate(),
-        _makeRepId = makeRepId ??
-            ((repNumber) => '${session.id}-rep-$repNumber');
 
   LiveCoachSession _session;
   final DogVisionEngine _visionEngine;
@@ -98,18 +82,14 @@ class CameraCoachOrchestrator {
   DogVisionResult? _lastVision;
 
   CameraCoachOrchestrator._({
-    required LiveCoachSession session,
-    required DogVisionEngine visionEngine,
+    required this._session,
+    required this._visionEngine,
     required this.minFrameIntervalMs,
     required this.evidencePolicy,
-    required String Function(int repNumber) makeRepId,
-    required PostureBuffer postureBuffer,
-    required TemporalRepGate repGate,
-  })  : _session = session,
-        _visionEngine = visionEngine,
-        _makeRepId = makeRepId,
-        _postureBuffer = postureBuffer,
-        _repGate = repGate;
+    required this._makeRepId,
+    required this._postureBuffer,
+    required this._repGate,
+  });
 
   factory CameraCoachOrchestrator.withDefaults({
     required LiveCoachSession session,
