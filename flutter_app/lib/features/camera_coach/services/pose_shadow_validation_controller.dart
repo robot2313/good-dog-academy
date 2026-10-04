@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../domain/camera_coach_models.dart';
 import '../domain/pose_shadow_validation.dart';
 import 'camera/camera_frame_source.dart';
+import 'pose_shadow_performance.dart';
 import 'pose_shadow_validation_repository.dart';
 import 'vision/dog_vision_engine.dart';
 
@@ -101,16 +102,28 @@ class PoseShadowValidationController extends ChangeNotifier {
   PoseShadowValidationSummary? summary;
   Object? error;
 
+  static const int maximumPerformanceSamples = 600;
+
   CameraFrameSubscription? _unsubscribe;
   bool _running = false;
   bool _inFlight = false;
   bool _disposed = false;
   String? _lastLabelledFrameId;
+  final List<int> _successfulLatencyMs = <int>[];
 
   bool get canLabel =>
       status == PoseShadowControllerStatus.ready &&
       latestObservation != null &&
       latestObservation!.frameId != _lastLabelledFrameId;
+
+  PoseShadowPerformanceReport get performanceReport =>
+      buildPoseShadowPerformanceReport(
+        successfulLatencyMs: _successfulLatencyMs,
+        framesRequested: diagnostics.framesRequested,
+        framesAnalysed: diagnostics.framesAnalysed,
+        framesSkippedBusy: diagnostics.framesSkippedBusy,
+        inferenceErrors: diagnostics.inferenceErrors,
+      );
 
   void _notify() {
     if (!_disposed) notifyListeners();
@@ -124,6 +137,7 @@ class PoseShadowValidationController extends ChangeNotifier {
     diagnostics = const PoseShadowDiagnostics.empty();
     latestObservation = null;
     _lastLabelledFrameId = null;
+    _successfulLatencyMs.clear();
     _notify();
 
     try {
@@ -169,6 +183,10 @@ class PoseShadowValidationController extends ChangeNotifier {
       final result = await visionEngine.detect(frame);
       stopwatch.stop();
       latestObservation = result;
+      _successfulLatencyMs.add(stopwatch.elapsedMilliseconds);
+      if (_successfulLatencyMs.length > maximumPerformanceSamples) {
+        _successfulLatencyMs.removeAt(0);
+      }
       diagnostics = diagnostics.copyWith(
         framesAnalysed: diagnostics.framesAnalysed + 1,
         lastInferenceAt: result.analysedAt,

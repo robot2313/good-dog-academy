@@ -10,6 +10,12 @@ void main() {
     expect(dogPostureQaLabel(null), 'Unknown');
   });
 
+  test('QA millisecond formatting is explicit', () {
+    expect(formatQaMilliseconds(null), '—');
+    expect(formatQaMilliseconds(0), '0 ms');
+    expect(formatQaMilliseconds(137), '137 ms');
+  });
+
   test('QA percentages fail safely for missing and invalid values', () {
     expect(formatQaPercent(null), '—');
     expect(formatQaPercent(double.nan), '—');

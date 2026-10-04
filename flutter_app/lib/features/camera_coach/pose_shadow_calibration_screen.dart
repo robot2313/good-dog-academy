@@ -7,6 +7,7 @@ import '../../core/theme/gda_theme.dart';
 import 'domain/camera_coach_models.dart';
 import 'domain/pose_shadow_validation.dart';
 import 'services/camera/flutter_camera_capture_adapter.dart';
+import 'services/pose_shadow_performance.dart';
 import 'services/pose_shadow_validation_controller.dart';
 import 'services/pose_shadow_validation_repository.dart';
 import 'services/vision/dog_vision_engine.dart';
@@ -285,7 +286,10 @@ class _PoseShadowCalibrationScreenState
           summary: controller.summary,
         ),
         const SizedBox(height: 12),
-        _DiagnosticsCard(diagnostics: controller.diagnostics),
+        _DiagnosticsCard(
+          diagnostics: controller.diagnostics,
+          performance: controller.performanceReport,
+        ),
         if (_setupError != null) ...[
           const SizedBox(height: 12),
           const _Notice(
@@ -541,9 +545,13 @@ class _ValidationProgressCard extends StatelessWidget {
 }
 
 class _DiagnosticsCard extends StatelessWidget {
-  const _DiagnosticsCard({required this.diagnostics});
+  const _DiagnosticsCard({
+    required this.diagnostics,
+    required this.performance,
+  });
 
   final PoseShadowDiagnostics diagnostics;
+  final PoseShadowPerformanceReport performance;
 
   @override
   Widget build(BuildContext context) {
@@ -565,6 +573,23 @@ class _DiagnosticsCard extends StatelessWidget {
               'Last end-to-end time: '
               '${diagnostics.lastTotalMs == null ? '—' : '${diagnostics.lastTotalMs} ms'}',
             ),
+            const SizedBox(height: 6),
+            Text(
+              'Latency P50 / P95 / max: '
+              '${formatQaMilliseconds(performance.p50Ms)} / '
+              '${formatQaMilliseconds(performance.p95Ms)} / '
+              '${formatQaMilliseconds(performance.maxMs)}',
+            ),
+            Text(
+              'Analysis yield: ${formatQaPercent(performance.analysisYield)}',
+            ),
+            Text(
+              'Busy skip rate: ${formatQaPercent(performance.busySkipRate)}',
+            ),
+            Text(
+              'Inference error rate: ${formatQaPercent(performance.errorRate)}',
+            ),
+            Text('Latency samples retained: ${performance.latencySamples}'),
           ],
         ),
       ),
@@ -643,3 +668,6 @@ String formatQaPercent(double? value) {
   if (value == null || !value.isFinite) return '—';
   return '${(value.clamp(0.0, 1.0) * 100).toStringAsFixed(1)}%';
 }
+
+
+String formatQaMilliseconds(int? value) => value == null ? '—' : '$value ms';
