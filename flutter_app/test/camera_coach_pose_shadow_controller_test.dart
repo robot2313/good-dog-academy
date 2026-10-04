@@ -46,11 +46,11 @@ class _FakeFrameSource implements CameraFrameSource {
 class _FakeVision implements DogVisionEngine {
   _FakeVision({
     this.throwOnDetect = false,
-    Completer<void>? gate,
-  }) : _gate = gate;
+    this.gate,
+  });
 
   final bool throwOnDetect;
-  final Completer<void>? _gate;
+  final Completer<void>? gate;
   int warmups = 0;
   int calls = 0;
   int disposals = 0;
@@ -63,7 +63,7 @@ class _FakeVision implements DogVisionEngine {
   @override
   Future<DogVisionResult> detect(CameraFrame frame) async {
     calls++;
-    await _gate?.future;
+    await gate?.future;
     if (throwOnDetect) throw StateError('candidate model failed');
     return DogVisionResult(
       frameId: frame.id,
