@@ -126,12 +126,16 @@ Float32List _prepareDetector(String path) {
 }
 
 img.Image _decodeOriented(String path) {
-  final bytes = File(path).readAsBytesSync();
-  final decoded = img.decodeImage(bytes);
-  if (decoded == null) {
+  try {
+    final bytes = File(path).readAsBytesSync();
+    final decoded = img.decodeImage(bytes);
+    if (decoded == null) {
+      throw StateError('Camera frame could not be decoded as an image.');
+    }
+    return img.bakeOrientation(decoded);
+  } catch (_) {
     throw StateError('Camera frame could not be decoded as an image.');
   }
-  return img.bakeOrientation(decoded);
 }
 
 Uint8List _rgbBytes(img.Image image) {
