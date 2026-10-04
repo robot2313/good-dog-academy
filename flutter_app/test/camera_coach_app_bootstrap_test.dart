@@ -1,22 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:good_dog_academy/features/camera_coach/camera_coach_capability.dart';
 import 'package:good_dog_academy/features/camera_coach/services/vision/flutter_onnx_tensor_runtime.dart';
 import 'package:good_dog_academy/features/camera_coach/services/vision/model_readiness.dart';
 import 'package:good_dog_academy/main.dart';
-
-class _CapabilityProbe extends StatelessWidget {
-  const _CapabilityProbe();
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      CameraCoachCapabilityScope.maybeOf(context) == null
-          ? 'camera-disabled'
-          : 'camera-enabled',
-    );
-  }
-}
 
 ReviewedDogVisionBundle _approvedBundle() {
   return const ReviewedDogVisionBundle(
