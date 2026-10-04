@@ -1,0 +1,645 @@
+import 'dart:async';
+
+import 'package:camera/camera.dart';
+import 'package:flutter/material.dart';
+
+import '../../core/theme/gda_theme.dart';
+import 'domain/camera_coach_models.dart';
+import 'domain/pose_shadow_validation.dart';
+import 'services/camera/flutter_camera_capture_adapter.dart';
+import 'services/pose_shadow_validation_controller.dart';
+import 'services/pose_shadow_validation_repository.dart';
+import 'services/vision/dog_vision_engine.dart';
+
+typedef PoseShadowVisionEngineFactory = DogVisionEngine Function();
+
+/// Engineering-only real-device calibration surface.
+///
+/// This screen is intentionally not registered in consumer navigation. It may
+/// run candidate model bundles that are not production-approved, so its output
+/// is restricted to shadow-validation storage and can never write lesson
+/// progress, training history, rewards, or Adaptive Brain memory.
+class PoseShadowCalibrationScreen extends StatefulWidget {
+  const PoseShadowCalibrationScreen({
+    super.key,
+    required this.dogId,
+    required this.lessonId,
+    required this.expectedPosture,
+    required this.visionEngineFactory,
+  });
+
+  final String dogId;
+  final String lessonId;
+  final DogPosture expectedPosture;
+  final PoseShadowVisionEngineFactory visionEngineFactory;
+
+  @override
+  State<PoseShadowCalibrationScreen> createState() =>
+      _PoseShadowCalibrationScreenState();
+}
+
+class _PoseShadowCalibrationScreenState
+    extends State<PoseShadowCalibrationScreen>
+    with WidgetsBindingObserver {
+  FlutterCameraCaptureAdapter? _camera;
+  PoseShadowValidationController? _controller;
+
+  bool _initializing = true;
+  bool _resumeAfterLifecycle = false;
+  bool _closing = false;
+  Object? _setupError;
+  Future<void> _lifecycleSerial = Future<void>.value();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    unawaited(_bootstrap());
+  }
+
+  Future<void> _bootstrap() async {
+    final camera = FlutterCameraCaptureAdapter();
+    _camera = camera;
+
+    try {
+      await camera.initialize();
+      if (!mounted) {
+        await camera.shutdown();
+        camera.dispose();
+        return;
+      }
+
+      final controller = PoseShadowValidationController(
+        frameSource: camera.createPollingSource(),
+        visionEngine: widget.visionEngineFactory(),
+        repository: const PoseShadowValidationRepository(
+          storage: SharedPreferencesPoseShadowValidationStorage(),
+        ),
+        dogId: widget.dogId,
+        lessonId: widget.lessonId,
+        expectedPosture: widget.expectedPosture,
+      );
+      controller.addListener(_controllerChanged);
+      _controller = controller;
+
+      setState(() {
+        _initializing = false;
+        _setupError = null;
+      });
+      await controller.start();
+      if (mounted) setState(() {});
+    } catch (cause) {
+      await camera.shutdown();
+      if (!mounted) {
+        camera.dispose();
+        return;
+      }
+      setState(() {
+        _initializing = false;
+        _setupError = cause;
+      });
+    }
+  }
+
+  void _controllerChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _queueLifecycle(_resumeFromLifecycle);
+      return;
+    }
+
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.detached) {
+      _queueLifecycle(_suspendForLifecycle);
+    }
+  }
+
+  void _queueLifecycle(Future<void> Function() action) {
+    _lifecycleSerial = _lifecycleSerial.then((_) => action()).catchError((
+      Object cause,
+      StackTrace _,
+    ) {
+      if (mounted) setState(() => _setupError = cause);
+    });
+  }
+
+  Future<void> _suspendForLifecycle() async {
+    final controller = _controller;
+    final camera = _camera;
+    if (controller == null || camera == null) return;
+
+    _resumeAfterLifecycle =
+        controller.status == PoseShadowControllerStatus.ready ||
+        controller.status == PoseShadowControllerStatus.loading;
+
+    await controller.stop();
+    await camera.shutdown();
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _resumeFromLifecycle() async {
+    if (!_resumeAfterLifecycle || _closing) return;
+
+    final controller = _controller;
+    final camera = _camera;
+    if (controller == null || camera == null) return;
+
+    try {
+      await camera.initialize();
+      await controller.start();
+      _resumeAfterLifecycle = false;
+      if (mounted) setState(() => _setupError = null);
+    } catch (cause) {
+      if (mounted) setState(() => _setupError = cause);
+    }
+  }
+
+  Future<void> _record(PoseShadowGroundTruth truth) async {
+    final controller = _controller;
+    if (controller == null) return;
+    await controller.recordGroundTruth(truth);
+  }
+
+  Future<void> _retry() async {
+    if (_initializing) return;
+
+    final oldController = _controller;
+    _controller = null;
+    if (oldController != null) {
+      oldController.removeListener(_controllerChanged);
+      await oldController.shutdown();
+      oldController.dispose();
+    }
+
+    final oldCamera = _camera;
+    _camera = null;
+    if (oldCamera != null) {
+      await oldCamera.shutdown();
+      oldCamera.dispose();
+    }
+
+    if (mounted) {
+      setState(() {
+        _initializing = true;
+        _setupError = null;
+      });
+    }
+    await _bootstrap();
+  }
+
+  Future<void> _close() async {
+    if (_closing) return;
+    _closing = true;
+    await _controller?.stop();
+    await _camera?.shutdown();
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+
+    final controller = _controller;
+    final camera = _camera;
+    _controller = null;
+    _camera = null;
+
+    if (controller != null) {
+      controller.removeListener(_controllerChanged);
+    }
+    unawaited(_release(controller, camera));
+    super.dispose();
+  }
+
+  Future<void> _release(
+    PoseShadowValidationController? controller,
+    FlutterCameraCaptureAdapter? camera,
+  ) async {
+    await controller?.shutdown();
+    controller?.dispose();
+    await camera?.shutdown();
+    camera?.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) unawaited(_close());
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            tooltip: 'Close calibration',
+            onPressed: _close,
+            icon: const Icon(Icons.close),
+          ),
+          title: const Text('Vision Calibration · QA'),
+        ),
+        body: SafeArea(child: _body()),
+      ),
+    );
+  }
+
+  Widget _body() {
+    if (_initializing) {
+      return const Center(
+        child: CircularProgressIndicator(
+          semanticsLabel: 'Starting vision calibration',
+        ),
+      );
+    }
+
+    final controller = _controller;
+    if (controller == null) {
+      return _StartupError(onRetry: _retry);
+    }
+
+    if (controller.status == PoseShadowControllerStatus.error) {
+      return _StartupError(onRetry: _retry);
+    }
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
+      children: [
+        const _QaBanner(),
+        const SizedBox(height: 12),
+        _cameraPreview(),
+        const SizedBox(height: 12),
+        _PredictionCard(controller: controller),
+        const SizedBox(height: 12),
+        _GroundTruthCard(
+          enabled: controller.canLabel,
+          onRecord: _record,
+        ),
+        const SizedBox(height: 12),
+        _ValidationProgressCard(
+          expectedPosture: widget.expectedPosture,
+          summary: controller.summary,
+        ),
+        const SizedBox(height: 12),
+        _DiagnosticsCard(diagnostics: controller.diagnostics),
+        if (_setupError != null) ...[
+          const SizedBox(height: 12),
+          const _Notice(
+            text:
+                'Camera resume failed. Close and reopen this QA screen before collecting more samples.',
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _cameraPreview() {
+    final camera = _camera?.controller;
+    if (camera == null || !camera.value.isInitialized) {
+      return AspectRatio(
+        aspectRatio: 4 / 3,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Center(
+            child: Text(
+              'Camera paused',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: AspectRatio(
+        aspectRatio: camera.value.aspectRatio,
+        child: CameraPreview(camera),
+      ),
+    );
+  }
+}
+
+class _QaBanner extends StatelessWidget {
+  const _QaBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF2D8),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: GdaColors.gold),
+      ),
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.science_outlined, color: GdaColors.gold),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'QA ONLY · These labels test a candidate model. They do not '
+              'complete lessons, score reps, give rewards, or change the '
+              'Adaptive Brain.',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PredictionCard extends StatelessWidget {
+  const _PredictionCard({required this.controller});
+
+  final PoseShadowValidationController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final observation = controller.latestObservation;
+    final detected = observation?.dogDetected ?? false;
+    final prediction = observation?.posture;
+    final confidence = observation?.postureConfidence;
+    final detectionConfidence = observation?.detectionConfidence;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Candidate model prediction',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              observation == null
+                  ? 'Waiting for the first analysed frame…'
+                  : detected
+                  ? '${dogPostureQaLabel(prediction)} · '
+                        '${formatQaPercent(confidence)}'
+                  : 'No dog detected',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              observation == null
+                  ? 'Do not label until a prediction appears.'
+                  : 'Dog detection: ${formatQaPercent(detectionConfidence)}',
+            ),
+            if (!controller.canLabel && observation != null) ...[
+              const SizedBox(height: 8),
+              const Text(
+                'This frame is already labelled. Wait for the next analysed frame.',
+                style: TextStyle(color: GdaColors.muted),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GroundTruthCard extends StatelessWidget {
+  const _GroundTruthCard({
+    required this.enabled,
+    required this.onRecord,
+  });
+
+  final bool enabled;
+  final Future<void> Function(PoseShadowGroundTruth truth) onRecord;
+
+  @override
+  Widget build(BuildContext context) {
+    const labels = <(PoseShadowGroundTruth, String)>[
+      (PoseShadowGroundTruth.standLike, 'Stand'),
+      (PoseShadowGroundTruth.sitLike, 'Sit'),
+      (PoseShadowGroundTruth.downLike, 'Down'),
+      (PoseShadowGroundTruth.noDog, 'No dog'),
+      (PoseShadowGroundTruth.unsure, 'Unsure'),
+    ];
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'What is actually in the frame?',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Label what you can see, regardless of what the model predicted.',
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final label in labels)
+                  FilledButton.tonal(
+                    onPressed: enabled ? () => onRecord(label.$1) : null,
+                    child: Text(label.$2),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ValidationProgressCard extends StatelessWidget {
+  const _ValidationProgressCard({
+    required this.expectedPosture,
+    required this.summary,
+  });
+
+  final DogPosture expectedPosture;
+  final PoseShadowValidationSummary? summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final report = summary?.byPosture[expectedPosture];
+    final labelled = report?.labelledSamples ?? 0;
+    final remaining =
+        defaultPoseShadowValidationPolicy.minimumSamples - labelled;
+    final needed = remaining > 0 ? remaining : 0;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${dogPostureQaLabel(expectedPosture)} validation',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              '$labelled / '
+              '${defaultPoseShadowValidationPolicy.minimumSamples} '
+              'owner-labelled samples',
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Precision: ${formatQaPercent(report?.precision)}  ·  '
+              'False positives: ${formatQaPercent(report?.falsePositiveRate)}  ·  '
+              'Coverage: ${formatQaPercent(report?.coverage)}',
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(
+                  report?.shadowQualityGatePassed == true
+                      ? Icons.check_circle
+                      : Icons.pending_outlined,
+                  color: report?.shadowQualityGatePassed == true
+                      ? GdaColors.forest
+                      : GdaColors.gold,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    report?.shadowQualityGatePassed == true
+                        ? 'Statistical shadow gate passed.'
+                        : needed > 0
+                        ? '$needed more labelled samples required before '
+                              'quality thresholds can pass.'
+                        : 'Quality thresholds are not met yet.',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Production auto-scoring: DISABLED',
+              style: TextStyle(
+                color: GdaColors.muted,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DiagnosticsCard extends StatelessWidget {
+  const _DiagnosticsCard({required this.diagnostics});
+
+  final PoseShadowDiagnostics diagnostics;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Device diagnostics',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text('Analysed frames: ${diagnostics.framesAnalysed}'),
+            Text('Busy frames skipped: ${diagnostics.framesSkippedBusy}'),
+            Text('Inference errors: ${diagnostics.inferenceErrors}'),
+            Text(
+              'Last end-to-end time: '
+              '${diagnostics.lastTotalMs == null ? '—' : '${diagnostics.lastTotalMs} ms'}',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StartupError extends StatelessWidget {
+  const _StartupError({required this.onRetry});
+
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              size: 52,
+              color: GdaColors.gold,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Vision calibration could not run',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Check the candidate model files, camera permission, and runtime configuration.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: onRetry,
+              child: const Text('Try again'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Notice extends StatelessWidget {
+  const _Notice({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF2D8),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(text),
+    );
+  }
+}
+
+String dogPostureQaLabel(DogPosture? posture) {
+  return switch (posture) {
+    DogPosture.standLike => 'Stand',
+    DogPosture.sitLike => 'Sit',
+    DogPosture.downLike => 'Down',
+    null => 'Unknown',
+  };
+}
+
+String formatQaPercent(double? value) {
+  if (value == null || !value.isFinite) return '—';
+  return '${(value.clamp(0.0, 1.0) * 100).toStringAsFixed(1)}%';
+}
