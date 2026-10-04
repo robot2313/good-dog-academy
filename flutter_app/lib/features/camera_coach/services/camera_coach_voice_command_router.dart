@@ -83,17 +83,22 @@ class CameraCoachVoiceCommandRouter extends ChangeNotifier {
   CameraCoachVoiceCommandRouter({
     required this.handsFree,
     required this.actions,
-  }) {
+    this.sessionChanges,
+  }) : _lastStatus = actions.status {
     _disposeEvent = handsFree.onEvent(_onHandsFreeEvent);
+    sessionChanges?.addListener(_onSessionChanged);
   }
 
   final HandsFreeCoachController handsFree;
   final CameraCoachVoiceActions actions;
+  final Listenable? sessionChanges;
 
   void Function()? _disposeEvent;
   Future<void> _serial = Future<void>.value();
+  CameraCoachRuntimeStatus _lastStatus;
   bool _enabled = false;
   bool _disposed = false;
+  bool _handlingEvent = false;
 
   CameraCoachVoiceFeedback? feedback;
 
@@ -113,38 +118,62 @@ class CameraCoachVoiceCommandRouter extends ChangeNotifier {
 
     if (_enabled && handsFree.isListening) return true;
 
-    try {
-      final started = await handsFree.start();
-      _enabled = started;
-      if (!started) {
-        _setFeedback(
-          const CameraCoachVoiceFeedback(
-            kind: CameraCoachVoiceFeedbackKind.blocked,
-            message:
-                'Hands-free commands are unavailable. Use the on-screen controls.',
-          ),
-        );
-      } else {
-        _setFeedback(
-          const CameraCoachVoiceFeedback(
-            kind: CameraCoachVoiceFeedbackKind.handled,
-            message: 'Hands-free commands are listening.',
-          ),
-        );
-      }
-      _notify();
-      return started;
-    } catch (cause) {
-      _enabled = false;
+    _enabled = true;
+    final started = await syncWithSessionState();
+    if (!started && _enabled && !_shouldListen(actions.status)) {
       _setFeedback(
-        CameraCoachVoiceFeedback(
-          kind: CameraCoachVoiceFeedbackKind.error,
-          message: 'Hands-free commands could not start: $cause',
+        const CameraCoachVoiceFeedback(
+          kind: CameraCoachVoiceFeedbackKind.handled,
+          message:
+              'Hands-free commands are enabled and will listen at the next safe command point.',
         ),
       );
       _notify();
+      return true;
+    }
+    return started;
+  }
+
+  Future<bool> syncWithSessionState() async {
+    if (!_enabled || _disposed) return false;
+
+    if (!_shouldListen(actions.status)) {
+      await suspendListening();
       return false;
     }
+
+    return _rearm();
+  }
+
+  Future<void> suspendListening() async {
+    if (handsFree.isListening) {
+      await handsFree.stop();
+    }
+  }
+
+  void _onSessionChanged() {
+    final next = actions.status;
+    final previous = _lastStatus;
+    _lastStatus = next;
+
+    if (!_enabled || _disposed || _handlingEvent || next == previous) return;
+
+    if (!_shouldListen(next)) {
+      unawaited(suspendListening());
+      return;
+    }
+
+    // Pause/resume notify before their trainer speech finishes. The caller
+    // explicitly re-synchronizes after those actions complete.
+    if (next == CameraCoachRuntimeStatus.paused ||
+        previous == CameraCoachRuntimeStatus.paused) {
+      unawaited(suspendListening());
+      return;
+    }
+
+    // Frame-driven transitions to owner confirmation or the next ready state
+    // happen after spoken coaching completes, so it is safe to listen again.
+    unawaited(syncWithSessionState());
   }
 
   void _onHandsFreeEvent(HandsFreeCoachEvent event) {
@@ -168,9 +197,11 @@ class CameraCoachVoiceCommandRouter extends ChangeNotifier {
   Future<void> _handle(HandsFreeCoachEvent event) async {
     if (!_enabled || _disposed) return;
 
-    // Stop the current one-shot recognizer before performing an action that
-    // may itself speak. We re-arm after the action completes.
-    await handsFree.stop();
+    _handlingEvent = true;
+    try {
+      // Stop the current one-shot recognizer before performing an action that
+      // may itself speak. We re-arm after the action completes.
+      await handsFree.stop();
 
     if (event is HandsFreeErrorEvent) {
       _setFeedback(
@@ -233,6 +264,9 @@ class CameraCoachVoiceCommandRouter extends ChangeNotifier {
           );
         } else if (await actions.beginCue()) {
           _handled('Next rep started.', intentEvent.transcript);
+          // Do not listen while the dog rep is being watched. Recognition
+          // re-arms when Camera Coach reaches the next safe command state.
+          shouldRearm = false;
         } else {
           _blocked(
             'Camera Coach is not ready to start the next rep yet.',
@@ -291,9 +325,12 @@ class CameraCoachVoiceCommandRouter extends ChangeNotifier {
         break;
     }
 
-    _notify();
-    if (shouldRearm) {
-      await _rearm();
+      _notify();
+      if (shouldRearm) {
+        await _rearm();
+      }
+    } finally {
+      _handlingEvent = false;
     }
   }
 
@@ -323,14 +360,15 @@ class CameraCoachVoiceCommandRouter extends ChangeNotifier {
         status == CameraCoachRuntimeStatus.awaitingOwnerConfirmation;
   }
 
-  Future<void> _rearm() async {
-    if (!_enabled ||
-        _disposed ||
-        actions.status == CameraCoachRuntimeStatus.complete) {
-      return;
+  Future<bool> _rearm() async {
+    if (!_enabled || _disposed || !_shouldListen(actions.status)) {
+      return false;
     }
 
     try {
+      if (handsFree.isListening) {
+        await handsFree.stop();
+      }
       final started = await handsFree.start();
       if (!started) {
         _enabled = false;
@@ -342,7 +380,9 @@ class CameraCoachVoiceCommandRouter extends ChangeNotifier {
           ),
         );
         _notify();
+        return false;
       }
+      return true;
     } catch (cause) {
       _enabled = false;
       _setFeedback(
@@ -352,7 +392,14 @@ class CameraCoachVoiceCommandRouter extends ChangeNotifier {
         ),
       );
       _notify();
+      return false;
     }
+  }
+
+  bool _shouldListen(CameraCoachRuntimeStatus status) {
+    return status == CameraCoachRuntimeStatus.ready ||
+        status == CameraCoachRuntimeStatus.awaitingOwnerConfirmation ||
+        status == CameraCoachRuntimeStatus.paused;
   }
 
   void _handled(String message, String transcript) {
@@ -385,6 +432,7 @@ class CameraCoachVoiceCommandRouter extends ChangeNotifier {
 
   Future<void> shutdown() async {
     _enabled = false;
+    sessionChanges?.removeListener(_onSessionChanged);
     _disposeEvent?.call();
     _disposeEvent = null;
     await handsFree.abort();
@@ -395,6 +443,7 @@ class CameraCoachVoiceCommandRouter extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _enabled = false;
+    sessionChanges?.removeListener(_onSessionChanged);
     _disposeEvent?.call();
     _disposeEvent = null;
     handsFree.dispose();
