@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:good_dog_academy/features/camera_coach/services/camera_coach_runtime_controller.dart';
 import 'package:good_dog_academy/features/camera_coach/services/camera_coach_voice_command_router.dart';
@@ -60,7 +61,7 @@ class _FakeRecognizer implements TrainingSpeechRecognizer {
   }
 }
 
-class _FakeActions implements CameraCoachVoiceActions {
+class _FakeActions extends ChangeNotifier implements CameraCoachVoiceActions {
   @override
   CameraCoachRuntimeStatus status = CameraCoachRuntimeStatus.ready;
 
@@ -80,6 +81,7 @@ class _FakeActions implements CameraCoachVoiceActions {
   Future<bool> beginCue() async {
     begins++;
     status = CameraCoachRuntimeStatus.cueActive;
+    notifyListeners();
     return true;
   }
 
@@ -88,6 +90,7 @@ class _FakeActions implements CameraCoachVoiceActions {
     confirms++;
     lastOutcome = outcome;
     status = CameraCoachRuntimeStatus.ready;
+    notifyListeners();
     return true;
   }
 
@@ -95,12 +98,14 @@ class _FakeActions implements CameraCoachVoiceActions {
   Future<void> pause() async {
     pauses++;
     status = CameraCoachRuntimeStatus.paused;
+    notifyListeners();
   }
 
   @override
   Future<void> resume() async {
     resumes++;
     status = CameraCoachRuntimeStatus.ready;
+    notifyListeners();
   }
 
   @override
@@ -113,6 +118,7 @@ class _FakeActions implements CameraCoachVoiceActions {
   Future<void> stop() async {
     stops++;
     status = CameraCoachRuntimeStatus.complete;
+    notifyListeners();
   }
 }
 
@@ -128,6 +134,7 @@ void main() {
     final router = CameraCoachVoiceCommandRouter(
       handsFree: HandsFreeCoachController(recognizer),
       actions: actions,
+      sessionChanges: actions,
     );
 
     expect(await router.setEnabled(true), isTrue);
@@ -144,6 +151,42 @@ void main() {
 
     expect(actions.begins, 1);
     expect(actions.status, CameraCoachRuntimeStatus.cueActive);
+    expect(
+      recognizer.starts,
+      2,
+      reason: 'microphone must stay off while the dog rep is watched',
+    );
+
+    actions.status = CameraCoachRuntimeStatus.awaitingOwnerConfirmation;
+    actions.notifyListeners();
+    await _flush();
+    expect(recognizer.starts, 3);
+
+    await router.shutdown();
+    router.dispose();
+  });
+
+  test('frame-driven ready state re-arms after watched rep completes', () async {
+    final recognizer = _FakeRecognizer();
+    final actions = _FakeActions();
+    final router = CameraCoachVoiceCommandRouter(
+      handsFree: HandsFreeCoachController(recognizer),
+      actions: actions,
+      sessionChanges: actions,
+    );
+
+    await router.setEnabled(true);
+    recognizer.emit('next rep');
+    await _flush();
+
+    expect(actions.status, CameraCoachRuntimeStatus.cueActive);
+    expect(recognizer.starts, 1);
+
+    actions.status = CameraCoachRuntimeStatus.ready;
+    actions.notifyListeners();
+    await _flush();
+
+    expect(recognizer.starts, 2);
 
     await router.shutdown();
     router.dispose();
@@ -155,6 +198,7 @@ void main() {
     final router = CameraCoachVoiceCommandRouter(
       handsFree: HandsFreeCoachController(recognizer),
       actions: actions,
+      sessionChanges: actions,
     );
 
     await router.setEnabled(true);
@@ -179,6 +223,7 @@ void main() {
     final router = CameraCoachVoiceCommandRouter(
       handsFree: HandsFreeCoachController(recognizer),
       actions: actions,
+      sessionChanges: actions,
     );
 
     await router.setEnabled(true);
@@ -204,6 +249,7 @@ void main() {
     final router = CameraCoachVoiceCommandRouter(
       handsFree: HandsFreeCoachController(recognizer),
       actions: actions,
+      sessionChanges: actions,
     );
 
     await router.setEnabled(true);
@@ -224,6 +270,7 @@ void main() {
     final router = CameraCoachVoiceCommandRouter(
       handsFree: HandsFreeCoachController(recognizer),
       actions: actions,
+      sessionChanges: actions,
     );
 
     await router.setEnabled(true);
@@ -245,6 +292,7 @@ void main() {
     final router = CameraCoachVoiceCommandRouter(
       handsFree: HandsFreeCoachController(recognizer),
       actions: actions,
+      sessionChanges: actions,
     );
 
     await router.setEnabled(true);
