@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-import '../camera_coach_capability.dart';
+import '../../camera_coach_capability.dart';
 import 'model_readiness.dart';
 import 'onnx_dog_vision_engine_factory.dart';
 

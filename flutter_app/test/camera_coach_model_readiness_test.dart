@@ -1,9 +1,7 @@
-import 'package:flutter/widgets.dart';
 import 'package:flutter_onnxruntime/flutter_onnxruntime.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:good_dog_academy/features/camera_coach/services/vision/flutter_onnx_tensor_runtime.dart';
 import 'package:good_dog_academy/features/camera_coach/services/vision/model_readiness.dart';
-import 'package:good_dog_academy/features/camera_coach/services/vision/onnx_dog_vision_engine_factory.dart';
 
 ReviewedVisionModel _detector({
   VisionModelReviewStatus license = VisionModelReviewStatus.approved,
