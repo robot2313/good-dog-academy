@@ -1,3 +1,5 @@
+import 'dart:async';
+
 class CameraFrame {
   const CameraFrame({
     required this.id,
@@ -16,7 +18,7 @@ class CameraFrame {
   final String? uri;
 }
 
-typedef CameraFrameListener = void Function(CameraFrame frame);
+typedef CameraFrameListener = FutureOr<void> Function(CameraFrame frame);
 typedef CameraFrameSubscription = void Function();
 
 abstract interface class CameraFrameSource {

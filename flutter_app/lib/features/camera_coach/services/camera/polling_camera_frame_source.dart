@@ -8,12 +8,14 @@ class CapturedCameraSnapshot {
     required this.width,
     required this.height,
     required this.rotationDegrees,
+    this.release,
   });
 
   final String uri;
   final int width;
   final int height;
   final int rotationDegrees;
+  final Future<void> Function()? release;
 }
 
 typedef CameraSnapshotCapture = Future<CapturedCameraSnapshot?> Function();
@@ -83,8 +85,9 @@ class PollingCameraFrameSource implements CameraFrameSource {
     if (!_running || _captureInFlight) return;
 
     _captureInFlight = true;
+    CapturedCameraSnapshot? snapshot;
     try {
-      final snapshot = await capture();
+      snapshot = await capture();
       if (!_running || snapshot == null) return;
       if (snapshot.uri.trim().isEmpty ||
           snapshot.width <= 0 ||
@@ -103,12 +106,19 @@ class PollingCameraFrameSource implements CameraFrameSource {
       );
       final listeners = List<CameraFrameListener>.of(_listeners);
       for (final listener in listeners) {
-        listener(frame);
+        await listener(frame);
       }
     } catch (_) {
-      // A single camera capture failure must not terminate Camera Coach.
-      // The next polling interval can try again.
+      // A single camera capture or consumer failure must not terminate Camera
+      // Coach. The next polling interval can try again.
     } finally {
+      if (snapshot != null) {
+        try {
+          await snapshot.release?.call();
+        } catch (_) {
+          // Temporary snapshot cleanup is best-effort and never breaks coaching.
+        }
+      }
       _captureInFlight = false;
     }
   }

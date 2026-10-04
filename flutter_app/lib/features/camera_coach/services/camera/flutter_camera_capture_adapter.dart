@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
@@ -111,6 +112,7 @@ class FlutterCameraCaptureAdapter extends ChangeNotifier {
       rotationDegrees: cameraDeviceOrientationDegrees(
         camera.value.deviceOrientation,
       ),
+      release: () => _deleteSnapshot(file.path),
     );
   }
 
@@ -150,3 +152,15 @@ int cameraDeviceOrientationDegrees(DeviceOrientation orientation) {
 }
 
 int _positiveDimension(int value) => value < 1 ? 1 : value;
+
+
+Future<void> _deleteSnapshot(String path) async {
+  try {
+    final file = File(path);
+    if (await file.exists()) {
+      await file.delete();
+    }
+  } catch (_) {
+    // Camera Coach snapshot cleanup is best-effort.
+  }
+}

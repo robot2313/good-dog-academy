@@ -176,6 +176,66 @@ void main() {
     expect(frames, isEmpty);
   });
 
+  test('awaits frame consumer before releasing temporary snapshot', () async {
+    final consumerDone = Completer<void>();
+    var releases = 0;
+    var captures = 0;
+    final source = PollingCameraFrameSource(
+      interval: const Duration(hours: 1),
+      capture: () async {
+        captures++;
+        return CapturedCameraSnapshot(
+          uri: 'file:///tmp/frame.jpg',
+          width: 100,
+          height: 100,
+          rotationDegrees: 0,
+          release: () async {
+            releases++;
+          },
+        );
+      },
+    );
+    source.subscribe((_) async {
+      await consumerDone.future;
+    });
+
+    final starting = source.start();
+    await Future<void>.delayed(Duration.zero);
+    final overlapping = source.captureNow();
+    await Future<void>.delayed(Duration.zero);
+
+    expect(captures, 1);
+    expect(releases, 0);
+
+    consumerDone.complete();
+    await starting;
+    await overlapping;
+
+    expect(releases, 1);
+    await source.stop();
+  });
+
+  test('releases invalid or late snapshots even when not delivered', () async {
+    var releases = 0;
+    final source = PollingCameraFrameSource(
+      interval: const Duration(hours: 1),
+      capture: () async => CapturedCameraSnapshot(
+        uri: '',
+        width: 100,
+        height: 100,
+        rotationDegrees: 0,
+        release: () async {
+          releases++;
+        },
+      ),
+    );
+
+    await source.start();
+
+    expect(releases, 1);
+    await source.stop();
+  });
+
   test('non-positive polling interval is rejected before capture', () async {
     final source = PollingCameraFrameSource(
       interval: Duration.zero,

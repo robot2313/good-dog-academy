@@ -298,9 +298,7 @@ class CameraCoachRuntimeController extends ChangeNotifier {
   Future<void> _startFrameSource() async {
     if (_started) return;
 
-    _unsubscribe ??= frameSource.subscribe((frame) {
-      unawaited(processFrame(frame));
-    });
+    _unsubscribe ??= frameSource.subscribe(processFrame);
     try {
       await frameSource.start();
       _started = true;
