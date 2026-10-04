@@ -44,8 +44,10 @@ class _FakeFrameSource implements CameraFrameSource {
 }
 
 class _FakeVision implements DogVisionEngine {
-  _FakeVision({this.throwOnDetect = false, Completer<void>? gate})
-      : _gate = gate;
+  _FakeVision({
+    this.throwOnDetect = false,
+    Completer<void>? gate,
+  }) : _gate = gate;
 
   final bool throwOnDetect;
   final Completer<void>? _gate;
