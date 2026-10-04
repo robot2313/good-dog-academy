@@ -10,6 +10,7 @@ class _FakeTtsDriver implements FlutterTtsDriver {
   int pitchCalls = 0;
   int speakCalls = 0;
   int stopCalls = 0;
+  int awaitCompletionCalls = 0;
   bool throwOnSpeak = false;
 
   @override
@@ -32,6 +33,12 @@ class _FakeTtsDriver implements FlutterTtsDriver {
   @override
   Future<void> setPitch(double pitch) async {
     pitchCalls++;
+  }
+
+  @override
+  Future<void> awaitSpeakCompletion(bool enabled) async {
+    awaitCompletionCalls++;
+    events.add('await:$enabled');
   }
 
   @override
@@ -62,6 +69,7 @@ void main() {
     expect(driver.languageCalls, 1);
     expect(driver.volumeCalls, 1);
     expect(driver.pitchCalls, 1);
+    expect(driver.awaitCompletionCalls, 1);
     expect(driver.rates, <double>[0.92, 0.88]);
     expect(driver.speakCalls, 2);
     expect(speech.available, isTrue);
