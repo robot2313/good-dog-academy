@@ -1,20 +1,19 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 
 import '../domain/camera_coach_models.dart';
 import '../domain/pose_shadow_validation.dart';
 import 'camera/camera_frame_source.dart';
+import 'camera/polling_camera_frame_source.dart';
 import 'pose_shadow_performance.dart';
 import 'pose_shadow_validation_repository.dart';
 import 'vision/dog_vision_engine.dart';
+import 'vision_benchmark_repository.dart';
 
-enum PoseShadowControllerStatus {
-  off,
-  loading,
-  ready,
-  error,
-}
+enum PoseShadowControllerStatus { off, loading, ready, error }
 
 class PoseShadowDiagnostics {
   const PoseShadowDiagnostics({
@@ -29,14 +28,14 @@ class PoseShadowDiagnostics {
   });
 
   const PoseShadowDiagnostics.empty()
-      : framesRequested = 0,
-        framesAnalysed = 0,
-        framesSkippedBusy = 0,
-        inferenceErrors = 0,
-        lastInferenceAt = null,
-        lastTotalMs = null,
-        lastDetectionConfidence = null,
-        lastPostureConfidence = null;
+    : framesRequested = 0,
+      framesAnalysed = 0,
+      framesSkippedBusy = 0,
+      inferenceErrors = 0,
+      lastInferenceAt = null,
+      lastTotalMs = null,
+      lastDetectionConfidence = null,
+      lastPostureConfidence = null;
 
   final int framesRequested;
   final int framesAnalysed;
@@ -85,6 +84,8 @@ class PoseShadowValidationController extends ChangeNotifier {
     required this.dogId,
     required this.lessonId,
     required this.expectedPosture,
+    this.benchmarkContext,
+    this.benchmarkRepository,
     DateTime Function()? now,
   }) : _now = now ?? DateTime.now;
 
@@ -95,6 +96,93 @@ class PoseShadowValidationController extends ChangeNotifier {
   final String lessonId;
   final DogPosture expectedPosture;
   final DateTime Function() _now;
+  final VisionBenchmarkContext? benchmarkContext;
+  final VisionBenchmarkRepository? benchmarkRepository;
+  final List<Map<String, Object?>> _benchmarkLabels = [];
+  List<Map<String, Object?>> get benchmarkLabels =>
+      List.unmodifiable(_benchmarkLabels);
+  Future<void> _lifecycle = Future<void>.value();
+  Future<void>? _shutdown;
+  Completer<void>? _inferenceDone;
+  Future<void>? _labelWrite;
+  bool _labelBusy = false;
+  bool _labelFrozen = false;
+  Uint8List? latestAnalysedImage;
+  bool get labelFrozen => _labelFrozen;
+
+  void freezeForLabel() {
+    if (status != PoseShadowControllerStatus.ready || latestObservation == null)
+      return;
+    _labelFrozen = true;
+    _notify();
+  }
+
+  void resumeAfterLabel() {
+    _labelFrozen = false;
+    latestObservation = null;
+    latestAnalysedImage = null;
+    _notify();
+  }
+
+  int _generation = 0;
+  int _postureChanges = 0;
+  int _posturePairs = 0;
+  String? _previousPosture;
+
+  int? get captureBusySkips => frameSource is PollingCameraFrameSource
+      ? (frameSource as PollingCameraFrameSource).captureBusySkips
+      : null;
+  int? get captureErrors => frameSource is PollingCameraFrameSource
+      ? (frameSource as PollingCameraFrameSource).captureErrors
+      : null;
+
+  Map<String, Object?> get benchmarkMetrics {
+    final report = performanceReport;
+    return {
+      'captureBusySkips': captureBusySkips,
+      'captureErrors': captureErrors,
+      'framesRequested': diagnostics.framesRequested,
+      'framesAnalysed': diagnostics.framesAnalysed,
+      'framesSkippedBusy': diagnostics.framesSkippedBusy,
+      'inferenceErrors': diagnostics.inferenceErrors,
+      'lastTotalMs': diagnostics.lastTotalMs,
+      'p50Ms': report.p50Ms,
+      'p95Ms': report.p95Ms,
+      'maxMs': report.maxMs,
+      'latencySamples': report.latencySamples,
+      'analysisYield': report.analysisYield,
+      'errorRate': report.errorRate,
+      'postureChanges': _postureChanges,
+      'posturePairs': _posturePairs,
+      'postureChangeRate': _posturePairs == 0
+          ? null
+          : _postureChanges / _posturePairs,
+      'errorRateDenominator': 'requested frames (including busy skips)',
+      'timingScope':
+          'preprocess+detect+track+pose+classify; excludes camera capture',
+      'battery': null,
+      'thermal': null,
+    };
+  }
+
+  Future<void> saveBenchmarkSnapshot() async {
+    await _labelWrite;
+    await _saveBenchmark();
+  }
+
+  Future<void> _saveBenchmark() async {
+    final context = benchmarkContext;
+    if (context == null) return;
+    final store = benchmarkRepository;
+    if (store == null) throw StateError('Benchmark repository is missing.');
+    await store.save(context, _benchmarkLabels, benchmarkMetrics);
+  }
+
+  Future<void> _serialize(Future<void> Function() action) {
+    final next = _lifecycle.then((_) => action());
+    _lifecycle = next.catchError((Object _) {});
+    return next;
+  }
 
   PoseShadowControllerStatus status = PoseShadowControllerStatus.off;
   PoseShadowDiagnostics diagnostics = const PoseShadowDiagnostics.empty();
@@ -112,6 +200,9 @@ class PoseShadowValidationController extends ChangeNotifier {
   final List<int> _successfulLatencyMs = <int>[];
 
   bool get canLabel =>
+      !_disposed &&
+      !_labelBusy &&
+      (benchmarkContext == null || _labelFrozen) &&
       status == PoseShadowControllerStatus.ready &&
       latestObservation != null &&
       latestObservation!.frameId != _lastLabelledFrameId;
@@ -129,23 +220,40 @@ class PoseShadowValidationController extends ChangeNotifier {
     if (!_disposed) notifyListeners();
   }
 
-  Future<void> start() async {
+  Future<void> start() => _serialize(_start);
+
+  Future<void> _start() async {
+    if (_disposed || _shutdown != null) return;
+    if (benchmarkContext != null && benchmarkContext!.dogId != dogId) {
+      throw StateError('Benchmark dog does not match the QA session.');
+    }
+    if ((benchmarkContext == null) != (benchmarkRepository == null)) {
+      throw StateError(
+        'Benchmark context and repository must be supplied together.',
+      );
+    }
     if (_running || status == PoseShadowControllerStatus.loading) return;
 
     status = PoseShadowControllerStatus.loading;
     error = null;
-    diagnostics = const PoseShadowDiagnostics.empty();
+    if (benchmarkContext == null)
+      diagnostics = const PoseShadowDiagnostics.empty();
     latestObservation = null;
     _lastLabelledFrameId = null;
-    _successfulLatencyMs.clear();
+    if (benchmarkContext == null) _successfulLatencyMs.clear();
+    _previousPosture = null;
+    _labelFrozen = false;
+    latestAnalysedImage = null;
     _notify();
 
     try {
-      summary = await repository.loadSummary(dogId);
+      if (benchmarkContext == null)
+        summary = await repository.loadSummary(dogId);
       await visionEngine.warmup();
+      if (_disposed || _shutdown != null) return;
       _unsubscribe = frameSource.subscribe(processFrame);
-      await frameSource.start();
       _running = true;
+      await frameSource.start();
       status = PoseShadowControllerStatus.ready;
       _notify();
     } catch (cause) {
@@ -164,7 +272,8 @@ class PoseShadowValidationController extends ChangeNotifier {
   }
 
   Future<void> processFrame(CameraFrame frame) async {
-    if (!_running || status != PoseShadowControllerStatus.ready) return;
+    if (!_running || status != PoseShadowControllerStatus.ready || _labelFrozen)
+      return;
 
     diagnostics = diagnostics.copyWith(
       framesRequested: diagnostics.framesRequested + 1,
@@ -178,17 +287,55 @@ class PoseShadowValidationController extends ChangeNotifier {
     }
 
     _inFlight = true;
+    final generation = _generation;
+    _inferenceDone = Completer<void>();
     final stopwatch = Stopwatch()..start();
     try {
+      Uint8List? image;
+      if (benchmarkContext != null && frame.uri != null) {
+        final uri = Uri.parse(frame.uri!);
+        if (uri.scheme != 'file' && uri.scheme.isNotEmpty) {
+          throw StateError('QA snapshot requires a local file.');
+        }
+        image =
+            await (uri.scheme.isEmpty ? File(frame.uri!) : File.fromUri(uri))
+                .readAsBytes();
+      }
       final result = await visionEngine.detect(frame);
+      if (result.frameId != frame.id ||
+          [
+            result.detectionConfidence,
+            result.postureConfidence,
+            result.trackingConfidence,
+          ].any(
+            (value) =>
+                value != null && (!value.isFinite || value < 0 || value > 1),
+          ) ||
+          (!result.dogDetected && result.posture != null) ||
+          (result.poseInferenceFailed && result.posture != null)) {
+        throw StateError('Invalid or inconsistent QA vision output.');
+      }
       stopwatch.stop();
+      if (!_running || generation != _generation || _disposed || _labelFrozen)
+        return;
+      latestAnalysedImage = image;
       latestObservation = result;
+      final posture = !result.dogDetected
+          ? 'noDog'
+          : result.posture?.name ?? 'unknown';
+      if (_previousPosture != null) {
+        _posturePairs++;
+        if (_previousPosture != posture) _postureChanges++;
+      }
+      _previousPosture = posture;
       _successfulLatencyMs.add(stopwatch.elapsedMilliseconds);
       if (_successfulLatencyMs.length > maximumPerformanceSamples) {
         _successfulLatencyMs.removeAt(0);
       }
       diagnostics = diagnostics.copyWith(
         framesAnalysed: diagnostics.framesAnalysed + 1,
+        inferenceErrors:
+            diagnostics.inferenceErrors + (result.poseInferenceFailed ? 1 : 0),
         lastInferenceAt: result.analysedAt,
         lastTotalMs: stopwatch.elapsedMilliseconds,
         lastDetectionConfidence: result.detectionConfidence,
@@ -197,6 +344,8 @@ class PoseShadowValidationController extends ChangeNotifier {
       _notify();
     } catch (cause) {
       stopwatch.stop();
+      if (!_running || generation != _generation || _disposed) return;
+      latestObservation = null;
       diagnostics = diagnostics.copyWith(
         inferenceErrors: diagnostics.inferenceErrors + 1,
         lastTotalMs: stopwatch.elapsedMilliseconds,
@@ -205,8 +354,12 @@ class PoseShadowValidationController extends ChangeNotifier {
       error = cause;
       _notify();
       await _stopFrameSource();
+      await _labelWrite;
+      await _saveBenchmark();
     } finally {
       _inFlight = false;
+      _inferenceDone?.complete();
+      _inferenceDone = null;
     }
   }
 
@@ -216,10 +369,10 @@ class PoseShadowValidationController extends ChangeNotifier {
     final observation = latestObservation;
     if (!canLabel || observation == null) return null;
 
+    _labelBusy = true;
     final recordedAt = _now().toUtc();
     final sample = PersistedPoseShadowValidationSample(
-      id:
-          'shadow-${observation.frameId}-${recordedAt.microsecondsSinceEpoch}',
+      id: 'shadow-${observation.frameId}-${recordedAt.microsecondsSinceEpoch}',
       dogId: dogId,
       lessonId: lessonId,
       expectedPosture: expectedPosture,
@@ -229,47 +382,87 @@ class PoseShadowValidationController extends ChangeNotifier {
       recordedAt: recordedAt.toIso8601String(),
     );
 
-    await repository.record(sample);
-    _lastLabelledFrameId = observation.frameId;
-    summary = await repository.loadSummary(dogId);
-    _notify();
-    return sample;
+    final write = () async {
+      // Mark before the first await to reject duplicate taps for this frame.
+      _lastLabelledFrameId = observation.frameId;
+      if (benchmarkContext != null) {
+        _benchmarkLabels.add({
+          'frameId': observation.frameId,
+          'recordedAt': sample.recordedAt,
+          'truth': groundTruth.name,
+          'dogDetected': observation.rawDogDetected ?? observation.dogDetected,
+          'trackedDog': observation.dogDetected,
+          'poseInferenceFailed': observation.poseInferenceFailed,
+          'detectionConfidence': observation.detectionConfidence,
+          'posture': observation.posture?.name,
+          'postureConfidence': observation.postureConfidence,
+          'trackingState': observation.trackingState?.name,
+          'analysisMs': diagnostics.lastTotalMs,
+        });
+        try {
+          await _saveBenchmark();
+        } catch (_) {
+          _benchmarkLabels.removeLast();
+          _lastLabelledFrameId = null;
+          rethrow;
+        }
+      } else {
+        await repository.record(sample);
+        summary = await repository.loadSummary(dogId);
+      }
+    }();
+    _labelWrite = write;
+    try {
+      await write;
+      if (benchmarkContext != null) resumeAfterLabel();
+      return sample;
+    } finally {
+      _labelBusy = false;
+      _labelWrite = null;
+      _notify();
+    }
   }
 
-  Future<void> stop() async {
+  Future<void> stop() => _serialize(_stop);
+
+  Future<void> _stop() async {
     await _stopFrameSource();
+    await _inferenceDone?.future;
+    if (frameSource is PollingCameraFrameSource) {
+      await (frameSource as PollingCameraFrameSource).drain();
+    }
+    await _labelWrite;
+    await _saveBenchmark();
     if (status != PoseShadowControllerStatus.error) {
       status = PoseShadowControllerStatus.off;
       _notify();
     }
   }
 
-  Future<void> shutdown() async {
-    await _stopFrameSource();
-    await visionEngine.dispose();
-    status = PoseShadowControllerStatus.off;
-    _notify();
-  }
+  Future<void> shutdown() => _shutdown ??= _serialize(() async {
+    try {
+      await _stop();
+    } finally {
+      await visionEngine.dispose();
+      status = PoseShadowControllerStatus.off;
+      _notify();
+    }
+  });
 
   Future<void> _stopFrameSource() async {
     _unsubscribe?.call();
     _unsubscribe = null;
+    _generation++;
+    latestObservation = null;
     if (!_running) return;
-
-    try {
-      await frameSource.stop();
-    } finally {
-      _running = false;
-    }
+    _running = false;
+    await frameSource.stop();
   }
 
   @override
   void dispose() {
     _disposed = true;
-    _unsubscribe?.call();
-    _unsubscribe = null;
-    unawaited(frameSource.stop());
-    unawaited(visionEngine.dispose());
+    unawaited(shutdown().catchError((Object _) {}));
     super.dispose();
   }
 }

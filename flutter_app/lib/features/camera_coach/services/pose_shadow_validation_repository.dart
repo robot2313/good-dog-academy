@@ -67,8 +67,9 @@ class PersistedPoseShadowValidationSample extends PoseShadowValidationSample {
     'dogId': dogId,
     'lessonId': lessonId,
     'expectedPosture': _postureValue(expectedPosture),
-    'predictedPosture':
-        predictedPosture == null ? 'unknown' : _postureValue(predictedPosture!),
+    'predictedPosture': predictedPosture == null
+        ? 'unknown'
+        : _postureValue(predictedPosture!),
     'confidence': confidence,
     'groundTruth': groundTruth == null ? null : _groundTruthValue(groundTruth!),
     'ownerLabel': ownerLabel?.name,
@@ -98,9 +99,7 @@ class PersistedPoseShadowValidationSample extends PoseShadowValidationSample {
             ),
       ownerLabel: ownerLabelValue == null
           ? null
-          : _ownerLabelFromValue(
-              _stringValue(ownerLabelValue, 'ownerLabel'),
-            ),
+          : _ownerLabelFromValue(_stringValue(ownerLabelValue, 'ownerLabel')),
       recordedAt: _requiredString(json, 'recordedAt'),
     );
     sample.validate();
@@ -111,6 +110,7 @@ class PersistedPoseShadowValidationSample extends PoseShadowValidationSample {
 class PoseShadowValidationRepository {
   const PoseShadowValidationRepository({
     required this.storage,
+    this.namespace = storageKey,
   });
 
   static const storageKey =
@@ -119,6 +119,7 @@ class PoseShadowValidationRepository {
   static const maximumSamplesPerDog = 500;
 
   final PoseShadowValidationStringStorage storage;
+  final String namespace;
 
   Future<List<PersistedPoseShadowValidationSample>> loadForDog(
     String dogId,
@@ -136,14 +137,15 @@ class PoseShadowValidationRepository {
     final root = await _readRoot();
     final current =
         root[sample.dogId] ?? const <PersistedPoseShadowValidationSample>[];
-    final next = <PersistedPoseShadowValidationSample>[
-      sample,
-      ...current.where((item) => item.id != sample.id),
-    ]..sort(
-        (a, b) => DateTime.parse(b.recordedAt).compareTo(
-          DateTime.parse(a.recordedAt),
-        ),
-      );
+    final next =
+        <PersistedPoseShadowValidationSample>[
+          sample,
+          ...current.where((item) => item.id != sample.id),
+        ]..sort(
+          (a, b) =>
+              DateTime.parse(b.recordedAt)
+                  .compareTo(DateTime.parse(a.recordedAt)),
+        );
     final limited = next.take(maximumSamplesPerDog).toList(growable: false);
 
     await _writeRoot(<String, List<PersistedPoseShadowValidationSample>>{
@@ -172,8 +174,8 @@ class PoseShadowValidationRepository {
   }
 
   Future<Map<String, List<PersistedPoseShadowValidationSample>>>
-      _readRoot() async {
-    final raw = await storage.read(storageKey);
+  _readRoot() async {
+    final raw = await storage.read(namespace);
     if (raw == null || raw.trim().isEmpty) {
       return <String, List<PersistedPoseShadowValidationSample>>{};
     }
@@ -186,8 +188,7 @@ class PoseShadowValidationRepository {
       final dogsValue = root['dogs'];
       if (dogsValue is! Map) return {};
 
-      final result =
-          <String, List<PersistedPoseShadowValidationSample>>{};
+      final result = <String, List<PersistedPoseShadowValidationSample>>{};
       for (final entry in dogsValue.entries) {
         final dogId = entry.key;
         final samplesValue = entry.value;
@@ -206,9 +207,9 @@ class PoseShadowValidationRepository {
           }
         }
         valid.sort(
-          (a, b) => DateTime.parse(b.recordedAt).compareTo(
-            DateTime.parse(a.recordedAt),
-          ),
+          (a, b) =>
+              DateTime.parse(b.recordedAt)
+                  .compareTo(DateTime.parse(a.recordedAt)),
         );
         if (valid.isNotEmpty) {
           result[dogId] = valid
@@ -226,13 +227,12 @@ class PoseShadowValidationRepository {
     Map<String, List<PersistedPoseShadowValidationSample>> root,
   ) {
     return storage.write(
-      storageKey,
+      namespace,
       jsonEncode(<String, Object?>{
         'schemaVersion': schemaVersion,
         'dogs': <String, Object?>{
           for (final entry in root.entries)
-            entry.key:
-                entry.value.map((sample) => sample.toJson()).toList(),
+            entry.key: entry.value.map((sample) => sample.toJson()).toList(),
         },
       }),
     );
@@ -253,8 +253,8 @@ DogPosture _postureFromValue(String value) {
     'sit_like' => DogPosture.sitLike,
     'down_like' => DogPosture.downLike,
     _ => throw const PoseShadowValidationException(
-        'Unknown expected dog posture.',
-      ),
+      'Unknown expected dog posture.',
+    ),
   };
 }
 
@@ -281,8 +281,8 @@ PoseShadowGroundTruth _groundTruthFromValue(String value) {
     'no_dog' => PoseShadowGroundTruth.noDog,
     'unsure' => PoseShadowGroundTruth.unsure,
     _ => throw const PoseShadowValidationException(
-        'Unknown shadow-validation ground truth.',
-      ),
+      'Unknown shadow-validation ground truth.',
+    ),
   };
 }
 
@@ -291,8 +291,8 @@ PoseShadowOwnerLabel _ownerLabelFromValue(String value) {
     'correct' => PoseShadowOwnerLabel.correct,
     'incorrect' => PoseShadowOwnerLabel.incorrect,
     _ => throw const PoseShadowValidationException(
-        'Unknown shadow-validation owner label.',
-      ),
+      'Unknown shadow-validation owner label.',
+    ),
   };
 }
 

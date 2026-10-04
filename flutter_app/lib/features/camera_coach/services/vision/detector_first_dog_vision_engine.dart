@@ -64,11 +64,14 @@ class DetectorFirstDogVisionEngine implements DogVisionEngine {
       required bool dogDetected,
       required DogPosture? posture,
       required double? postureConfidence,
+      bool poseInferenceFailed = false,
     }) {
       return DogVisionResult(
         frameId: frame.id,
         analysedAt: _nowIso(),
         dogDetected: dogDetected,
+        rawDogDetected: detectorResult.detections.isNotEmpty,
+        poseInferenceFailed: poseInferenceFailed,
         detectionConfidence: bestDetection?.confidence,
         dogBoundingBox: tracking.box,
         detectionSource: DogDetectionSource.dedicatedDetector,
@@ -86,11 +89,7 @@ class DetectorFirstDogVisionEngine implements DogVisionEngine {
         tracking.state == DogTrackingState.tracking;
 
     if (tracking.box == null || !stableDetectionState) {
-      return common(
-        dogDetected: false,
-        posture: null,
-        postureConfidence: null,
-      );
+      return common(dogDetected: false, posture: null, postureConfidence: null);
     }
 
     try {
@@ -113,6 +112,7 @@ class DetectorFirstDogVisionEngine implements DogVisionEngine {
     } catch (_) {
       // Detector truth remains valid even if pose inference temporarily fails.
       return common(
+        poseInferenceFailed: true,
         dogDetected: true,
         posture: null,
         postureConfidence: null,

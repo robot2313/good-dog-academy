@@ -27,11 +27,15 @@ class DogVisionResult {
     this.detectionSource,
     this.trackingConfidence,
     this.trackingState,
+    this.rawDogDetected,
+    this.poseInferenceFailed = false,
   });
 
   final String frameId;
   final String analysedAt;
   final bool dogDetected;
+  final bool? rawDogDetected;
+  final bool poseInferenceFailed;
   final double? detectionConfidence;
   final NormalizedDogBox? dogBoundingBox;
   final DogDetectionSource? detectionSource;

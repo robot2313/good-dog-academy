@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../core/theme/gda_theme.dart';
+import '../features/camera_coach/pose_shadow_calibration_screen.dart';
+import '../features/camera_coach/services/vision/qa_vision_candidate.dart';
 import '../features/identity/app_identity_controller.dart';
 import '../features/discovery/categories_screen.dart';
 import '../features/discovery/dog_stages_screen.dart';
@@ -29,6 +31,22 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: visionBenchmarkEnabled
+          ? FloatingActionButton.small(
+              tooltip: 'Engineering vision QA',
+              onPressed: () {
+                final dog = AppIdentityScope.maybeOf(context)?.selectedDogId;
+                if (dog == null) return;
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) =>
+                        PoseShadowCalibrationScreen.benchmark(dogId: dog),
+                  ),
+                );
+              },
+              child: const Icon(Icons.science_outlined),
+            )
+          : null,
       body: IndexedStack(
         index: currentIndex,
         children: [

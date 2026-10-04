@@ -1,3 +1,9 @@
 .dart_tool/
 build/
 .flutter-plugins-dependencies
+
+# Candidate model artifacts are private, explicitly provisioned and never committed.
+assets/models/qa/
+*.onnx
+*.pth
+*.pt

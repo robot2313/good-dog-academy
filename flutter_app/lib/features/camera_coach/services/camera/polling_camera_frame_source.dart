@@ -43,6 +43,13 @@ class PollingCameraFrameSource implements CameraFrameSource {
   bool _running = false;
   bool _captureInFlight = false;
   int _sequence = 0;
+  int captureBusySkips = 0;
+  int captureErrors = 0;
+  Completer<void>? _captureDone;
+
+  /// Call only outside a frame listener, after stop(). This also waits for
+  /// a native snapshot already in progress before disposing the camera.
+  Future<void> drain() async => await _captureDone?.future;
 
   bool get running => _running;
 
@@ -82,9 +89,13 @@ class PollingCameraFrameSource implements CameraFrameSource {
   Future<void> captureNow() => _captureOnce();
 
   Future<void> _captureOnce() async {
-    if (!_running || _captureInFlight) return;
-
+    if (!_running) return;
+    if (_captureInFlight) {
+      captureBusySkips++;
+      return;
+    }
     _captureInFlight = true;
+    _captureDone = Completer<void>();
     CapturedCameraSnapshot? snapshot;
     try {
       snapshot = await capture();
@@ -109,6 +120,7 @@ class PollingCameraFrameSource implements CameraFrameSource {
         await listener(frame);
       }
     } catch (_) {
+      captureErrors++;
       // A single camera capture or consumer failure must not terminate Camera
       // Coach. The next polling interval can try again.
     } finally {
@@ -120,6 +132,8 @@ class PollingCameraFrameSource implements CameraFrameSource {
         }
       }
       _captureInFlight = false;
+      _captureDone?.complete();
+      _captureDone = null;
     }
   }
 
