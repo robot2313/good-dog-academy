@@ -11,9 +11,12 @@ import 'domain/expected_cue_response.dart';
 import 'domain/live_coach_engine.dart';
 import 'services/camera/flutter_camera_capture_adapter.dart';
 import 'services/flutter_coach_speech.dart';
+import 'services/flutter_training_speech_recognizer.dart';
+import 'services/hands_free_coach_controller.dart';
 import 'services/camera_coach_experience_controller.dart';
 import 'services/camera_coach_runtime_controller.dart';
 import 'services/camera_coach_session_persistence_service.dart';
+import 'services/camera_coach_voice_command_router.dart';
 import 'services/spoken_coach_controller.dart';
 import 'services/vision/dog_vision_engine.dart';
 
@@ -54,12 +57,14 @@ class _CameraCoachScreenState extends State<CameraCoachScreen>
     with WidgetsBindingObserver {
   FlutterCameraCaptureAdapter? _camera;
   CameraCoachExperienceController? _experience;
+  CameraCoachVoiceCommandRouter? _voiceRouter;
   LessonProgressController? _progress;
 
   bool _bootstrapStarted = false;
   bool _initializing = true;
   bool _closing = false;
   bool _resumeAfterLifecyclePause = false;
+  bool _resumeHandsFreeAfterLifecycle = false;
   Object? _setupError;
   Future<void> _lifecycleSerial = Future<void>.value();
 
@@ -132,8 +137,18 @@ class _CameraCoachScreenState extends State<CameraCoachScreen>
         dailyPlanId: widget.dailyPlanId,
         allowPrerequisiteBypass: widget.allowPrerequisiteBypass,
       );
+      final voiceRouter = CameraCoachVoiceCommandRouter(
+        handsFree: HandsFreeCoachController(
+          FlutterTrainingSpeechRecognizer(),
+        ),
+        actions: ExperienceCameraCoachVoiceActions(experience),
+        sessionChanges: experience,
+      );
+      voiceRouter.addListener(_voiceRouterChanged);
+
       experience.addListener(_experienceChanged);
       _experience = experience;
+      _voiceRouter = voiceRouter;
 
       if (mounted) {
         setState(() {
@@ -158,6 +173,10 @@ class _CameraCoachScreenState extends State<CameraCoachScreen>
   }
 
   void _experienceChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _voiceRouterChanged() {
     if (mounted) setState(() {});
   }
 
@@ -188,7 +207,13 @@ class _CameraCoachScreenState extends State<CameraCoachScreen>
   Future<void> _suspendForLifecycle() async {
     final experience = _experience;
     final camera = _camera;
+    final voiceRouter = _voiceRouter;
     if (experience == null || camera == null) return;
+
+    _resumeHandsFreeAfterLifecycle = voiceRouter?.enabled ?? false;
+    if (_resumeHandsFreeAfterLifecycle) {
+      await voiceRouter!.setEnabled(false);
+    }
 
     final status = experience.runtime.status;
     _resumeAfterLifecyclePause =
@@ -205,16 +230,26 @@ class _CameraCoachScreenState extends State<CameraCoachScreen>
   }
 
   Future<void> _resumeFromLifecycle() async {
-    if (!_resumeAfterLifecyclePause || _closing) return;
+    if ((!_resumeAfterLifecyclePause && !_resumeHandsFreeAfterLifecycle) ||
+        _closing) {
+      return;
+    }
 
     final experience = _experience;
     final camera = _camera;
+    final voiceRouter = _voiceRouter;
     if (experience == null || camera == null) return;
 
     try {
       await camera.initialize();
-      await experience.resume();
+      if (_resumeAfterLifecyclePause) {
+        await experience.resume();
+      }
+      if (_resumeHandsFreeAfterLifecycle && voiceRouter != null) {
+        await voiceRouter.setEnabled(true);
+      }
       _resumeAfterLifecyclePause = false;
+      _resumeHandsFreeAfterLifecycle = false;
       if (mounted) setState(() => _setupError = null);
     } catch (cause) {
       if (mounted) setState(() => _setupError = cause);
@@ -256,6 +291,13 @@ class _CameraCoachScreenState extends State<CameraCoachScreen>
     await _experience?.retrySave();
   }
 
+  Future<void> _setHandsFreeEnabled(bool enabled) async {
+    final router = _voiceRouter;
+    if (router == null) return;
+    await router.setEnabled(enabled);
+    if (mounted) setState(() {});
+  }
+
   bool _safeToLeave(CameraCoachSaveState state) {
     return state == CameraCoachSaveState.saved ||
         state == CameraCoachSaveState.qaComplete ||
@@ -265,6 +307,11 @@ class _CameraCoachScreenState extends State<CameraCoachScreen>
   Future<void> _finishAndClose() async {
     if (_closing) return;
     _closing = true;
+
+    final voiceRouter = _voiceRouter;
+    if (voiceRouter?.enabled ?? false) {
+      await voiceRouter!.setEnabled(false);
+    }
 
     final experience = _experience;
     if (experience != null &&
@@ -298,13 +345,18 @@ class _CameraCoachScreenState extends State<CameraCoachScreen>
 
     final experience = _experience;
     final camera = _camera;
+    final voiceRouter = _voiceRouter;
     _experience = null;
     _camera = null;
+    _voiceRouter = null;
 
     if (experience != null) {
       experience.removeListener(_experienceChanged);
     }
-    unawaited(_releaseResources(experience, camera));
+    if (voiceRouter != null) {
+      voiceRouter.removeListener(_voiceRouterChanged);
+    }
+    unawaited(_releaseResources(experience, camera, voiceRouter));
 
     super.dispose();
   }
@@ -312,7 +364,10 @@ class _CameraCoachScreenState extends State<CameraCoachScreen>
   Future<void> _releaseResources(
     CameraCoachExperienceController? experience,
     FlutterCameraCaptureAdapter? camera,
+    CameraCoachVoiceCommandRouter? voiceRouter,
   ) async {
+    await voiceRouter?.shutdown();
+    voiceRouter?.dispose();
     await experience?.shutdown();
     await camera?.shutdown();
     camera?.dispose();
@@ -363,7 +418,12 @@ class _CameraCoachScreenState extends State<CameraCoachScreen>
       children: [
         _cameraPreview(),
         const SizedBox(height: 14),
-        _StatusCard(runtime: runtime, experience: experience),
+        _StatusCard(
+          runtime: runtime,
+          experience: experience,
+          voiceRouter: _voiceRouter,
+          onHandsFreeChanged: _setHandsFreeEnabled,
+        ),
         if (_setupError != null) ...[
           const SizedBox(height: 12),
           const _Notice(
@@ -396,6 +456,14 @@ class _CameraCoachScreenState extends State<CameraCoachScreen>
   Future<void> _retryBootstrap() async {
     final progress = _progress;
     if (progress == null || _initializing) return;
+
+    final oldVoiceRouter = _voiceRouter;
+    _voiceRouter = null;
+    if (oldVoiceRouter != null) {
+      oldVoiceRouter.removeListener(_voiceRouterChanged);
+      await oldVoiceRouter.shutdown();
+      oldVoiceRouter.dispose();
+    }
 
     final oldExperience = _experience;
     _experience = null;
@@ -472,10 +540,14 @@ class _StatusCard extends StatelessWidget {
   const _StatusCard({
     required this.runtime,
     required this.experience,
+    required this.voiceRouter,
+    required this.onHandsFreeChanged,
   });
 
   final CameraCoachRuntimeController runtime;
   final CameraCoachExperienceController experience;
+  final CameraCoachVoiceCommandRouter? voiceRouter;
+  final Future<void> Function(bool enabled) onHandsFreeChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -510,6 +582,19 @@ class _StatusCard extends StatelessWidget {
             Text(
               framing?.instruction ?? _runtimeMessage(runtime.status),
               style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 8),
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Hands-free commands'),
+              subtitle: Text(
+                voiceRouter?.feedback?.message ??
+                    'Say next rep, pause, resume, repeat, stop, or confirm a rep.',
+              ),
+              value: voiceRouter?.enabled ?? false,
+              onChanged: runtime.status == CameraCoachRuntimeStatus.complete
+                  ? null
+                  : onHandsFreeChanged,
             ),
             if (experience.saveState == CameraCoachSaveState.saving) ...[
               const SizedBox(height: 10),
