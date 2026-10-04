@@ -81,24 +81,46 @@ jobs:
 
           manifest = Path('/tmp/gda_flutter/android/app/src/main/AndroidManifest.xml')
           xml = manifest.read_text()
-          record_audio = 'android.permission.RECORD_AUDIO'
-          if record_audio not in xml:
-              manifest_tag = '<manifest xmlns:android="http://schemas.android.com/apk/res/android">'
-              if manifest_tag not in xml:
-                  raise SystemExit('Could not find generated Android manifest tag')
-              permission = '    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n'
-              xml = xml.replace(manifest_tag, manifest_tag + '\n' + permission, 1)
+          manifest_tag = '<manifest xmlns:android="http://schemas.android.com/apk/res/android">'
+          if manifest_tag not in xml:
+              raise SystemExit('Could not find generated Android manifest tag')
+
+          permissions = [
+              'android.permission.RECORD_AUDIO',
+              'android.permission.INTERNET',
+          ]
+          missing_permissions = [
+              f'    <uses-permission android:name="{permission}" />'
+              for permission in permissions
+              if permission not in xml
+          ]
+          if missing_permissions:
+              xml = xml.replace(
+                  manifest_tag,
+                  manifest_tag + '\n' + '\n'.join(missing_permissions),
+                  1,
+              )
+
+          application = '    <application'
+          if application not in xml:
+              raise SystemExit('Could not find generated Android application element')
+
+          query_actions = []
           if 'android.intent.action.TTS_SERVICE' not in xml:
-              application = '    <application'
-              if application not in xml:
-                  raise SystemExit('Could not find generated Android application element')
-              queries = '''    <queries>
-                  <intent>
-                      <action android:name="android.intent.action.TTS_SERVICE" />
-                  </intent>
-              </queries>
-          '''
-              manifest.write_text(xml.replace(application, queries + application, 1))
+              query_actions.append('android.intent.action.TTS_SERVICE')
+          if 'android.speech.RecognitionService' not in xml:
+              query_actions.append('android.speech.RecognitionService')
+          if query_actions:
+              intents = ''.join(
+                  '        <intent>\n'
+                  f'            <action android:name="{action}" />\n'
+                  '        </intent>\n'
+                  for action in query_actions
+              )
+              queries = '    <queries>\n' + intents + '    </queries>\n'
+              xml = xml.replace(application, queries + application, 1)
+
+          manifest.write_text(xml)
           PY
 
       - name: Get dependencies
