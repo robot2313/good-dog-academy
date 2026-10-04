@@ -22,7 +22,7 @@ Future<File> _imageFile(
       ..g = green
       ..b = blue;
   }
-  final file = File(directory.path + '/frame.jpg');
+  final file = File('${directory.path}/frame.jpg');
   await file.writeAsBytes(img.encodeJpg(image, quality: 100));
   return file;
 }
@@ -114,7 +114,7 @@ void main() {
   });
 
   test('corrupt camera file fails closed during decode', () async {
-    final file = File(temp.path + '/bad.jpg');
+    final file = File('${temp.path}/bad.jpg');
     await file.writeAsBytes(<int>[1, 2, 3, 4, 5]);
 
     await expectLater(
