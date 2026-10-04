@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:good_dog_academy/features/camera_coach/domain/owner_voice_intent.dart';
 import 'package:good_dog_academy/features/camera_coach/services/camera_coach_runtime_controller.dart';
 import 'package:good_dog_academy/features/camera_coach/services/camera_coach_voice_command_router.dart';
 import 'package:good_dog_academy/features/camera_coach/services/hands_free_coach_controller.dart';
