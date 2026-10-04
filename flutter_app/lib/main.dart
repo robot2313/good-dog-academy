@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'core/theme/gda_theme.dart';
+import 'features/camera_coach/services/vision/model_readiness.dart';
+import 'features/camera_coach/services/vision/production_vision_capability.dart';
+import 'features/camera_coach/services/vision/production_vision_models.dart';
 import 'features/lessons/progress/lesson_progress_controller.dart';
 import 'features/assessment/assessment_controller.dart';
 import 'features/assessment/assessment_repository.dart';
@@ -57,12 +60,14 @@ class GoodDogAcademyApp extends StatefulWidget {
     this.identityController,
     this.assessmentController,
     this.dailyPlanController,
+    this.cameraCoachVisionBundle = productionDogVisionBundle,
   });
 
   final LessonProgressController? progressController;
   final AppIdentityController? identityController;
   final AssessmentController? assessmentController;
   final DailyPlanController? dailyPlanController;
+  final ReviewedDogVisionBundle? cameraCoachVisionBundle;
 
   @override
   State<GoodDogAcademyApp> createState() => _GoodDogAcademyAppState();
@@ -148,6 +153,14 @@ class _GoodDogAcademyAppState extends State<GoodDogAcademyApp> {
       );
     }
 
-    return LessonProgressScope(controller: controller, child: scopedApp);
+    final appWithProgress = LessonProgressScope(
+      controller: controller,
+      child: scopedApp,
+    );
+
+    return withReviewedCameraCoachCapability(
+      bundle: widget.cameraCoachVisionBundle,
+      child: appWithProgress,
+    );
   }
 }
