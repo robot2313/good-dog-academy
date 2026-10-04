@@ -121,18 +121,19 @@ jobs:
               xml = xml.replace(application, queries + application, 1)
 
           manifest.write_text(xml)
+
+          proguard = Path('/tmp/gda_flutter/android/app/proguard-rules.pro')
+          rule = '-keep class ai.onnxruntime.** { *; }'
+          existing = proguard.read_text() if proguard.exists() else ''
+          if rule not in existing:
+              if existing and not existing.endswith('\n'):
+                  existing += '\n'
+              proguard.write_text(existing + rule + '\n')
           PY
 
       - name: Get dependencies
         working-directory: /tmp/gda_flutter
         run: flutter pub get
-
-      - name: Upload refreshed Flutter lockfile
-        uses: actions/upload-artifact@v4
-        with:
-          name: good-dog-academy-flutter-refreshed-lock
-          path: /tmp/gda_flutter/pubspec.lock
-          retention-days: 1
 
       - name: Verify Flutter lockfile is current
         run: cmp flutter_app/pubspec.lock /tmp/gda_flutter/pubspec.lock
