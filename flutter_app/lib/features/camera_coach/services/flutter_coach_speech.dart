@@ -7,6 +7,7 @@ abstract interface class FlutterTtsDriver {
   Future<void> setSpeechRate(double rate);
   Future<void> setVolume(double volume);
   Future<void> setPitch(double pitch);
+  Future<void> awaitSpeakCompletion(bool enabled);
   Future<void> speak(String text);
   Future<void> stop();
 }
@@ -34,6 +35,11 @@ class PluginFlutterTtsDriver implements FlutterTtsDriver {
   @override
   Future<void> setPitch(double pitch) async {
     await _tts.setPitch(pitch);
+  }
+
+  @override
+  Future<void> awaitSpeakCompletion(bool enabled) async {
+    await _tts.awaitSpeakCompletion(enabled);
   }
 
   @override
@@ -109,6 +115,7 @@ class FlutterCoachSpeech implements CoachSpeech {
     await _bestEffort(() => _driver.setLanguage(locale));
     await _bestEffort(() => _driver.setVolume(1));
     await _bestEffort(() => _driver.setPitch(1));
+    await _bestEffort(() => _driver.awaitSpeakCompletion(true));
     _configured = true;
   }
 
