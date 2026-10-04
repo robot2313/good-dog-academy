@@ -29,7 +29,7 @@ PersistedPoseShadowValidationSample _sample(
     predictedPosture: DogPosture.sitLike,
     confidence: confidence,
     groundTruth: groundTruth,
-    recordedAt: '2026-10-04T10:00:${id}.000Z',
+    recordedAt: '2026-10-04T10:00:$id.000Z',
   );
 }
 
@@ -106,7 +106,7 @@ void main() {
       ).toIso8601String();
       await repository.record(
         PersistedPoseShadowValidationSample(
-          id: 'sit-${suffix}',
+          id: 'sit-$suffix',
           dogId: 'dog-1',
           lessonId: 'sit-1',
           expectedPosture: DogPosture.sitLike,
@@ -139,7 +139,7 @@ void main() {
           .toIso8601String();
       await repository.record(
         PersistedPoseShadowValidationSample(
-          id: 'sample-${index}',
+          id: 'sample-$index',
           dogId: 'dog-1',
           lessonId: 'sit-1',
           expectedPosture: DogPosture.sitLike,

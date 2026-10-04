@@ -9,7 +9,7 @@ PoseShadowValidationSample _sample(
   double confidence = 0.93,
 }) {
   return PoseShadowValidationSample(
-    id: 'sample-${index}',
+    id: 'sample-$index',
     expectedPosture: DogPosture.sitLike,
     predictedPosture: predicted,
     confidence: confidence,
@@ -124,7 +124,7 @@ void main() {
     final samples = <PoseShadowValidationSample>[
       for (var index = 0; index < 50; index++)
         PoseShadowValidationSample(
-          id: 'sit-${index}',
+          id: 'sit-$index',
           expectedPosture: DogPosture.sitLike,
           predictedPosture: DogPosture.sitLike,
           confidence: 0.95,
