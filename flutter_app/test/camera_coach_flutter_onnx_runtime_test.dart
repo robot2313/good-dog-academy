@@ -74,7 +74,8 @@ void main() {
       const <int>[1, 2],
     );
 
-    expect(output.data, <double>[0.9, 0.8]);
+    expect(output.data[0], closeTo(0.9, 0.000001));
+    expect(output.data[1], closeTo(0.8, 0.000001));
     expect(output.dimensions, <int>[1, 17, 1, 2]);
 
     await runtime.dispose();
