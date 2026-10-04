@@ -10,9 +10,11 @@ import 'domain/camera_coach_orchestrator.dart';
 import 'domain/expected_cue_response.dart';
 import 'domain/live_coach_engine.dart';
 import 'services/camera/flutter_camera_capture_adapter.dart';
+import 'services/flutter_coach_speech.dart';
 import 'services/camera_coach_experience_controller.dart';
 import 'services/camera_coach_runtime_controller.dart';
 import 'services/camera_coach_session_persistence_service.dart';
+import 'services/spoken_coach_controller.dart';
 import 'services/vision/dog_vision_engine.dart';
 
 typedef CameraCoachVisionEngineFactory = DogVisionEngine Function();
@@ -118,6 +120,7 @@ class _CameraCoachScreenState extends State<CameraCoachScreen>
         orchestrator: orchestrator,
         dogName: widget.dogName,
         cueResponse: expectedCueResponseForLesson(widget.lessonId),
+        spokenCoach: SpokenCoachController(FlutterCoachSpeech()),
       );
       final experience = CameraCoachExperienceController(
         runtime: runtime,
