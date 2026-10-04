@@ -207,16 +207,19 @@ class CameraCoachVoiceCommandRouter extends ChangeNotifier {
           TrainingOutcome.success,
           intentEvent.transcript,
         );
+        break;
       case OwnerVoiceIntent.partialSuccess:
         await _confirm(
           TrainingOutcome.partialSuccess,
           intentEvent.transcript,
         );
+        break;
       case OwnerVoiceIntent.unsuccessful:
         await _confirm(
           TrainingOutcome.unsuccessful,
           intentEvent.transcript,
         );
+        break;
       case OwnerVoiceIntent.nextRep:
         if (actions.status != CameraCoachRuntimeStatus.ready) {
           _blocked(
@@ -236,6 +239,7 @@ class CameraCoachVoiceCommandRouter extends ChangeNotifier {
             intentEvent.transcript,
           );
         }
+        break;
       case OwnerVoiceIntent.pause:
         if (_canPause(actions.status)) {
           await actions.pause();
@@ -246,6 +250,7 @@ class CameraCoachVoiceCommandRouter extends ChangeNotifier {
             intentEvent.transcript,
           );
         }
+        break;
       case OwnerVoiceIntent.resume:
         if (actions.status == CameraCoachRuntimeStatus.paused) {
           await actions.resume();
@@ -256,6 +261,7 @@ class CameraCoachVoiceCommandRouter extends ChangeNotifier {
             intentEvent.transcript,
           );
         }
+        break;
       case OwnerVoiceIntent.repeat:
         if (await actions.repeatLastCoachMessage()) {
           _handled('Repeated the last trainer message.', intentEvent.transcript);
@@ -265,6 +271,7 @@ class CameraCoachVoiceCommandRouter extends ChangeNotifier {
             intentEvent.transcript,
           );
         }
+        break;
       case OwnerVoiceIntent.stop:
         if (actions.status != CameraCoachRuntimeStatus.complete) {
           await actions.stop();
@@ -272,6 +279,7 @@ class CameraCoachVoiceCommandRouter extends ChangeNotifier {
         }
         shouldRearm = false;
         _enabled = false;
+        break;
       case OwnerVoiceIntent.unknown:
         _setFeedback(
           CameraCoachVoiceFeedback(
@@ -280,6 +288,7 @@ class CameraCoachVoiceCommandRouter extends ChangeNotifier {
             transcript: intentEvent.transcript,
           ),
         );
+        break;
     }
 
     _notify();
