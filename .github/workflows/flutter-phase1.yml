@@ -81,6 +81,13 @@ jobs:
 
           manifest = Path('/tmp/gda_flutter/android/app/src/main/AndroidManifest.xml')
           xml = manifest.read_text()
+          record_audio = 'android.permission.RECORD_AUDIO'
+          if record_audio not in xml:
+              manifest_tag = '<manifest xmlns:android="http://schemas.android.com/apk/res/android">'
+              if manifest_tag not in xml:
+                  raise SystemExit('Could not find generated Android manifest tag')
+              permission = '    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n'
+              xml = xml.replace(manifest_tag, manifest_tag + '\n' + permission, 1)
           if 'android.intent.action.TTS_SERVICE' not in xml:
               application = '    <application'
               if application not in xml:
@@ -97,6 +104,13 @@ jobs:
       - name: Get dependencies
         working-directory: /tmp/gda_flutter
         run: flutter pub get
+
+      - name: Upload resolved Flutter speech-recognition lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: good-dog-academy-flutter-speech-recognition-lock
+          path: /tmp/gda_flutter/pubspec.lock
+          retention-days: 1
 
       - name: Verify Flutter lockfile is current
         run: cmp flutter_app/pubspec.lock /tmp/gda_flutter/pubspec.lock
