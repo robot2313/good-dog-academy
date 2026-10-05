@@ -137,6 +137,35 @@ jobs:
               proguard.write_text(existing + rule + '\n')
           PY
 
+      - name: Provision private Model A QA assets
+        if: ${{ inputs.vision_qa == true }}
+        run: |
+          python3 -m venv "$RUNNER_TEMP/gda-model-a-venv"
+          "$RUNNER_TEMP/gda-model-a-venv/bin/pip" install \
+            onnx==1.23.1 \
+            onnxruntime==1.30.0 \
+            numpy
+          "$RUNNER_TEMP/gda-model-a-venv/bin/python" \
+            tools/vision_qa/provision_model_a.py \
+            --cache "$RUNNER_TEMP/gda-model-a-cache" \
+            --output /tmp/gda_flutter/assets/vision-qa-model-a
+
+          python3 - <<'PY2'
+          from pathlib import Path
+
+          pubspec = Path('/tmp/gda_flutter/pubspec.yaml')
+          text = pubspec.read_text()
+          entry = '    - assets/vision-qa-model-a/\n'
+
+          if entry not in text:
+              needle = '  assets:\n'
+              if needle not in text:
+                  raise SystemExit('Expected Flutter assets section')
+              text = text.replace(needle, needle + entry, 1)
+
+          pubspec.write_text(text)
+          PY2
+
       - name: Get dependencies
         working-directory: /tmp/gda_flutter
         run: flutter pub get
@@ -160,7 +189,9 @@ jobs:
         working-directory: /tmp/gda_flutter
         run: |
           if [ "${{ inputs.vision_qa }}" = "true" ]; then
-            flutter build apk --debug --dart-define=GDA_VISION_QA=true
+            flutter build apk --debug \
+              --dart-define=GDA_VISION_QA=true \
+              --dart-define=GDA_VISION_MODEL_A=true
           else
             flutter build apk --debug
           fi
