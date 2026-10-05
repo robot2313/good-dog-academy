@@ -503,6 +503,22 @@ class _PoseShadowCalibrationScreenState
           const SizedBox(height: 12),
           _PredictionCard(controller: controller),
           const SizedBox(height: 12),
+          if (_benchmark) ...[
+            FilledButton.tonal(
+              onPressed:
+                  controller.status == PoseShadowControllerStatus.ready &&
+                      controller.latestObservation != null &&
+                      !controller.labelFrozen
+                  ? controller.freezeForLabel
+                  : null,
+              child: Text(
+                controller.labelFrozen
+                    ? 'Prediction locked · choose the correct label below'
+                    : 'Lock current prediction for labelling',
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           _GroundTruthCard(enabled: controller.canLabel, onRecord: _record),
           const SizedBox(height: 12),
           if (_benchmark)
