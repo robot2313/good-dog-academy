@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
-import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
@@ -32,8 +31,9 @@ const _poseHash =
 /// QA-only composition of existing tracker/classifier/runtime. No lesson,
 /// coaching, rewards, persistence or adaptive services are available here.
 DogVisionEngine createRtmQaEngine() {
-  if (!rtmQaRequested)
+  if (!rtmQaRequested) {
     throw StateError('Model A requires a private debug QA build');
+  }
   return _VerifiedRtmQaEngine(
     DetectorFirstDogVisionEngine(
       detector: RtmQaDogDetector(
@@ -72,8 +72,9 @@ Future<void> verifyRtmQaAssets(AssetBundle bundle) async {
   final metadata = jsonDecode(
     await bundle.loadString('$_assetRoot/manifest.json'),
   );
-  if (metadata is! Map<String, dynamic>)
+  if (metadata is! Map<String, dynamic>) {
     throw const FormatException('Missing QA metadata');
+  }
   validateRtmQaMetadata(metadata);
   for (final artifact in {
     'rtmdet-tiny.onnx': _detectorHash,
@@ -211,12 +212,14 @@ class RtmQaPoseModel implements QuadrupedPoseModel {
 
 String _framePath(CameraFrame frame) {
   final value = frame.uri;
-  if (value == null || value.trim().isEmpty)
+  if (value == null || value.trim().isEmpty) {
     throw const FormatException('Missing camera frame');
+  }
   final uri = Uri.parse(value);
   if (uri.scheme.isEmpty) return value;
-  if (uri.scheme != 'file')
+  if (uri.scheme != 'file') {
     throw const FormatException('Expected local camera frame');
+  }
   return File.fromUri(uri).path;
 }
 

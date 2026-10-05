@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 
@@ -111,8 +110,9 @@ class PoseShadowValidationController extends ChangeNotifier {
   bool get labelFrozen => _labelFrozen;
 
   void freezeForLabel() {
-    if (status != PoseShadowControllerStatus.ready || latestObservation == null)
+    if (status != PoseShadowControllerStatus.ready || latestObservation == null) {
       return;
+    }
     _labelFrozen = true;
     _notify();
   }
@@ -236,8 +236,9 @@ class PoseShadowValidationController extends ChangeNotifier {
 
     status = PoseShadowControllerStatus.loading;
     error = null;
-    if (benchmarkContext == null)
+    if (benchmarkContext == null) {
       diagnostics = const PoseShadowDiagnostics.empty();
+    }
     latestObservation = null;
     _lastLabelledFrameId = null;
     if (benchmarkContext == null) _successfulLatencyMs.clear();
@@ -247,8 +248,9 @@ class PoseShadowValidationController extends ChangeNotifier {
     _notify();
 
     try {
-      if (benchmarkContext == null)
+      if (benchmarkContext == null) {
         summary = await repository.loadSummary(dogId);
+      }
       await visionEngine.warmup();
       if (_disposed || _shutdown != null) return;
       _unsubscribe = frameSource.subscribe(processFrame);
@@ -272,8 +274,9 @@ class PoseShadowValidationController extends ChangeNotifier {
   }
 
   Future<void> processFrame(CameraFrame frame) async {
-    if (!_running || status != PoseShadowControllerStatus.ready || _labelFrozen)
+    if (!_running || status != PoseShadowControllerStatus.ready || _labelFrozen) {
       return;
+    }
 
     diagnostics = diagnostics.copyWith(
       framesRequested: diagnostics.framesRequested + 1,
@@ -316,8 +319,9 @@ class PoseShadowValidationController extends ChangeNotifier {
         throw StateError('Invalid or inconsistent QA vision output.');
       }
       stopwatch.stop();
-      if (!_running || generation != _generation || _disposed || _labelFrozen)
+      if (!_running || generation != _generation || _disposed || _labelFrozen) {
         return;
+      }
       latestAnalysedImage = image;
       latestObservation = result;
       final posture = !result.dogDetected

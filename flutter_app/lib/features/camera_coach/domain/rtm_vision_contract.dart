@@ -221,14 +221,16 @@ Float32List _resample(
 }
 
 void _checkImage(int width, int height) {
-  if (width <= 0 || height <= 0)
+  if (width <= 0 || height <= 0) {
     throw const FormatException('Invalid image size');
+  }
 }
 
 void _checkRgb(Uint8List rgb, int width, int height) {
   _checkImage(width, height);
-  if (rgb.length != width * height * 3)
+  if (rgb.length != width * height * 3) {
     throw const FormatException('Invalid RGB bytes');
+  }
 }
 
 void _checkTensor(Float32List data, List<int> shape, List<int> expected) {
