@@ -257,7 +257,7 @@ void main() {
       ),
     );
     expect(find.text('Vision Calibration · QA'), findsOneWidget);
-    expect(find.textContaining('Checkpoint redistribution'), findsOneWidget);
+    expect(find.textContaining('Commercial redistribution'), findsOneWidget);
     final start = tester.widget<FilledButton>(
       find.widgetWithText(FilledButton, 'Start new QA session'),
     );
