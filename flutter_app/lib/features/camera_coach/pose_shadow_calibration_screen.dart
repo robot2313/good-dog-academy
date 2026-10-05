@@ -463,6 +463,10 @@ class _PoseShadowCalibrationScreenState
                   },
           ),
           Text('Model: ${_candidate.id}@${_candidate.version}'),
+          const Text(
+            'Engineering test only. Confidence values are model scores, '
+            'not calibrated probabilities. UNKNOWN is a valid result.',
+          ),
           Text('Dog: ${widget.dogId}'),
           TextField(
             controller: _scenario,
