@@ -11,6 +11,7 @@ on:
   push:
     branches:
       - feature/flutter-migration
+      - ci/model-a-camera-quality-build
     paths:
       - 'flutter_app/**'
       - '.github/workflows/flutter-phase1.yml'
@@ -86,7 +87,8 @@ jobs:
 
           text = text.replace(needle, 'minSdk = 24', 1)
 
-          vision_qa = '${{ inputs.vision_qa }}' == 'true'
+          vision_qa = ('${{ inputs.vision_qa }}' == 'true' or
+                       '${{ github.ref }}' == 'refs/heads/ci/model-a-camera-quality-build')
           if vision_qa:
               normal_app_id = (
                   'applicationId = "com.robot2313.migration.good_dog_academy"'
@@ -160,7 +162,7 @@ jobs:
           PY
 
       - name: Provision private Model A QA assets
-        if: ${{ inputs.vision_qa == true }}
+        if: ${{ inputs.vision_qa == true || github.ref == 'refs/heads/ci/model-a-camera-quality-build' }}
         run: |
           python3 -m venv "$RUNNER_TEMP/gda-model-a-venv"
           "$RUNNER_TEMP/gda-model-a-venv/bin/pip" install \
@@ -210,7 +212,8 @@ jobs:
       - name: Build Android APK
         working-directory: /tmp/gda_flutter
         run: |
-          if [ "${{ inputs.vision_qa }}" = "true" ]; then
+          if [ "${{ inputs.vision_qa }}" = "true" ] || \
+             [ "${{ github.ref }}" = "refs/heads/ci/model-a-camera-quality-build" ]; then
             flutter build apk --debug \
               --dart-define=GDA_VISION_QA=true \
               --dart-define=GDA_VISION_MODEL_A=true
