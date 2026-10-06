@@ -43,6 +43,7 @@ class DogTrackingResult {
     required this.ageMs,
     required this.consecutiveMisses,
     required this.source,
+    this.matchedDetection,
   });
 
   final NormalizedDogBox? box;
@@ -51,6 +52,9 @@ class DogTrackingResult {
   final int ageMs;
   final int consecutiveMisses;
   final DogDetectionSource? source;
+
+  /// Detection associated with this frame's locked dog; null during gaps.
+  final DogDetection? matchedDetection;
 }
 
 class DogTrackerOptions {
@@ -87,20 +91,36 @@ class DogTracker {
   DogTrackingState _state = DogTrackingState.searching;
   DogDetectionSource? _source;
 
-  DogTrackingResult update(
-    List<DogDetection> detections,
-    int nowMs,
-  ) {
+  DogTrackingResult update(List<DogDetection> detections, int nowMs) {
     final candidates = detections
-        .where((item) => item.confidence >= options.minDetectionConfidence)
+        .where(
+          (item) =>
+              item.confidence.isFinite &&
+              item.confidence >= options.minDetectionConfidence &&
+              item.confidence <= 1 &&
+              [
+                item.box.left,
+                item.box.top,
+                item.box.width,
+                item.box.height,
+              ].every((value) => value.isFinite) &&
+              item.box.left >= 0 &&
+              item.box.top >= 0 &&
+              item.box.width > 0 &&
+              item.box.height > 0 &&
+              item.box.left + item.box.width <= 1.000001 &&
+              item.box.top + item.box.height <= 1.000001,
+        )
         .toList(growable: false);
 
-    final detection = _chooseDetection(_box, candidates);
+    final detection = _chooseDetection(
+      _state == DogTrackingState.lost ? null : _box,
+      candidates,
+    );
 
     if (detection != null) {
       final wasLost = _state == DogTrackingState.lost;
-      final wasSearching =
-          _state == DogTrackingState.searching || _box == null;
+      final wasSearching = _state == DogTrackingState.searching || _box == null;
 
       if (_box == null || wasLost) {
         _box = detection.box;
@@ -141,8 +161,7 @@ class DogTracker {
       if (_box == null) {
         _state = DogTrackingState.searching;
         _confidence = 0;
-      } else if (ageMs > options.lostAfterMs ||
-          _misses > options.maxMisses) {
+      } else if (ageMs > options.lostAfterMs || _misses > options.maxMisses) {
         _state = DogTrackingState.lost;
         _confidence = 0;
         _source = null;
@@ -156,11 +175,10 @@ class DogTracker {
       box: _box,
       state: _state,
       trackingConfidence: _confidence,
-      ageMs: _box == null
-          ? 0
-          : _nonNegativeAge(nowMs - _lastDetectionAtMs),
+      ageMs: _box == null ? 0 : _nonNegativeAge(nowMs - _lastDetectionAtMs),
       consecutiveMisses: _misses,
       source: _source,
+      matchedDetection: detection,
     );
   }
 
@@ -189,12 +207,15 @@ DogDetection? _chooseDetection(
     return ranked.first;
   }
 
-  final ranked = [...valid]
+  final overlapping = valid.where((item) => _iou(current, item.box) >= 0.1);
+  if (overlapping.isEmpty) return null;
+  final ranked = [...overlapping]
     ..sort((a, b) {
       final aScore = _iou(current, a.box) * 0.75 + a.confidence * 0.25;
       final bScore = _iou(current, b.box) * 0.75 + b.confidence * 0.25;
       return bScore.compareTo(aScore);
     });
+  // A different dog cannot inherit the lock. Explicit loss permits reacquisition.
   return ranked.first;
 }
 

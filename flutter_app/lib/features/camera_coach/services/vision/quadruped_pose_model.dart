@@ -9,6 +9,9 @@ class QuadrupedPoseInference {
     required this.dogBoundingBox,
     required this.pose,
     required this.inferenceMs,
+    this.rawJointScores,
+    this.imageWidth,
+    this.imageHeight,
   });
 
   final bool dogDetected;
@@ -16,6 +19,8 @@ class QuadrupedPoseInference {
   final NormalizedDogBox? dogBoundingBox;
   final QuadrupedPose? pose;
   final int? inferenceMs;
+  final List<double>? rawJointScores;
+  final int? imageWidth, imageHeight;
 }
 
 abstract interface class QuadrupedPoseModel {

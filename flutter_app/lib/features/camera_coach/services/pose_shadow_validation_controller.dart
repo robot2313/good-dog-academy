@@ -110,7 +110,8 @@ class PoseShadowValidationController extends ChangeNotifier {
   bool get labelFrozen => _labelFrozen;
 
   void freezeForLabel() {
-    if (status != PoseShadowControllerStatus.ready || latestObservation == null) {
+    if (status != PoseShadowControllerStatus.ready ||
+        latestObservation == null) {
       return;
     }
     _labelFrozen = true;
@@ -255,9 +256,9 @@ class PoseShadowValidationController extends ChangeNotifier {
       if (_disposed || _shutdown != null) return;
       _unsubscribe = frameSource.subscribe(processFrame);
       _running = true;
-      await frameSource.start();
       status = PoseShadowControllerStatus.ready;
       _notify();
+      await frameSource.start();
     } catch (cause) {
       _unsubscribe?.call();
       _unsubscribe = null;
@@ -274,7 +275,9 @@ class PoseShadowValidationController extends ChangeNotifier {
   }
 
   Future<void> processFrame(CameraFrame frame) async {
-    if (!_running || status != PoseShadowControllerStatus.ready || _labelFrozen) {
+    if (!_running ||
+        status != PoseShadowControllerStatus.ready ||
+        _labelFrozen) {
       return;
     }
 
@@ -401,6 +404,7 @@ class PoseShadowValidationController extends ChangeNotifier {
           'posture': observation.posture?.name,
           'postureConfidence': observation.postureConfidence,
           'trackingState': observation.trackingState?.name,
+          'poseDiagnostics': observation.poseDiagnostics?.toJson(),
           'analysisMs': diagnostics.lastTotalMs,
         });
         try {

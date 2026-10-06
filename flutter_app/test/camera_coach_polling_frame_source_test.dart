@@ -151,30 +151,64 @@ void main() {
     await source.stop();
   });
 
-  test('stop during an in-flight capture suppresses late frame delivery', () async {
-    final pending = Completer<CapturedCameraSnapshot?>();
-    final source = PollingCameraFrameSource(
-      interval: const Duration(hours: 1),
-      capture: () => pending.future,
-    );
-    final frames = <CameraFrame>[];
-    source.subscribe(frames.add);
+  test(
+    'stop during an in-flight capture suppresses late frame delivery',
+    () async {
+      final pending = Completer<CapturedCameraSnapshot?>();
+      final source = PollingCameraFrameSource(
+        interval: const Duration(hours: 1),
+        capture: () => pending.future,
+      );
+      final frames = <CameraFrame>[];
+      source.subscribe(frames.add);
 
-    final starting = source.start();
-    await Future<void>.delayed(Duration.zero);
-    await source.stop();
-    pending.complete(
-      const CapturedCameraSnapshot(
-        uri: 'file:///tmp/late.jpg',
-        width: 100,
-        height: 100,
-        rotationDegrees: 0,
-      ),
-    );
-    await starting;
+      final starting = source.start();
+      await Future<void>.delayed(Duration.zero);
+      await source.stop();
+      pending.complete(
+        const CapturedCameraSnapshot(
+          uri: 'file:///tmp/late.jpg',
+          width: 100,
+          height: 100,
+          rotationDegrees: 0,
+        ),
+      );
+      await starting;
 
-    expect(frames, isEmpty);
-  });
+      expect(frames, isEmpty);
+    },
+  );
+
+  test(
+    'automatic polls wait for slow analysis instead of busy skipping',
+    () async {
+      final firstAnalysis = Completer<void>();
+      var captures = 0;
+      final source = PollingCameraFrameSource(
+        interval: const Duration(milliseconds: 5),
+        capture: () async => CapturedCameraSnapshot(
+          uri: 'file:///tmp/${++captures}.jpg',
+          width: 100,
+          height: 100,
+          rotationDegrees: 0,
+        ),
+      );
+      source.subscribe((_) async {
+        if (captures == 1) await firstAnalysis.future;
+      });
+      final starting = source.start();
+      await Future<void>.delayed(const Duration(milliseconds: 35));
+      expect(captures, 1);
+      expect(source.captureBusySkips, 0);
+      firstAnalysis.complete();
+      await starting;
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(captures, greaterThan(1));
+      expect(source.captureBusySkips, 0);
+      await source.stop();
+      await source.drain();
+    },
+  );
 
   test('awaits frame consumer before releasing temporary snapshot', () async {
     final consumerDone = Completer<void>();

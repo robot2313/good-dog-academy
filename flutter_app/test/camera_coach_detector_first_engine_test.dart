@@ -15,19 +15,12 @@ CameraFrame _frame(String id) => CameraFrame(
   rotationDegrees: 0,
 );
 
-DogDetection _dog({
-  double left = 0.25,
-  double confidence = 0.94,
-}) => DogDetection(
-  box: NormalizedDogBox(
-    left: left,
-    top: 0.20,
-    width: 0.45,
-    height: 0.45,
-  ),
-  confidence: confidence,
-  source: DogDetectionSource.dedicatedDetector,
-);
+DogDetection _dog({double left = 0.25, double confidence = 0.94}) =>
+    DogDetection(
+      box: NormalizedDogBox(left: left, top: 0.20, width: 0.45, height: 0.45),
+      confidence: confidence,
+      source: DogDetectionSource.dedicatedDetector,
+    );
 
 QuadrupedPose _standingPose() {
   final keypoints = <QuadrupedJoint, PoseKeypoint>{
@@ -39,26 +32,52 @@ QuadrupedPose _standingPose() {
       ),
   };
   keypoints.addAll(<QuadrupedJoint, PoseKeypoint>{
-    QuadrupedJoint.neck:
-        const PoseKeypoint(x: 0.42, y: 0.24, confidence: 0.95),
-    QuadrupedJoint.tailRoot:
-        const PoseKeypoint(x: 0.67, y: 0.31, confidence: 0.95),
-    QuadrupedJoint.leftShoulder:
-        const PoseKeypoint(x: 0.43, y: 0.30, confidence: 0.95),
-    QuadrupedJoint.rightShoulder:
-        const PoseKeypoint(x: 0.47, y: 0.30, confidence: 0.95),
-    QuadrupedJoint.leftHip:
-        const PoseKeypoint(x: 0.63, y: 0.32, confidence: 0.95),
-    QuadrupedJoint.rightHip:
-        const PoseKeypoint(x: 0.67, y: 0.32, confidence: 0.95),
-    QuadrupedJoint.leftFrontPaw:
-        const PoseKeypoint(x: 0.43, y: 0.85, confidence: 0.95),
-    QuadrupedJoint.rightFrontPaw:
-        const PoseKeypoint(x: 0.47, y: 0.85, confidence: 0.95),
-    QuadrupedJoint.leftBackPaw:
-        const PoseKeypoint(x: 0.63, y: 0.86, confidence: 0.95),
-    QuadrupedJoint.rightBackPaw:
-        const PoseKeypoint(x: 0.67, y: 0.86, confidence: 0.95),
+    QuadrupedJoint.neck: const PoseKeypoint(x: 0.42, y: 0.24, confidence: 0.95),
+    QuadrupedJoint.tailRoot: const PoseKeypoint(
+      x: 0.67,
+      y: 0.31,
+      confidence: 0.95,
+    ),
+    QuadrupedJoint.leftShoulder: const PoseKeypoint(
+      x: 0.43,
+      y: 0.30,
+      confidence: 0.95,
+    ),
+    QuadrupedJoint.rightShoulder: const PoseKeypoint(
+      x: 0.47,
+      y: 0.30,
+      confidence: 0.95,
+    ),
+    QuadrupedJoint.leftHip: const PoseKeypoint(
+      x: 0.63,
+      y: 0.32,
+      confidence: 0.95,
+    ),
+    QuadrupedJoint.rightHip: const PoseKeypoint(
+      x: 0.67,
+      y: 0.32,
+      confidence: 0.95,
+    ),
+    QuadrupedJoint.leftFrontPaw: const PoseKeypoint(
+      x: 0.43,
+      y: 0.85,
+      confidence: 0.95,
+    ),
+    QuadrupedJoint.rightFrontPaw: const PoseKeypoint(
+      x: 0.47,
+      y: 0.85,
+      confidence: 0.95,
+    ),
+    QuadrupedJoint.leftBackPaw: const PoseKeypoint(
+      x: 0.63,
+      y: 0.86,
+      confidence: 0.95,
+    ),
+    QuadrupedJoint.rightBackPaw: const PoseKeypoint(
+      x: 0.67,
+      y: 0.86,
+      confidence: 0.95,
+    ),
   });
   return QuadrupedPose(keypoints: keypoints);
 }
@@ -137,9 +156,9 @@ DogDetectorResult _result(List<DogDetection> detections) => DogDetectorResult(
 
 void main() {
   test('warmup prepares detector and pose model', () async {
-    final detector = _FakeDetector(
-      <DogDetectorResult>[_result(<DogDetection>[])],
-    );
+    final detector = _FakeDetector(<DogDetectorResult>[
+      _result(<DogDetection>[]),
+    ]);
     final pose = _FakePoseModel(pose: _standingPose());
     final engine = DetectorFirstDogVisionEngine(
       detector: detector,
@@ -153,34 +172,37 @@ void main() {
     expect(pose.warmups, 1);
   });
 
-  test('stable detector lock feeds tracked ROI into pose classification', () async {
-    var nowMs = 1000;
-    final detector = _FakeDetector(<DogDetectorResult>[
-      _result(<DogDetection>[_dog()]),
-      _result(<DogDetection>[_dog(left: 0.27)]),
-    ]);
-    final pose = _FakePoseModel(pose: _standingPose());
-    final engine = DetectorFirstDogVisionEngine(
-      detector: detector,
-      tracker: DogTracker(),
-      poseModel: pose,
-      nowMs: () => nowMs,
-      nowIso: () => '2026-10-04T10:00:00.000Z',
-    );
+  test(
+    'stable detector lock feeds tracked ROI into pose classification',
+    () async {
+      var nowMs = 1000;
+      final detector = _FakeDetector(<DogDetectorResult>[
+        _result(<DogDetection>[_dog()]),
+        _result(<DogDetection>[_dog(left: 0.27)]),
+      ]);
+      final pose = _FakePoseModel(pose: _standingPose());
+      final engine = DetectorFirstDogVisionEngine(
+        detector: detector,
+        tracker: DogTracker(),
+        poseModel: pose,
+        nowMs: () => nowMs,
+        nowIso: () => '2026-10-04T10:00:00.000Z',
+      );
 
-    final first = await engine.detect(_frame('f1'));
-    nowMs += 100;
-    final second = await engine.detect(_frame('f2'));
+      final first = await engine.detect(_frame('f1'));
+      nowMs += 100;
+      final second = await engine.detect(_frame('f2'));
 
-    expect(first.dogDetected, isTrue);
-    expect(first.trackingState, DogTrackingState.acquired);
-    expect(first.posture, DogPosture.standLike);
-    expect(second.trackingState, DogTrackingState.tracking);
-    expect(second.posture, DogPosture.standLike);
-    expect(pose.calls, 2);
-    expect(pose.lastBox, isNotNull);
-    expect(second.stressSignal, VisionStressSignal.uncertain);
-  });
+      expect(first.dogDetected, isTrue);
+      expect(first.trackingState, DogTrackingState.acquired);
+      expect(first.posture, DogPosture.standLike);
+      expect(second.trackingState, DogTrackingState.tracking);
+      expect(second.posture, DogPosture.standLike);
+      expect(pose.calls, 2);
+      expect(pose.lastBox, isNotNull);
+      expect(second.stressSignal, VisionStressSignal.uncertain);
+    },
+  );
 
   test('no detector lock skips pose and fails closed', () async {
     final detector = _FakeDetector(<DogDetectorResult>[
@@ -228,28 +250,122 @@ void main() {
     expect(pose.calls, 1);
   });
 
-  test('pose runtime failure preserves detector truth but not posture', () async {
+  test(
+    'pose runtime failure preserves detector truth but not posture',
+    () async {
+      final detector = _FakeDetector(<DogDetectorResult>[
+        _result(<DogDetection>[_dog()]),
+      ]);
+      final pose = _FakePoseModel(pose: _standingPose(), throwOnInfer: true);
+      final engine = DetectorFirstDogVisionEngine(
+        detector: detector,
+        tracker: DogTracker(),
+        poseModel: pose,
+        nowMs: () => 1000,
+        nowIso: () => '2026-10-04T10:00:00.000Z',
+      );
+
+      final result = await engine.detect(_frame('pose-error'));
+
+      expect(result.dogDetected, isTrue);
+      expect(result.posture, isNull);
+      expect(result.postureConfidence, isNull);
+    },
+  );
+
+  test('second dog does not steal the tracked dog or its confidence', () async {
+    var nowMs = 1000;
     final detector = _FakeDetector(<DogDetectorResult>[
-      _result(<DogDetection>[_dog()]),
+      _result(<DogDetection>[_dog(left: 0.05, confidence: 0.91)]),
+      _result(<DogDetection>[
+        _dog(left: 0.55, confidence: 0.99),
+        _dog(left: 0.07, confidence: 0.76),
+      ]),
+      _result(<DogDetection>[_dog(left: 0.55, confidence: 0.99)]),
     ]);
-    final pose = _FakePoseModel(
-      pose: _standingPose(),
-      throwOnInfer: true,
-    );
+    final pose = _FakePoseModel(pose: _standingPose());
     final engine = DetectorFirstDogVisionEngine(
       detector: detector,
       tracker: DogTracker(),
       poseModel: pose,
-      nowMs: () => 1000,
-      nowIso: () => '2026-10-04T10:00:00.000Z',
+      nowMs: () => nowMs,
     );
-
-    final result = await engine.detect(_frame('pose-error'));
-
-    expect(result.dogDetected, isTrue);
-    expect(result.posture, isNull);
-    expect(result.postureConfidence, isNull);
+    await engine.detect(_frame('first'));
+    nowMs += 300;
+    final matched = await engine.detect(_frame('second'));
+    expect(matched.detectionConfidence, 0.76);
+    expect(matched.dogBoundingBox!.left, lessThan(0.2));
+    nowMs += 300;
+    final missing = await engine.detect(_frame('third'));
+    expect(missing.trackingState, DogTrackingState.temporarilyLost);
+    expect(missing.dogDetected, isFalse);
+    expect(missing.detectionConfidence, isNull);
+    expect(pose.calls, 2);
   });
+
+  test(
+    'QA pose requires two fresh frames and retains joint diagnostics',
+    () async {
+      var nowMs = 1000;
+      const good = PoseKeypoint(x: 0.25, y: 0.35, confidence: 0.94);
+      final pose = QuadrupedPose(
+        keypoints: {
+          QuadrupedJoint.leftShoulder: good,
+          QuadrupedJoint.leftElbow: const PoseKeypoint(
+            x: 0.25,
+            y: 0.58,
+            confidence: 0.94,
+          ),
+          QuadrupedJoint.leftFrontPaw: const PoseKeypoint(
+            x: 0.25,
+            y: 0.83,
+            confidence: 0.94,
+          ),
+          QuadrupedJoint.leftHip: const PoseKeypoint(
+            x: 0.65,
+            y: 0.36,
+            confidence: 0.94,
+          ),
+          QuadrupedJoint.leftKnee: const PoseKeypoint(
+            x: 0.65,
+            y: 0.58,
+            confidence: 0.94,
+          ),
+          QuadrupedJoint.leftBackPaw: const PoseKeypoint(
+            x: 0.65,
+            y: 0.82,
+            confidence: 0.94,
+          ),
+        },
+      );
+      final detector = _FakeDetector(<DogDetectorResult>[
+        _result(<DogDetection>[_dog()]),
+        _result(<DogDetection>[_dog()]),
+        _result(<DogDetection>[]),
+        _result(<DogDetection>[_dog()]),
+      ]);
+      final engine = DetectorFirstDogVisionEngine(
+        detector: detector,
+        tracker: DogTracker(),
+        poseModel: _FakePoseModel(pose: pose),
+        qaLimbPosture: true,
+        nowMs: () => nowMs,
+      );
+      final first = await engine.detect(_frame('first'));
+      expect(first.posture, isNull);
+      expect(first.poseDiagnostics?.reason, 'confirming_posture');
+      expect(first.poseDiagnostics?.joints, hasLength(6));
+      nowMs += 800;
+      final confirmed = await engine.detect(_frame('second'));
+      expect(confirmed.posture, DogPosture.standLike);
+      nowMs += 800;
+      expect((await engine.detect(_frame('gap'))).posture, isNull);
+      nowMs += 800;
+      final reacquired = await engine.detect(_frame('again'));
+      expect(reacquired.posture, isNull);
+      expect(reacquired.poseDiagnostics?.reason, 'confirming_posture');
+    },
+  );
 
   test('reset clears tracking and dispose releases both adapters', () async {
     final detector = _FakeDetector(<DogDetectorResult>[

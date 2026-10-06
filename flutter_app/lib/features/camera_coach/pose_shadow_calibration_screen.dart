@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 
 import '../../core/theme/gda_theme.dart';
 import 'domain/camera_coach_models.dart';
+import 'domain/dog_tracking.dart';
+import 'domain/pose_diagnostics.dart';
 import 'domain/pose_shadow_validation.dart';
 import 'services/camera/flutter_camera_capture_adapter.dart';
 import 'services/pose_shadow_performance.dart';
@@ -554,6 +556,45 @@ class _PoseShadowCalibrationScreenState
   }
 
   Widget _cameraPreview() {
+    final controller = _controller;
+    final frozenImage = controller?.labelFrozen == true
+        ? controller?.latestAnalysedImage
+        : null;
+    if (frozenImage != null) {
+      final observation = controller!.latestObservation;
+      final diagnostics = observation?.poseDiagnostics;
+      final width = diagnostics?.imageWidth ?? 4;
+      final height = diagnostics?.imageHeight ?? 3;
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: AspectRatio(
+          aspectRatio: width > 0 && height > 0 ? width / height : 4 / 3,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.memory(
+                frozenImage,
+                fit: BoxFit.fill,
+                gaplessPlayback: false,
+                key: ValueKey(observation!.frameId),
+              ),
+              if (diagnostics != null)
+                CustomPaint(
+                  painter: _PoseOverlayPainter(
+                    diagnostics,
+                    observation.dogBoundingBox,
+                  ),
+                ),
+              const Positioned(
+                left: 8,
+                top: 8,
+                child: Chip(label: Text('Locked analysed frame')),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     final camera = _camera?.controller;
     if (camera == null || !camera.value.isInitialized) {
       return AspectRatio(
@@ -653,11 +694,19 @@ class _PredictionCard extends StatelessWidget {
             Text(
               'Tracking: ${observation?.trackingState?.name ?? 'unavailable'}',
             ),
+            if (observation?.poseDiagnostics case final details?) ...[
+              Text('Pose: ${_poseReason(details.reason)}'),
+              Text(
+                'Visible joints: '
+                '${details.joints.where((joint) => joint.quality >= 0.68).length}'
+                ' / ${details.joints.length}',
+              ),
+            ],
             if (!controller.canLabel && observation != null) ...[
               const SizedBox(height: 8),
-              const Text(
-                'Labelling is paused or this frame is already labelled. Use the QA controls below.',
-                style: TextStyle(color: GdaColors.muted),
+              Text(
+                controller.labelFrozen ? 'This frame is already labelled.' : 'Tap “Lock current prediction for labelling” to enable the labels below.',
+                style: const TextStyle(color: GdaColors.muted),
               ),
             ],
           ],
@@ -665,6 +714,84 @@ class _PredictionCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _poseReason(String reason) => switch (reason) {
+  'insufficient_visible_side' => 'Legs are obscured or too uncertain',
+  'insufficient_body_scale' => 'Move closer to the dog',
+  'frontal_view' => 'Try a side view',
+  'ambiguous_limb_geometry' ||
+  'sides_disagree' => 'Pose is unclear; hold steady or change angle',
+  'confirming_posture' => 'Confirming on the next frame',
+  'pose_unavailable' => 'Body joints were not found',
+  'pose_inference_failed' => 'Pose analysis failed',
+  'unsupported_view' => 'Try an upright side view',
+  _ => reason.replaceAll('_', ' '),
+};
+
+class _PoseOverlayPainter extends CustomPainter {
+  const _PoseOverlayPainter(this.diagnostics, this.box);
+  final PoseDiagnostics diagnostics;
+  final NormalizedDogBox? box;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final stroke = Paint()
+      ..color = Colors.lightGreenAccent
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    if (box != null) {
+      canvas.drawRect(
+        Rect.fromLTWH(
+          box!.left * size.width,
+          box!.top * size.height,
+          box!.width * size.width,
+          box!.height * size.height,
+        ),
+        stroke,
+      );
+    }
+    final joints = {for (final point in diagnostics.joints) point.name: point};
+    const limbs = [
+      ['leftShoulder', 'leftElbow', 'leftFrontPaw'],
+      ['rightShoulder', 'rightElbow', 'rightFrontPaw'],
+      ['leftHip', 'leftKnee', 'leftBackPaw'],
+      ['rightHip', 'rightKnee', 'rightBackPaw'],
+      ['leftShoulder', 'leftHip'],
+      ['rightShoulder', 'rightHip'],
+    ];
+    Offset? visible(String name) {
+      final point = joints[name];
+      if (point == null ||
+          point.quality < 0.68 ||
+          !point.x.isFinite ||
+          !point.y.isFinite ||
+          point.x < 0 ||
+          point.x > 1 ||
+          point.y < 0 ||
+          point.y > 1) {
+        return null;
+      }
+      return Offset(point.x * size.width, point.y * size.height);
+    }
+
+    for (final chain in limbs) {
+      for (var i = 1; i < chain.length; i++) {
+        final from = visible(chain[i - 1]);
+        final to = visible(chain[i]);
+        if (from != null && to != null) canvas.drawLine(from, to, stroke);
+      }
+    }
+    final dot = Paint()..color = Colors.yellowAccent;
+    for (final joint in diagnostics.joints) {
+      final point = visible(joint.name);
+      if (point != null) canvas.drawCircle(point, 3, dot);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _PoseOverlayPainter oldDelegate) =>
+      oldDelegate.diagnostics != diagnostics || oldDelegate.box != box;
 }
 
 class _GroundTruthCard extends StatelessWidget {

@@ -42,8 +42,8 @@ class QaVisionCandidate {
 const qaVisionCandidates = <QaVisionCandidate>[
   QaVisionCandidate(
     id: 'rtmdet-tiny-rtmpose-m-ap10k',
-    version: rtmQaRequested ? rtmQaVersion : 'unprovisioned-v1',
-    name: 'Model A: RTMDet tiny + RTMPose AP-10K',
+    version: rtmQaRequested ? '$rtmQaVersion-limb-v2' : 'unprovisioned-v1',
+    name: 'Model A: RTMDet tiny + RTMPose AP-10K · limb QA v2',
     factory: rtmQaRequested ? createRtmQaEngine : null,
     blockers: rtmQaRequested
         ? []

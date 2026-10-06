@@ -1,5 +1,6 @@
 import '../../lessons/session/training_session_record.dart';
 import 'dog_tracking.dart';
+import 'pose_diagnostics.dart';
 
 enum DogPosture { standLike, sitLike, downLike }
 
@@ -29,6 +30,7 @@ class DogVisionResult {
     this.trackingState,
     this.rawDogDetected,
     this.poseInferenceFailed = false,
+    this.poseDiagnostics,
   });
 
   final String frameId;
@@ -36,6 +38,7 @@ class DogVisionResult {
   final bool dogDetected;
   final bool? rawDogDetected;
   final bool poseInferenceFailed;
+  final PoseDiagnostics? poseDiagnostics;
   final double? detectionConfidence;
   final NormalizedDogBox? dogBoundingBox;
   final DogDetectionSource? detectionSource;

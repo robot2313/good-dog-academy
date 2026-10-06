@@ -45,6 +45,7 @@ DogVisionEngine createRtmQaEngine() {
         ),
       ),
       tracker: DogTracker(),
+      qaLimbPosture: true,
       poseModel: RtmQaPoseModel(
         FlutterOnnxFloatTensorExecutor(
           modelLocation: '$_assetRoot/rtmpose-ap10k-packed.onnx',
@@ -169,6 +170,8 @@ class RtmQaDogDetector implements DogDetector {
       detections: detections,
       inferenceMs: timer.elapsedMilliseconds,
       model: 'RTMDet tiny/$rtmQaVersion',
+      imageWidth: input.$2,
+      imageHeight: input.$3,
     );
   }
 
@@ -203,6 +206,9 @@ class RtmQaPoseModel implements QuadrupedPoseModel {
       dogBoundingBox: box,
       pose: decoded.pose,
       inferenceMs: timer.elapsedMilliseconds,
+      rawJointScores: decoded.rawJointScores,
+      imageWidth: input.$2.imageWidth,
+      imageHeight: input.$2.imageHeight,
     );
   }
 

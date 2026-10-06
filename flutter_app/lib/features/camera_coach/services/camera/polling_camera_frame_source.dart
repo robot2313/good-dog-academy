@@ -61,11 +61,7 @@ class PollingCameraFrameSource implements CameraFrameSource {
     }
 
     _running = true;
-    await _captureOnce();
-    if (!_running) return;
-    _timer = Timer.periodic(interval, (_) {
-      unawaited(_captureOnce());
-    });
+    await _poll();
   }
 
   @override
@@ -87,6 +83,18 @@ class PollingCameraFrameSource implements CameraFrameSource {
   }
 
   Future<void> captureNow() => _captureOnce();
+
+  Future<void> _poll() async {
+    if (!_running) return;
+    final elapsed = Stopwatch()..start();
+    await _captureOnce();
+    if (!_running) return;
+    final remaining = interval - elapsed.elapsed;
+    _timer = Timer(
+      remaining > Duration.zero ? remaining : Duration.zero,
+      () => unawaited(_poll()),
+    );
+  }
 
   Future<void> _captureOnce() async {
     if (!_running) return;

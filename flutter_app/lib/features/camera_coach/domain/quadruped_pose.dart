@@ -63,11 +63,13 @@ class PostureClassification {
     required this.posture,
     required this.confidence,
     required this.reason,
+    this.measurements = const {},
   });
 
   final DogPosture? posture;
   final double? confidence;
   final String reason;
+  final Map<String, double> measurements;
 }
 
 /// Production posture contract ported from the verified React Native geometry.
