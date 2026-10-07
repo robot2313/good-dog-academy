@@ -43,12 +43,26 @@ const qaVisionCandidates = <QaVisionCandidate>[
   QaVisionCandidate(
     id: 'rtmdet-tiny-rtmpose-m-ap10k',
     version: rtmQaRequested ? '$rtmQaVersion-limb-v2' : 'unprovisioned-v1',
-    name: 'Model A: RTMDet tiny + RTMPose AP-10K · limb QA v2',
+    name: 'Baseline A · RTMDet + AP-10K · limb v2',
     factory: rtmQaRequested ? createRtmQaEngine : null,
     blockers: rtmQaRequested
         ? []
         : [
             'Requires an explicitly provisioned private Model A QA build.',
+            'Commercial redistribution and ImageNet/AIC/COCO review remain pending.',
+          ],
+  ),
+  QaVisionCandidate(
+    id: 'rtmdet-tiny-rtmpose-m-ap10k-improved',
+    version: rtmQaRequested
+        ? '$rtmQaVersion-temporal-quality-v3'
+        : 'unprovisioned-v1',
+    name: 'Improved A · target lock + filtered pose · v3',
+    factory: rtmQaRequested ? createImprovedRtmQaEngine : null,
+    blockers: rtmQaRequested
+        ? []
+        : [
+            'Requires private provisioned Model A QA assets.',
             'Commercial redistribution and ImageNet/AIC/COCO review remain pending.',
           ],
   ),

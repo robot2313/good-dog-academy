@@ -6,3 +6,8 @@ abstract interface class DogVisionEngine {
   Future<DogVisionResult> detect(CameraFrame frame);
   Future<void> dispose();
 }
+
+/// Optional lifecycle boundary so a paused camera cannot retain temporal truth.
+abstract interface class ResettableDogVisionEngine {
+  void resetTemporalState();
+}

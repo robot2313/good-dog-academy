@@ -54,6 +54,7 @@ def pack_pose(source, target):
     checked(source, POSE_SHA)
     import onnx
     import onnxruntime as ort
+    ort.disable_telemetry_events()
     import numpy as np
     graph = onnx.load(source, load_external_data=False)
     # The SDK JSON incorrectly says 192x256. The checked graph and the original

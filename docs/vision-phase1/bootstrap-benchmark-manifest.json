@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "scope": "3 frozen screenshot derivatives; no video, no training set, no statistical generalization",
+  "frames": [
+    {
+      "id": "sit-front",
+      "sha256": "0c983da647d0051793e19594cb6a7b4f7c440e12eb93ba406c68213c8d7202cc",
+      "dogPresent": true,
+      "expectedPosture": "sitLike",
+      "sourceScreenshot": "1000000908.jpg",
+      "cropPixels": [
+        32,
+        240,
+        678,
+        670
+      ],
+      "identity": "source-tan-dog",
+      "visibility": "frontal-rear-legs-occluded",
+      "majorOcclusion": true,
+      "breed": "unknown",
+      "difficulty": "front-view",
+      "framing": "full-visible-body"
+    },
+    {
+      "id": "stand-photo",
+      "sha256": "95008c50d2ca221a56ec006727cdda72c8e428f6cde39d0cd4d3d5ca632f55e9",
+      "dogPresent": true,
+      "expectedPosture": "standLike",
+      "sourceScreenshot": "1000000909.jpg",
+      "cropPixels": [
+        32,
+        368,
+        678,
+        799
+      ],
+      "identity": "unknown-stock-photo-dog",
+      "visibility": "side-all-limbs",
+      "majorOcclusion": false,
+      "breed": "unknown",
+      "difficulty": "photo-of-screen",
+      "framing": "full-visible-body"
+    },
+    {
+      "id": "no-dog-patio",
+      "sha256": "f572dfc7471b24c9b1bc18906405c049be8b609a75b26c40f32537c405344449",
+      "dogPresent": false,
+      "expectedPosture": "noDog",
+      "sourceScreenshot": "1000000908.jpg",
+      "cropPixels": [
+        34,
+        245,
+        254,
+        425
+      ],
+      "identity": null,
+      "visibility": "no-dog",
+      "majorOcclusion": false,
+      "breed": "unknown",
+      "difficulty": "negative-patio",
+      "framing": "empty"
+    }
+  ]
+}

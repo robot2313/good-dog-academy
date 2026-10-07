@@ -30,6 +30,9 @@ class PoseDiagnostics {
     this.measurements = const {},
     this.rawPosture,
     this.rawPostureScore,
+    this.rawJoints = const [],
+    this.capturedAt,
+    this.pipelineVersion,
   });
   final String reason;
   final int imageWidth, imageHeight;
@@ -37,14 +40,19 @@ class PoseDiagnostics {
   final Map<String, double> measurements;
   final String? rawPosture;
   final double? rawPostureScore;
+  final List<PoseJointDiagnostic> rawJoints;
+  final String? capturedAt, pipelineVersion;
 
   Map<String, Object?> toJson() => {
     'reason': reason,
+    'capturedAt': capturedAt,
+    'pipelineVersion': pipelineVersion,
     'imageWidth': imageWidth,
     'imageHeight': imageHeight,
     'rawPosture': rawPosture,
     'rawPostureScore': rawPostureScore,
     'measurements': measurements,
     'joints': joints.map((joint) => joint.toJson()).toList(),
+    'rawJoints': rawJoints.map((joint) => joint.toJson()).toList(),
   };
 }

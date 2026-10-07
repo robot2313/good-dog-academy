@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "baselineCommit": "56184bb6e5bd09feb1868846370fa74c2b649117",
+  "candidatePipeline": "temporal-quality-v3",
+  "detectorChanged": false,
+  "poseCheckpointChanged": false,
+  "realStillBenchmark": {
+    "dogSources": 2,
+    "noDogSources": 1,
+    "baseline": {
+      "dogRecall": "2/2",
+      "noDogFalsePositives": "0/1"
+    },
+    "candidate": {
+      "dogRecall": "2/2",
+      "noDogFalsePositives": "0/1"
+    },
+    "frontalSit": "UNKNOWN in both; weak hip/knee/paw evidence",
+    "sideStand": "2/3 confirmed in both; first frame confirmation",
+    "down": "not available"
+  },
+  "perturbationReplay": {
+    "sourcePhotos": 1,
+    "frames": 30,
+    "commonUsableJointPairs": 406,
+    "baseline": {
+      "correctStand": 29,
+      "unknown": 1,
+      "meanJointJitterNormalized": 0.0011694551393919466,
+      "p50Ms": 376,
+      "p95Ms": 447,
+      "maxMs": 455
+    },
+    "candidate": {
+      "correctStand": 29,
+      "unknown": 1,
+      "meanJointJitterNormalized": 0.0007489970300643964,
+      "p50Ms": 353.5,
+      "p95Ms": 416,
+      "maxMs": 436
+    },
+    "jitterReductionFraction": 0.3595333375046482,
+    "scope": "desktop CPU, real graphs through phone Dart adapters; timings exclude capture and are not proof of target-phone speed"
+  },
+  "controlledComparison": {
+    "scope": "controlled synthetic detection/pose observations; not real video or model accuracy",
+    "metrics": {
+      "baseline": {
+        "wrongDogAssignments": 2,
+        "wrongDogStableFrames": 1,
+        "motionMissesOf6": 3,
+        "summedPoseCropLeftError": 0.18224,
+        "jointJitterNormalized": 0.020000000000000018
+      },
+      "candidate": {
+        "wrongDogAssignments": 0,
+        "wrongDogStableFrames": 0,
+        "motionMissesOf6": 0,
+        "summedPoseCropLeftError": 0.0,
+        "jointJitterNormalized": 0.008033642219585484
+      }
+    }
+  },
+  "validation": {
+    "baselineFlutterTests": 348,
+    "candidateFlutterTests": 376,
+    "analyzer": "No issues found",
+    "pythonTests": 5
+  },
+  "sustainedReplay": "not completed; no sustained claim",
+  "challengerComparison": "incomplete verification; automatic review rejected suspected telemetry; exploratory output excluded from acceptance"
+}

@@ -28,11 +28,17 @@ class DogDetection {
     required this.box,
     required this.confidence,
     required this.source,
+    this.appearance,
+    this.frameQuality = const {},
   });
 
   final NormalizedDogBox box;
   final double confidence;
   final DogDetectionSource source;
+
+  /// Optional normalized color histogram. Association aid, not dog identity proof.
+  final List<double>? appearance;
+  final Map<String, double> frameQuality;
 }
 
 class DogTrackingResult {

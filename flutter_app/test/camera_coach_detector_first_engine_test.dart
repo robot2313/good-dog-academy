@@ -390,4 +390,84 @@ void main() {
     expect(pose.disposals, 1);
     expect(engine.lastTracking, isNull);
   });
+  test('improved pose crop uses the current matched detection instead of lagging display ROI', () async {
+    var nowMs = 1000;
+    final detector = _FakeDetector([
+      _result([_dog()]),
+      _result([_dog(left: .40)]),
+    ]);
+    final pose = _FakePoseModel(pose: _standingPose());
+    final engine = DetectorFirstDogVisionEngine(
+      detector: detector,
+      tracker: DogTracker(),
+      poseModel: pose,
+      qaLimbPosture: true,
+      qaTemporalQuality: true,
+      nowMs: () => nowMs,
+    );
+    await engine.detect(_frame('current-1'));
+    nowMs += 800;
+    final result = await engine.detect(_frame('current-2'));
+    expect(result.dogBoundingBox!.left, lessThan(.40));
+    expect(pose.lastBox!.left, .40);
+    expect(result.poseDiagnostics!.rawJoints, isNotEmpty);
+    await engine.dispose();
+  });
+  test(
+    'improved loss resets filtering and explains loss without running pose',
+    () async {
+      var nowMs = 1000;
+      final detector = _FakeDetector([
+        _result([_dog()]),
+        _result([]),
+        _result([_dog()]),
+      ]);
+      final base = _standingPose();
+      final canonical = QuadrupedPose(
+        keypoints: {
+          ...base.keypoints,
+          QuadrupedJoint.leftElbow: const PoseKeypoint(
+            x: .43,
+            y: .55,
+            confidence: .95,
+          ),
+          QuadrupedJoint.rightElbow: const PoseKeypoint(
+            x: .47,
+            y: .55,
+            confidence: .95,
+          ),
+          QuadrupedJoint.leftKnee: const PoseKeypoint(
+            x: .63,
+            y: .55,
+            confidence: .95,
+          ),
+          QuadrupedJoint.rightKnee: const PoseKeypoint(
+            x: .67,
+            y: .55,
+            confidence: .95,
+          ),
+        },
+      );
+      final pose = _FakePoseModel(pose: canonical);
+      final engine = DetectorFirstDogVisionEngine(
+        detector: detector,
+        tracker: DogTracker(),
+        poseModel: pose,
+        qaLimbPosture: true,
+        qaTemporalQuality: true,
+        nowMs: () => nowMs,
+      );
+      await engine.detect(_frame('loss-1'));
+      nowMs += 800;
+      final lost = await engine.detect(_frame('loss-2'));
+      expect(lost.posture, isNull);
+      expect(lost.poseDiagnostics!.reason, 'target_temporarily_lost');
+      expect(lost.poseDiagnostics!.joints, isEmpty);
+      expect(pose.calls, 1);
+      nowMs += 800;
+      final returned = await engine.detect(_frame('loss-3'));
+      expect(returned.poseDiagnostics!.reason, 'confirming_posture');
+      await engine.dispose();
+    },
+  );
 }

@@ -9,6 +9,7 @@ import '../../core/theme/gda_theme.dart';
 import 'domain/camera_coach_models.dart';
 import 'domain/dog_tracking.dart';
 import 'domain/pose_diagnostics.dart';
+import 'domain/perception_guidance.dart';
 import 'domain/pose_shadow_validation.dart';
 import 'services/camera/flutter_camera_capture_adapter.dart';
 import 'services/pose_shadow_performance.dart';
@@ -78,6 +79,7 @@ class _PoseShadowCalibrationScreenState
   QaVisionCandidate get _candidate => widget.candidates[_selected];
   bool _resumeAfterLifecycle = false;
   bool _closing = false;
+  bool _rawPose = false;
   Object? _setupError;
   Future<void> _lifecycleSerial = Future<void>.value();
 
@@ -86,6 +88,10 @@ class _PoseShadowCalibrationScreenState
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     if (_benchmark) {
+      final improved = widget.candidates.indexWhere(
+        (candidate) => candidate.id == 'rtmdet-tiny-rtmpose-m-ap10k-improved',
+      );
+      if (improved >= 0) _selected = improved;
       _initializing = false;
     } else {
       _queueLifecycle(_bootstrap);
@@ -504,6 +510,22 @@ class _PoseShadowCalibrationScreenState
           _cameraPreview(),
           const SizedBox(height: 12),
           _PredictionCard(controller: controller),
+          if (_benchmark) ...[
+            SwitchListTile(
+              title: const Text('Show raw pose (filter comparison)'),
+              value: _rawPose,
+              onChanged: (value) => setState(() => _rawPose = value),
+            ),
+            TextButton(
+              onPressed: () => _queueLifecycle(_restart),
+              child: const Text('Restart target / new QA session'),
+            ),
+            if (controller.labelFrozen)
+              TextButton(
+                onPressed: controller.resumeAfterLabel,
+                child: const Text('Resume camera without label'),
+              ),
+          ],
           const SizedBox(height: 12),
           if (_benchmark) ...[
             FilledButton.tonal(
@@ -557,9 +579,7 @@ class _PoseShadowCalibrationScreenState
 
   Widget _cameraPreview() {
     final controller = _controller;
-    final frozenImage = controller?.labelFrozen == true
-        ? controller?.latestAnalysedImage
-        : null;
+    final frozenImage = controller?.latestAnalysedImage;
     if (frozenImage != null) {
       final observation = controller!.latestObservation;
       final diagnostics = observation?.poseDiagnostics;
@@ -583,12 +603,21 @@ class _PoseShadowCalibrationScreenState
                   painter: _PoseOverlayPainter(
                     diagnostics,
                     observation.dogBoundingBox,
+                    raw: _rawPose,
                   ),
                 ),
-              const Positioned(
+              Positioned(
                 left: 8,
                 top: 8,
-                child: Chip(label: Text('Locked analysed frame')),
+                child: Chip(
+                  label: Text(
+                    controller.labelFrozen
+                        ? 'Locked analysed frame'
+                        : controller.observationStale
+                        ? 'Stale analysed frame'
+                        : 'Analysed frame · ${observation.frameId}',
+                  ),
+                ),
               ),
             ],
           ),
@@ -677,7 +706,9 @@ class _PredictionCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              observation == null
+              controller.observationStale
+                  ? 'UNKNOWN · analysis stale'
+                  : observation == null
                   ? 'Waiting for the first analysed frame…'
                   : detected
                   ? '${dogPostureQaLabel(prediction)} · '
@@ -694,8 +725,24 @@ class _PredictionCard extends StatelessWidget {
             Text(
               'Tracking: ${observation?.trackingState?.name ?? 'unavailable'}',
             ),
+            Text(
+              'Track score: ${formatQaPercent(observation?.trackingConfidence)}',
+            ),
+            if (observation != null)
+              Text(
+                'Analysed: ${observation.analysedAt} · ${controller.diagnostics.lastTotalMs ?? 0} ms',
+              ),
+            if (controller.observationStale)
+              const Text(
+                'Waiting for a fresh frame. Restart the QA session if this persists.',
+              ),
             if (observation?.poseDiagnostics case final details?) ...[
-              Text('Pose: ${_poseReason(details.reason)}'),
+              Text('Pose: ${perceptionGuidance(details.reason)}'),
+              Text(
+                'Reason: ${details.reason} · ${details.pipelineVersion ?? 'baseline'}',
+              ),
+              if (details.capturedAt != null)
+                Text('Captured: ${details.capturedAt}'),
               Text(
                 'Visible joints: '
                 '${details.joints.where((joint) => joint.quality >= 0.68).length}'
@@ -716,23 +763,11 @@ class _PredictionCard extends StatelessWidget {
   }
 }
 
-String _poseReason(String reason) => switch (reason) {
-  'insufficient_visible_side' => 'Legs are obscured or too uncertain',
-  'insufficient_body_scale' => 'Move closer to the dog',
-  'frontal_view' => 'Try a side view',
-  'ambiguous_limb_geometry' ||
-  'sides_disagree' => 'Pose is unclear; hold steady or change angle',
-  'confirming_posture' => 'Confirming on the next frame',
-  'pose_unavailable' => 'Body joints were not found',
-  'pose_inference_failed' => 'Pose analysis failed',
-  'unsupported_view' => 'Try an upright side view',
-  _ => reason.replaceAll('_', ' '),
-};
-
 class _PoseOverlayPainter extends CustomPainter {
-  const _PoseOverlayPainter(this.diagnostics, this.box);
+  const _PoseOverlayPainter(this.diagnostics, this.box, {this.raw = false});
   final PoseDiagnostics diagnostics;
   final NormalizedDogBox? box;
+  final bool raw;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -751,7 +786,10 @@ class _PoseOverlayPainter extends CustomPainter {
         stroke,
       );
     }
-    final joints = {for (final point in diagnostics.joints) point.name: point};
+    final evidence = raw && diagnostics.rawJoints.isNotEmpty
+        ? diagnostics.rawJoints
+        : diagnostics.joints;
+    final joints = {for (final point in evidence) point.name: point};
     const limbs = [
       ['leftShoulder', 'leftElbow', 'leftFrontPaw'],
       ['rightShoulder', 'rightElbow', 'rightFrontPaw'],
@@ -783,15 +821,33 @@ class _PoseOverlayPainter extends CustomPainter {
       }
     }
     final dot = Paint()..color = Colors.yellowAccent;
-    for (final joint in diagnostics.joints) {
+    for (final joint in evidence) {
       final point = visible(joint.name);
-      if (point != null) canvas.drawCircle(point, 3, dot);
+      if (point != null) {
+        dot.color = joint.quality >= .85
+            ? Colors.lightGreenAccent
+            : Colors.yellowAccent;
+        canvas.drawCircle(point, 3, dot);
+      } else if (joint.quality > 0 &&
+          joint.x >= 0 &&
+          joint.x <= 1 &&
+          joint.y >= 0 &&
+          joint.y <= 1) {
+        dot.color = Colors.orangeAccent;
+        canvas.drawCircle(
+          Offset(joint.x * size.width, joint.y * size.height),
+          2,
+          dot,
+        );
+      }
     }
   }
 
   @override
   bool shouldRepaint(covariant _PoseOverlayPainter oldDelegate) =>
-      oldDelegate.diagnostics != diagnostics || oldDelegate.box != box;
+      oldDelegate.diagnostics != diagnostics ||
+      oldDelegate.box != box ||
+      oldDelegate.raw != raw;
 }
 
 class _GroundTruthCard extends StatelessWidget {

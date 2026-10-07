@@ -106,11 +106,16 @@ class PoseShadowValidationController extends ChangeNotifier {
   Future<void>? _labelWrite;
   bool _labelBusy = false;
   bool _labelFrozen = false;
+  Timer? _freshnessTimer;
+  bool _observationStale = false;
+  bool get observationStale => _observationStale && !_labelFrozen;
+  final List<Map<String, Object?>> _temporalEvidence = [];
   Uint8List? latestAnalysedImage;
   bool get labelFrozen => _labelFrozen;
 
   void freezeForLabel() {
     if (status != PoseShadowControllerStatus.ready ||
+        observationStale ||
         latestObservation == null) {
       return;
     }
@@ -163,6 +168,8 @@ class PoseShadowValidationController extends ChangeNotifier {
           'preprocess+detect+track+pose+classify; excludes camera capture',
       'battery': null,
       'thermal': null,
+      'temporalEvidence': List<Map<String, Object?>>.of(_temporalEvidence),
+      'temporalEvidenceScope': 'last 120 analysed frames; structured joints only, no image/audio bytes',
     };
   }
 
@@ -203,6 +210,7 @@ class PoseShadowValidationController extends ChangeNotifier {
   bool get canLabel =>
       !_disposed &&
       !_labelBusy &&
+      !observationStale &&
       (benchmarkContext == null || _labelFrozen) &&
       status == PoseShadowControllerStatus.ready &&
       latestObservation != null &&
@@ -234,6 +242,21 @@ class PoseShadowValidationController extends ChangeNotifier {
       );
     }
     if (_running || status == PoseShadowControllerStatus.loading) return;
+    if (visionEngine case final ResettableDogVisionEngine resettable) {
+      resettable.resetTemporalState();
+    }
+    _observationStale = false;
+    _freshnessTimer?.cancel();
+    _freshnessTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+      if (_disposed || !_running || _labelFrozen) return;
+      final analysed = DateTime.tryParse(latestObservation?.analysedAt ?? '');
+      final stale =
+          analysed != null && _now().difference(analysed).inMilliseconds > 4000;
+      if (stale != _observationStale) {
+        _observationStale = stale;
+        _notify();
+      }
+    });
 
     status = PoseShadowControllerStatus.loading;
     error = null;
@@ -327,6 +350,22 @@ class PoseShadowValidationController extends ChangeNotifier {
       }
       latestAnalysedImage = image;
       latestObservation = result;
+      _observationStale = false;
+      if (benchmarkContext != null) {
+        _temporalEvidence.add({
+          'frameId': frame.id,
+          'capturedAt': frame.capturedAt,
+          'analysedAt': result.analysedAt,
+          'modelVersion': benchmarkContext!.modelVersion,
+          'trackingState': result.trackingState?.name,
+          'trackingScore': result.trackingConfidence,
+          'detectorScore': result.detectionConfidence,
+          'posture': result.posture?.name,
+          'postureScore': result.postureConfidence,
+          'pose': result.poseDiagnostics?.toJson(),
+        });
+        if (_temporalEvidence.length > 120) _temporalEvidence.removeAt(0);
+      }
       final posture = !result.dogDetected
           ? 'noDog'
           : result.posture?.name ?? 'unknown';
@@ -458,10 +497,13 @@ class PoseShadowValidationController extends ChangeNotifier {
   });
 
   Future<void> _stopFrameSource() async {
+    _freshnessTimer?.cancel();
+    _freshnessTimer = null;
     _unsubscribe?.call();
     _unsubscribe = null;
     _generation++;
     latestObservation = null;
+    latestAnalysedImage = null;
     if (!_running) return;
     _running = false;
     await frameSource.stop();
@@ -470,6 +512,7 @@ class PoseShadowValidationController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _freshnessTimer?.cancel();
     unawaited(shutdown().catchError((Object _) {}));
     super.dispose();
   }

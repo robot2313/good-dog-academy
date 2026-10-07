@@ -9,6 +9,8 @@ import 'package:image/image.dart' as img;
 
 import '../../domain/camera_coach_models.dart';
 import '../../domain/dog_tracking.dart';
+import '../../domain/dog_crop_evidence.dart';
+import '../../domain/target_dog_tracker.dart';
 import '../../domain/rtm_vision_contract.dart';
 import '../camera/camera_frame_source.dart';
 import 'detector_first_dog_vision_engine.dart';
@@ -30,32 +32,67 @@ const _poseHash =
 
 /// QA-only composition of existing tracker/classifier/runtime. No lesson,
 /// coaching, rewards, persistence or adaptive services are available here.
-DogVisionEngine createRtmQaEngine() {
+DogVisionEngine createRtmQaEngine({bool improved = false}) {
   if (!rtmQaRequested) {
     throw StateError('Model A requires a private debug QA build');
   }
   return _VerifiedRtmQaEngine(
-    DetectorFirstDogVisionEngine(
-      detector: RtmQaDogDetector(
-        FlutterOnnxFloatTensorExecutor(
-          modelLocation: '$_assetRoot/rtmdet-tiny.onnx',
-          modelSource: FlutterOnnxModelSource.asset,
-          inputName: 'images',
-          outputName: 'output',
-        ),
+    composeRtmQaEngine(
+      detectorExecutor: FlutterOnnxFloatTensorExecutor(
+        modelLocation: '$_assetRoot/rtmdet-tiny.onnx',
+        modelSource: FlutterOnnxModelSource.asset,
+        inputName: 'images',
+        outputName: 'output',
       ),
-      tracker: DogTracker(),
-      qaLimbPosture: true,
-      poseModel: RtmQaPoseModel(
-        FlutterOnnxFloatTensorExecutor(
-          modelLocation: '$_assetRoot/rtmpose-ap10k-packed.onnx',
-          modelSource: FlutterOnnxModelSource.asset,
-          inputName: 'input',
-          outputName: 'simcc_xy',
-        ),
+      poseExecutor: FlutterOnnxFloatTensorExecutor(
+        modelLocation: '$_assetRoot/rtmpose-ap10k-packed.onnx',
+        modelSource: FlutterOnnxModelSource.asset,
+        inputName: 'input',
+        outputName: 'simcc_xy',
       ),
+      improved: improved,
     ),
   );
+}
+
+DogVisionEngine createImprovedRtmQaEngine() =>
+    createRtmQaEngine(improved: true);
+
+/// The phone and real-graph desktop replay use identical composition; only the
+/// tensor executor is platform-specific. Baseline keeps its old crop/decoder.
+DetectorFirstDogVisionEngine composeRtmQaEngine({
+  required FloatTensorExecutor detectorExecutor,
+  required FloatTensorExecutor poseExecutor,
+  bool improved = false,
+}) {
+  final cache = improved ? RtmQaFrameCache() : null;
+  return DetectorFirstDogVisionEngine(
+    detector: RtmQaDogDetector(
+      detectorExecutor,
+      cache: cache,
+      cropEvidence: improved,
+    ),
+    tracker: improved ? TargetDogTracker() : DogTracker(),
+    qaLimbPosture: true,
+    qaTemporalQuality: improved,
+    poseModel: RtmQaPoseModel(poseExecutor, cache: cache),
+  );
+}
+
+/// One decoded frame only, shared by detector and pose, cleared on disposal.
+class RtmQaFrameCache {
+  String? _id;
+  (Uint8List, int, int)? _image;
+  void remember(String id, (Uint8List, int, int) image) {
+    _id = id;
+    _image = image;
+  }
+
+  (Uint8List, int, int)? imageFor(String id) => _id == id ? _image : null;
+  void clear() {
+    _id = null;
+    _image = null;
+  }
 }
 
 void validateRtmQaMetadata(Map<String, dynamic> metadata) {
@@ -96,9 +133,12 @@ Future<void> verifyRtmQaAssets(AssetBundle bundle) async {
   }
 }
 
-class _VerifiedRtmQaEngine implements DogVisionEngine {
+class _VerifiedRtmQaEngine
+    implements DogVisionEngine, ResettableDogVisionEngine {
   _VerifiedRtmQaEngine(this.inner);
   final DetectorFirstDogVisionEngine inner;
+  @override
+  void resetTemporalState() => inner.resetTemporalState();
   Future<void>? _opening;
   bool _disposed = false;
 
@@ -141,8 +181,10 @@ class _VerifiedRtmQaEngine implements DogVisionEngine {
 }
 
 class RtmQaDogDetector implements DogDetector {
-  RtmQaDogDetector(this.executor);
+  RtmQaDogDetector(this.executor, {this.cache, this.cropEvidence = false});
   final FloatTensorExecutor executor;
+  final RtmQaFrameCache? cache;
+  final bool cropEvidence;
 
   @override
   Future<void> warmup() => executor.warmup();
@@ -151,21 +193,31 @@ class RtmQaDogDetector implements DogDetector {
   Future<DogDetectorResult> detect(CameraFrame frame) async {
     final timer = Stopwatch()..start();
     final path = _framePath(frame);
+    final retainImage = cache != null;
     final input = await Isolate.run(() {
       final image = _readRgb(path);
       return (
         prepareRtmDetRgb(image.$1, image.$2, image.$3),
         image.$2,
         image.$3,
+        retainImage ? image : null,
       );
     });
     final result = await executor.run(input.$1, const [1, 3, 640, 640]);
-    final detections = decodeRtmDet(
+    if (input.$4 != null) cache?.remember(frame.id, input.$4!);
+    final decoded = decodeRtmDet(
       result.data,
       result.dimensions,
       imageWidth: input.$2,
       imageHeight: input.$3,
     );
+    final image = input.$4;
+    final detections = cropEvidence && image != null
+        ? [
+            for (final d in decoded)
+              withDogCropEvidence(d, image.$1, image.$2, image.$3),
+          ]
+        : decoded;
     return DogDetectorResult(
       detections: detections,
       inferenceMs: timer.elapsedMilliseconds,
@@ -176,12 +228,16 @@ class RtmQaDogDetector implements DogDetector {
   }
 
   @override
-  Future<void> dispose() => executor.dispose();
+  Future<void> dispose() {
+    cache?.clear();
+    return executor.dispose();
+  }
 }
 
 class RtmQaPoseModel implements QuadrupedPoseModel {
-  RtmQaPoseModel(this.executor);
+  RtmQaPoseModel(this.executor, {this.cache});
   final FloatTensorExecutor executor;
+  final RtmQaFrameCache? cache;
 
   @override
   Future<void> warmup() => executor.warmup();
@@ -193,8 +249,9 @@ class RtmQaPoseModel implements QuadrupedPoseModel {
   ) async {
     final timer = Stopwatch()..start();
     final path = _framePath(frame);
+    final cached = cache?.imageFor(frame.id);
     final input = await Isolate.run(() {
-      final image = _readRgb(path);
+      final image = cached ?? _readRgb(path);
       final crop = RtmPoseCrop(image.$2, image.$3, box);
       return (prepareRtmPoseRgb(image.$1, crop), crop);
     });
@@ -213,7 +270,10 @@ class RtmQaPoseModel implements QuadrupedPoseModel {
   }
 
   @override
-  Future<void> dispose() => executor.dispose();
+  Future<void> dispose() {
+    cache?.clear();
+    return executor.dispose();
+  }
 }
 
 String _framePath(CameraFrame frame) {

@@ -12,6 +12,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 import onnxruntime as ort
+ort.disable_telemetry_events()
 
 from provision_model_a import checked, DETECTOR_SHA, POSE_SHA
 

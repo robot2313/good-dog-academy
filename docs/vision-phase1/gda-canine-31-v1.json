@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "id": "gda-canine-31-v1",
+  "status": "annotation-specification-only; no trained checkpoint",
+  "coordinateSpace": "oriented-source-image-normalized-xy",
+  "visibility": {
+    "0": "not observable; xy must be null",
+    "1": "occluded but labelable with explicit annotator evidence",
+    "2": "directly visible"
+  },
+  "sideConvention": "anatomical dog left/right, not image left/right",
+  "keypoints": [
+    {
+      "index": 0,
+      "name": "nose"
+    },
+    {
+      "index": 1,
+      "name": "leftEye"
+    },
+    {
+      "index": 2,
+      "name": "rightEye"
+    },
+    {
+      "index": 3,
+      "name": "leftEarBase"
+    },
+    {
+      "index": 4,
+      "name": "rightEarBase"
+    },
+    {
+      "index": 5,
+      "name": "chin"
+    },
+    {
+      "index": 6,
+      "name": "occiput"
+    },
+    {
+      "index": 7,
+      "name": "neck"
+    },
+    {
+      "index": 8,
+      "name": "withers"
+    },
+    {
+      "index": 9,
+      "name": "chest"
+    },
+    {
+      "index": 10,
+      "name": "midSpine"
+    },
+    {
+      "index": 11,
+      "name": "pelvisCenter"
+    },
+    {
+      "index": 12,
+      "name": "tailRoot"
+    },
+    {
+      "index": 13,
+      "name": "tailMid"
+    },
+    {
+      "index": 14,
+      "name": "tailTip"
+    },
+    {
+      "index": 15,
+      "name": "leftShoulder"
+    },
+    {
+      "index": 16,
+      "name": "leftElbow"
+    },
+    {
+      "index": 17,
+      "name": "leftCarpus"
+    },
+    {
+      "index": 18,
+      "name": "leftFrontPaw"
+    },
+    {
+      "index": 19,
+      "name": "rightShoulder"
+    },
+    {
+      "index": 20,
+      "name": "rightElbow"
+    },
+    {
+      "index": 21,
+      "name": "rightCarpus"
+    },
+    {
+      "index": 22,
+      "name": "rightFrontPaw"
+    },
+    {
+      "index": 23,
+      "name": "leftHip"
+    },
+    {
+      "index": 24,
+      "name": "leftKnee"
+    },
+    {
+      "index": 25,
+      "name": "leftHock"
+    },
+    {
+      "index": 26,
+      "name": "leftBackPaw"
+    },
+    {
+      "index": 27,
+      "name": "rightHip"
+    },
+    {
+      "index": 28,
+      "name": "rightKnee"
+    },
+    {
+      "index": 29,
+      "name": "rightHock"
+    },
+    {
+      "index": 30,
+      "name": "rightBackPaw"
+    }
+  ],
+  "ap10kMappings": {
+    "leftEye": 1,
+    "rightEye": 2,
+    "nose": 0,
+    "neck": 7,
+    "tailRoot": 12,
+    "leftShoulder": 15,
+    "leftElbow": 16,
+    "leftFrontPaw": 18,
+    "rightShoulder": 19,
+    "rightElbow": 20,
+    "rightFrontPaw": 22,
+    "leftHip": 23,
+    "leftKnee": 24,
+    "leftBackPaw": 26,
+    "rightHip": 27,
+    "rightKnee": 28,
+    "rightBackPaw": 30
+  },
+  "annotationRule": "Do not synthesize unobserved carpus/hock/spine positions from AP-10K. Model/native scores are not calibrated visibility labels.",
+  "splitKeys": [
+    "dogId",
+    "householdId",
+    "sessionId",
+    "handlerId",
+    "environmentId"
+  ],
+  "licenseRequired": true
+}

@@ -43,17 +43,19 @@ class _FakeFrameSource implements CameraFrameSource {
   }
 }
 
-class _FakeVision implements DogVisionEngine {
-  _FakeVision({
-    this.throwOnDetect = false,
-    this.gate,
-  });
+class _FakeVision implements DogVisionEngine, ResettableDogVisionEngine {
+  _FakeVision({this.throwOnDetect = false, this.gate});
 
   final bool throwOnDetect;
   final Completer<void>? gate;
   int warmups = 0;
   int calls = 0;
   int disposals = 0;
+  int resets = 0;
+  @override
+  void resetTemporalState() {
+    resets++;
+  }
 
   @override
   Future<void> warmup() async {
@@ -108,9 +110,7 @@ PoseShadowValidationController _controller({
   return PoseShadowValidationController(
     frameSource: source ?? _FakeFrameSource(),
     visionEngine: vision ?? _FakeVision(),
-    repository: PoseShadowValidationRepository(
-      storage: _MemoryStorage(),
-    ),
+    repository: PoseShadowValidationRepository(storage: _MemoryStorage()),
     dogId: 'dog-1',
     lessonId: 'qa-camera-sit',
     expectedPosture: DogPosture.sitLike,
@@ -119,19 +119,67 @@ PoseShadowValidationController _controller({
 }
 
 void main() {
-  test('start warms candidate model and starts isolated frame source', () async {
-    final source = _FakeFrameSource();
-    final vision = _FakeVision();
-    final controller = _controller(source: source, vision: vision);
-
+  test(
+    'start is idempotent; restarting after pause resets temporal identity',
+    () async {
+      final vision = _FakeVision();
+      final controller = _controller(vision: vision);
+      await controller.start();
+      await controller.start();
+      expect(vision.resets, 1);
+      await controller.stop();
+      await controller.start();
+      expect(vision.resets, 2);
+      await controller.shutdown();
+    },
+  );
+  testWidgets(
+    'stale results cannot be labelled or frozen as a live observation',
+    (tester) async {
+      var now = DateTime.parse('2026-10-04T10:00:00Z');
+      final controller = _controller(now: () => now);
+      await controller.start();
+      await controller.processFrame(_frame('fresh'));
+      expect(controller.observationStale, isFalse);
+      now = now.add(const Duration(seconds: 5));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(controller.observationStale, isTrue);
+      expect(controller.canLabel, isFalse);
+      controller.freezeForLabel();
+      expect(controller.labelFrozen, isFalse);
+      await controller.shutdown();
+    },
+  );
+  testWidgets('intentionally locked analysed frame remains labelable', (
+    tester,
+  ) async {
+    var now = DateTime.parse('2026-10-04T10:00:00Z');
+    final controller = _controller(now: () => now);
     await controller.start();
-
-    expect(controller.status, PoseShadowControllerStatus.ready);
-    expect(source.starts, 1);
-    expect(vision.warmups, 1);
-
+    await controller.processFrame(_frame('locked'));
+    controller.freezeForLabel();
+    now = now.add(const Duration(seconds: 10));
+    await tester.pump(const Duration(seconds: 1));
+    expect(controller.observationStale, isFalse);
+    expect(controller.canLabel, isTrue);
     await controller.shutdown();
   });
+  test(
+    'start warms candidate model and starts isolated frame source',
+    () async {
+      final source = _FakeFrameSource();
+      final vision = _FakeVision();
+      final controller = _controller(source: source, vision: vision);
+
+      await controller.start();
+
+      expect(controller.status, PoseShadowControllerStatus.ready);
+      expect(source.starts, 1);
+      expect(vision.warmups, 1);
+
+      await controller.shutdown();
+    },
+  );
 
   test('analysed frame can be labelled once with owner ground truth', () async {
     final controller = _controller(
@@ -160,59 +208,68 @@ void main() {
     await controller.shutdown();
   });
 
-  test('no-dog owner label is preserved even when model predicted sit', () async {
-    final controller = _controller();
-    await controller.start();
-    await controller.processFrame(_frame('false-positive'));
+  test(
+    'no-dog owner label is preserved even when model predicted sit',
+    () async {
+      final controller = _controller();
+      await controller.start();
+      await controller.processFrame(_frame('false-positive'));
 
-    final sample = await controller.recordGroundTruth(
-      PoseShadowGroundTruth.noDog,
-    );
+      final sample = await controller.recordGroundTruth(
+        PoseShadowGroundTruth.noDog,
+      );
 
-    expect(sample!.predictedPosture, DogPosture.sitLike);
-    expect(sample.groundTruth, PoseShadowGroundTruth.noDog);
-    expect(controller.summary?.overall.falsePositiveCandidates, 1);
+      expect(sample!.predictedPosture, DogPosture.sitLike);
+      expect(sample.groundTruth, PoseShadowGroundTruth.noDog);
+      expect(controller.summary?.overall.falsePositiveCandidates, 1);
 
-    await controller.shutdown();
-  });
+      await controller.shutdown();
+    },
+  );
 
-  test('busy frames are skipped instead of overlapping candidate inference', () async {
-    final gate = Completer<void>();
-    final vision = _FakeVision(gate: gate);
-    final controller = _controller(vision: vision);
-    await controller.start();
+  test(
+    'busy frames are skipped instead of overlapping candidate inference',
+    () async {
+      final gate = Completer<void>();
+      final vision = _FakeVision(gate: gate);
+      final controller = _controller(vision: vision);
+      await controller.start();
 
-    final first = controller.processFrame(_frame('first'));
-    await Future<void>.delayed(Duration.zero);
-    await controller.processFrame(_frame('second'));
+      final first = controller.processFrame(_frame('first'));
+      await Future<void>.delayed(Duration.zero);
+      await controller.processFrame(_frame('second'));
 
-    expect(vision.calls, 1);
-    expect(controller.diagnostics.framesSkippedBusy, 1);
+      expect(vision.calls, 1);
+      expect(controller.diagnostics.framesSkippedBusy, 1);
 
-    gate.complete();
-    await first;
-    expect(controller.diagnostics.framesAnalysed, 1);
+      gate.complete();
+      await first;
+      expect(controller.diagnostics.framesAnalysed, 1);
 
-    await controller.shutdown();
-  });
+      await controller.shutdown();
+    },
+  );
 
-  test('candidate inference failure stops capture and enters error state', () async {
-    final source = _FakeFrameSource();
-    final controller = _controller(
-      source: source,
-      vision: _FakeVision(throwOnDetect: true),
-    );
-    await controller.start();
+  test(
+    'candidate inference failure stops capture and enters error state',
+    () async {
+      final source = _FakeFrameSource();
+      final controller = _controller(
+        source: source,
+        vision: _FakeVision(throwOnDetect: true),
+      );
+      await controller.start();
 
-    await controller.processFrame(_frame('bad'));
+      await controller.processFrame(_frame('bad'));
 
-    expect(controller.status, PoseShadowControllerStatus.error);
-    expect(controller.error, isA<StateError>());
-    expect(controller.diagnostics.inferenceErrors, 1);
-    expect(source.stops, 1);
+      expect(controller.status, PoseShadowControllerStatus.error);
+      expect(controller.error, isA<StateError>());
+      expect(controller.diagnostics.inferenceErrors, 1);
+      expect(source.stops, 1);
 
-    await controller.shutdown();
-  });
+      await controller.shutdown();
+    },
+  );
 
   test('QA validation never writes training history by construction', () async {
     final controller = _controller();

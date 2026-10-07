@@ -11,6 +11,7 @@ on:
   push:
     branches:
       - feature/flutter-migration
+      - work/flutter-camera-phase1
     paths:
       - 'flutter_app/**'
       - '.github/workflows/flutter-phase1.yml'
@@ -22,6 +23,10 @@ jobs:
   build-android:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      CI: true
+      FLUTTER_SUPPRESS_ANALYTICS: true
+      GDA_PRIVATE_QA: ${{ inputs.vision_qa == true || github.ref == 'refs/heads/work/flutter-camera-phase1' }}
 
     steps:
       - name: Checkout repository
@@ -77,6 +82,7 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import os
 
           gradle = Path('/tmp/gda_flutter/android/app/build.gradle.kts')
           text = gradle.read_text()
@@ -86,7 +92,7 @@ jobs:
 
           text = text.replace(needle, 'minSdk = 24', 1)
 
-          vision_qa = '${{ inputs.vision_qa }}' == 'true'
+          vision_qa = os.environ['GDA_PRIVATE_QA'] == 'true'
           if vision_qa:
               normal_app_id = (
                   'applicationId = "com.robot2313.migration.good_dog_academy"'
@@ -114,6 +120,7 @@ jobs:
               raise SystemExit('Could not find generated Android manifest tag')
 
           permissions = [
+              'android.permission.CAMERA',
               'android.permission.RECORD_AUDIO',
               'android.permission.INTERNET',
           ]
@@ -160,7 +167,7 @@ jobs:
           PY
 
       - name: Provision private Model A QA assets
-        if: ${{ inputs.vision_qa == true }}
+        if: ${{ env.GDA_PRIVATE_QA == 'true' }}
         run: |
           python3 -m venv "$RUNNER_TEMP/gda-model-a-venv"
           "$RUNNER_TEMP/gda-model-a-venv/bin/pip" install \
@@ -210,7 +217,7 @@ jobs:
       - name: Build Android APK
         working-directory: /tmp/gda_flutter
         run: |
-          if [ "${{ inputs.vision_qa }}" = "true" ]; then
+          if [ "$GDA_PRIVATE_QA" = "true" ]; then
             flutter build apk --debug \
               --dart-define=GDA_VISION_QA=true \
               --dart-define=GDA_VISION_MODEL_A=true
@@ -218,7 +225,27 @@ jobs:
             flutter build apk --debug
           fi
 
+      - name: Encrypt private QA APK
+        if: ${{ env.GDA_PRIVATE_QA == 'true' }}
+        run: |
+          sha256sum /tmp/gda_flutter/build/app/outputs/flutter-apk/app-debug.apk > "$RUNNER_TEMP/private-qa-apk.sha256"
+          openssl cms -encrypt -binary -aes-256-cbc \
+            -in /tmp/gda_flutter/build/app/outputs/flutter-apk/app-debug.apk \
+            -out "$RUNNER_TEMP/gda-private-qa.apk.cms" -outform DER \
+            tools/vision_qa/qa_artifact_recipient.pem
+
+      - name: Upload encrypted private QA APK
+        if: ${{ env.GDA_PRIVATE_QA == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: good-dog-academy-private-qa-encrypted
+          path: |
+            ${{ runner.temp }}/gda-private-qa.apk.cms
+            ${{ runner.temp }}/private-qa-apk.sha256
+          retention-days: 14
+
       - name: Upload APK
+        if: ${{ env.GDA_PRIVATE_QA != 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: good-dog-academy-flutter-migration
