@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       vision_qa:
-        description: 'Include private engineering vision benchmark (no models bundled)'
+        description: 'Include private engineering vision benchmark and verified Model A assets'
         type: boolean
         required: false
         default: false
@@ -98,7 +98,7 @@ jobs:
                   'applicationId = "com.robot2313.migration.good_dog_academy"'
               )
               qa_app_id = (
-                  'applicationId = "com.robot2313.migration.good_dog_academy.qa"'
+                  'applicationId = "com.robot2313.migration.good_dog_academy.qa.camera_phase1"'
               )
               if normal_app_id not in text:
                   raise SystemExit('Could not find generated Android applicationId')
@@ -111,7 +111,7 @@ jobs:
 
           if vision_qa:
               normal_label = 'android:label="good_dog_academy"'
-              qa_label = 'android:label="Good Dog Academy QA"'
+              qa_label = 'android:label="GDA Camera Phase 1 QA"'
               if normal_label not in xml:
                   raise SystemExit('Could not find generated Android app label')
               xml = xml.replace(normal_label, qa_label, 1)
@@ -224,6 +224,44 @@ jobs:
           else
             flutter build apk --debug
           fi
+
+      - name: Verify private QA APK identity and models
+        if: ${{ env.GDA_PRIVATE_QA == 'true' }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          import subprocess
+          import zipfile
+          from pathlib import Path
+
+          apk = Path('/tmp/gda_flutter/build/app/outputs/flutter-apk/app-debug.apk')
+          tools = sorted(Path(os.environ['ANDROID_HOME']).glob('build-tools/*/aapt'))
+          if not tools:
+              raise SystemExit('Android aapt is required to verify the QA package')
+          aapt = tools[-1]
+          badging = subprocess.check_output([str(aapt), 'dump', 'badging', str(apk)], text=True)
+          expected = "package: name='com.robot2313.migration.good_dog_academy.qa.camera_phase1'"
+          if expected not in badging or "application-label:'GDA Camera Phase 1 QA'" not in badging:
+              raise SystemExit('QA APK must have the isolated Camera Phase 1 identity')
+          if "sdkVersion:'24'" not in badging:
+              raise SystemExit('Unexpected QA Android minimum API')
+          subprocess.run([str(aapt.with_name('apksigner')), 'verify', '--verbose', str(apk)], check=True)
+          with zipfile.ZipFile(apk) as bundle:
+              root = 'assets/flutter_assets/assets/vision-qa-model-a/'
+              metadata = json.loads(bundle.read(root + 'manifest.json'))
+              if metadata.get('production_approved') is not False or metadata.get('usage') != 'private-engineering-qa':
+                  raise SystemExit('Private engineering model gates missing')
+              hashes = {
+                  'rtmdet-tiny.onnx': 'a6f06381c68334f09e134d8ca7e062f4e756eaf662bb110752e80b7290470b5e',
+                  'rtmpose-ap10k-packed.onnx': '8f8b474bc0009e9e023897e5999e67ac3ed583f412b1ed0571234c4bb661c32e',
+              }
+              for name, expected_hash in hashes.items():
+                  if hashlib.sha256(bundle.read(root + name)).hexdigest() != expected_hash:
+                      raise SystemExit('QA model checksum failed: ' + name)
+          print('PASS: isolated QA package, label, Android API, signing and model hashes')
+          PY
 
       - name: Encrypt private QA APK
         if: ${{ env.GDA_PRIVATE_QA == 'true' }}
