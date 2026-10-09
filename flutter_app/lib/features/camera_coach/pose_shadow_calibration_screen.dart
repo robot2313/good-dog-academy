@@ -507,6 +507,15 @@ class _PoseShadowCalibrationScreenState
         ],
         if (controller != null) ...[
           const SizedBox(height: 12),
+          if (_benchmark &&
+              controller.latestObservation?.trackingState ==
+                  DogTrackingState.lost)
+            QaTargetRecoveryNotice(
+              restartRequired:
+                  controller.latestObservation?.poseDiagnostics?.reason ==
+                  'target_restart_required',
+              onRestart: () => _queueLifecycle(_restart),
+            ),
           _cameraPreview(),
           const SizedBox(height: 12),
           _PredictionCard(controller: controller),
@@ -602,7 +611,11 @@ class _PoseShadowCalibrationScreenState
                 CustomPaint(
                   painter: _PoseOverlayPainter(
                     diagnostics,
-                    observation.dogBoundingBox,
+                    qaVisibleDogBox(
+                      observation.dogBoundingBox,
+                      observation.trackingState,
+                      stale: controller.observationStale,
+                    ),
                     raw: _rawPose,
                   ),
                 ),
@@ -693,6 +706,9 @@ class _PredictionCard extends StatelessWidget {
     final prediction = observation?.posture;
     final confidence = observation?.postureConfidence;
     final detectionConfidence = observation?.detectionConfidence;
+    final otherDogConfidence = observation
+        ?.poseDiagnostics
+        ?.measurements['unassociatedDetectorConfidence'];
 
     return Card(
       child: Padding(
@@ -720,7 +736,9 @@ class _PredictionCard extends StatelessWidget {
             Text(
               observation == null
                   ? 'Do not label until a prediction appears.'
-                  : 'Dog detection: ${formatQaPercent(detectionConfidence)}',
+                  : otherDogConfidence != null
+                  ? 'Dog candidate: ${formatQaPercent(otherDogConfidence)} · target unconfirmed'
+                  : 'Target detector: ${formatQaPercent(detectionConfidence)}',
             ),
             Text(
               'Tracking: ${observation?.trackingState?.name ?? 'unavailable'}',
@@ -761,6 +779,57 @@ class _PredictionCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Historical target geometry is retained internally for association, but it
+/// must never look like a current detection on a different analysed frame.
+NormalizedDogBox? qaVisibleDogBox(
+  NormalizedDogBox? box,
+  DogTrackingState? state, {
+  bool stale = false,
+}) =>
+    !stale &&
+        (state == DogTrackingState.acquired ||
+            state == DogTrackingState.tracking)
+    ? box
+    : null;
+
+class QaTargetRecoveryNotice extends StatelessWidget {
+  const QaTargetRecoveryNotice({
+    super.key,
+    required this.restartRequired,
+    required this.onRestart,
+  });
+
+  final bool restartRequired;
+  final VoidCallback onRestart;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            restartRequired
+                ? 'UNKNOWN · Target lock expired'
+                : 'UNKNOWN · Target lost',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          Text(
+            restartRequired
+                ? 'Confirm the dog now in view to start a new target session.'
+                : 'Bring the same dog back. To select another dog, start a new target session.',
+          ),
+          FilledButton(
+            onPressed: onRestart,
+            child: const Text('Restart target / new QA session'),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _PoseOverlayPainter extends CustomPainter {

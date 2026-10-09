@@ -241,7 +241,7 @@ void main() {
       profile: assessed.$1,
       assessment: assessed.$2,
       progress: const <LessonProgressRecord>[],
-      now: DateTime.parse('2026-10-04T12:00:00Z'),
+      now: DateTime(2026, 10, 4, 12),
     );
     final second = await service.getOrCreate(
       owner: ownerRecord(),
@@ -249,7 +249,7 @@ void main() {
       profile: assessed.$1,
       assessment: assessed.$2,
       progress: const <LessonProgressRecord>[],
-      now: DateTime.parse('2026-10-04T13:00:00Z'),
+      now: DateTime(2026, 10, 4, 13),
       targetMinutes: 30,
     );
 

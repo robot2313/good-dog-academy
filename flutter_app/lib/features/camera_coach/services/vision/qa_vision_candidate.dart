@@ -55,9 +55,9 @@ const qaVisionCandidates = <QaVisionCandidate>[
   QaVisionCandidate(
     id: 'rtmdet-tiny-rtmpose-m-ap10k-improved',
     version: rtmQaRequested
-        ? '$rtmQaVersion-temporal-quality-v3'
+        ? '$rtmQaVersion-temporal-quality-v4'
         : 'unprovisioned-v1',
-    name: 'Improved A · target lock + filtered pose · v3',
+    name: 'Improved A · target lock + filtered pose · v4',
     factory: rtmQaRequested ? createImprovedRtmQaEngine : null,
     blockers: rtmQaRequested
         ? []

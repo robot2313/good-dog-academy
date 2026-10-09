@@ -1,0 +1,124 @@
+{
+  "source": "Owner-supplied screen recording reviewed privately; pictures displayed on another phone, not live dogs",
+  "source_sha256": "e72804adb2e8b2d9ed9620330cea6f76479f6d79c81b686ac9a907168ae6e8b1",
+  "duration_s": 187.349955,
+  "pipeline_version": "temporal-quality-v3",
+  "session_labels": {
+    "count": 3,
+    "detector_tp": 3,
+    "detector_fp": 0,
+    "detector_fn": 0,
+    "posture_coverage": 0,
+    "sit_fn": 1,
+    "stand_fn": 1,
+    "down_fn": 1
+  },
+  "displayed_latency_samples": [
+    {
+      "approx_video_s": 62.5,
+      "ms": 909
+    },
+    {
+      "approx_video_s": 67.5,
+      "ms": 840
+    },
+    {
+      "approx_video_s": 72.5,
+      "ms": 884
+    },
+    {
+      "approx_video_s": 77.5,
+      "ms": 942
+    },
+    {
+      "approx_video_s": 87.5,
+      "ms": 1106
+    },
+    {
+      "approx_video_s": 92.5,
+      "ms": 937
+    },
+    {
+      "approx_video_s": 97.5,
+      "ms": 897
+    },
+    {
+      "approx_video_s": 102.5,
+      "ms": 925
+    },
+    {
+      "approx_video_s": 107.5,
+      "ms": 949
+    },
+    {
+      "approx_video_s": 112.5,
+      "ms": 986
+    },
+    {
+      "approx_video_s": 117.5,
+      "ms": 1004
+    },
+    {
+      "approx_video_s": 122.5,
+      "ms": 995
+    },
+    {
+      "approx_video_s": 127.5,
+      "ms": 924
+    },
+    {
+      "approx_video_s": 132.5,
+      "ms": 994
+    },
+    {
+      "approx_video_s": 137.5,
+      "ms": 1031
+    },
+    {
+      "approx_video_s": 142.5,
+      "ms": 1028
+    },
+    {
+      "approx_video_s": 147.5,
+      "ms": 1192
+    },
+    {
+      "approx_video_s": 152.5,
+      "ms": 1231
+    },
+    {
+      "approx_video_s": 157.5,
+      "ms": 1145
+    },
+    {
+      "approx_video_s": 162.5,
+      "ms": 1212
+    },
+    {
+      "approx_video_s": 167.5,
+      "ms": 1129
+    },
+    {
+      "approx_video_s": 172.5,
+      "ms": 1234
+    },
+    {
+      "approx_video_s": 177.5,
+      "ms": 1202
+    }
+  ],
+  "sampled_latency_ms": {
+    "n": 23,
+    "p50": 995,
+    "p95_nearest_rank": 1231,
+    "max": 1234,
+    "min": 840
+  },
+  "limitations": [
+    "Samples every 5 seconds while diagnostics visible; not a complete inference distribution",
+    "Lost target skips pose, so these are not successful full-pipeline latencies",
+    "No exported session JSON, sustained temperature/RAM, baseline A recording or live dog footage",
+    "Screenshots contain rendered analysis overlays; no clean camera frames available",
+    "Inference and posture accuracy changes from the diagnostic fix remain unmeasured"
+  ]
+}

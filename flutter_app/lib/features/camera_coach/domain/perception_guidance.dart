@@ -74,6 +74,8 @@ String perceptionGuidance(String reason) => switch (reason) {
   'target_temporarily_lost' =>
     'Keep the dog in frame; the target is temporarily hidden.',
   'target_lost' => 'Target lost. Bring the same dog back; restart the session after a long absence.',
+  'target_restart_required' =>
+    'Target lock expired. Tap Restart target to select the dog now in view.',
   'no_dog' => 'Point the camera at the dog.',
   'unconfirmed_dog' => 'Dog candidate seen; waiting for a reliable target.',
   'confirming_posture' => 'Hold this view while I confirm the posture.',

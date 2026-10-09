@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:good_dog_academy/features/camera_coach/domain/camera_coach_models.dart';
 import 'package:good_dog_academy/features/camera_coach/domain/dog_tracking.dart';
+import 'package:good_dog_academy/features/camera_coach/domain/target_dog_tracker.dart';
 import 'package:good_dog_academy/features/camera_coach/domain/quadruped_pose.dart';
 import 'package:good_dog_academy/features/camera_coach/services/camera/camera_frame_source.dart';
 import 'package:good_dog_academy/features/camera_coach/services/vision/detector_first_dog_vision_engine.dart';
@@ -155,6 +156,52 @@ DogDetectorResult _result(List<DogDetection> detections) => DogDetectorResult(
 );
 
 void main() {
+  test('lost target clears overlay, preserves detector truth and requires explicit reset', () async {
+    var nowMs = 1000;
+    final detector = _FakeDetector([
+      _result([_dog()]),
+      _result([]),
+      _result([_dog(left: .50, confidence: .99)]),
+      _result([_dog(left: .50, confidence: .99)]),
+    ]);
+    final pose = _FakePoseModel(pose: _standingPose());
+    final engine = DetectorFirstDogVisionEngine(
+      detector: detector,
+      tracker: TargetDogTracker(),
+      poseModel: pose,
+      qaTemporalQuality: true,
+      qaLimbPosture: true,
+      nowMs: () => nowMs,
+    );
+    await engine.detect(_frame('first-dog'));
+    nowMs = 3500;
+    final empty = await engine.detect(_frame('no-dog'));
+    expect(empty.trackingState, DogTrackingState.lost);
+    expect(empty.dogBoundingBox, isNull);
+    expect(empty.poseDiagnostics!.reason, 'target_lost');
+    nowMs = 8000;
+    final other = await engine.detect(_frame('other-dog'));
+    expect(other.rawDogDetected, isTrue);
+    expect(other.dogDetected, isFalse);
+    expect(other.dogBoundingBox, isNull);
+    expect(other.detectionConfidence, isNull);
+    expect(
+      other.poseDiagnostics!.measurements['unassociatedDetectorConfidence'],
+      .99,
+    );
+    expect(other.poseDiagnostics!.reason, 'target_restart_required');
+    expect(other.poseDiagnostics!.pipelineVersion, 'temporal-quality-v4');
+    expect(other.posture, isNull);
+    expect(pose.calls, 1);
+    engine.resetTracking();
+    nowMs = 9000;
+    final selected = await engine.detect(_frame('explicit-new-target'));
+    expect(selected.trackingState, DogTrackingState.acquired);
+    expect(selected.dogBoundingBox, isNotNull);
+    expect(selected.detectionConfidence, .99);
+    expect(pose.calls, 2);
+  });
+
   test('warmup prepares detector and pose model', () async {
     final detector = _FakeDetector(<DogDetectorResult>[
       _result(<DogDetection>[]),

@@ -84,7 +84,9 @@ class DetectorFirstDogVisionEngine
         rawDogDetected: detectorResult.detections.isNotEmpty,
         poseInferenceFailed: poseInferenceFailed,
         detectionConfidence: matchedDetection?.confidence,
-        dogBoundingBox: tracking.box,
+        dogBoundingBox: qaTemporalQuality && matchedDetection == null
+            ? null
+            : tracking.box,
         detectionSource: DogDetectionSource.dedicatedDetector,
         trackingConfidence: tracking.trackingConfidence,
         trackingState: tracking.state,
@@ -112,7 +114,10 @@ class DetectorFirstDogVisionEngine
                 reason: switch (tracking.state) {
                   DogTrackingState.temporarilyLost => 'target_temporarily_lost',
                   DogTrackingState.reacquiring => 'target_reacquiring',
-                  DogTrackingState.lost => 'target_lost',
+                  DogTrackingState.lost =>
+                    tracking.ageMs > 6000
+                        ? 'target_restart_required'
+                        : 'target_lost',
                   _ =>
                     detectorResult.detections.isEmpty
                         ? 'no_dog'
@@ -120,8 +125,21 @@ class DetectorFirstDogVisionEngine
                 },
                 imageWidth: detectorResult.imageWidth ?? frame.width,
                 imageHeight: detectorResult.imageHeight ?? frame.height,
+                measurements: {
+                  'targetAgeMs': tracking.ageMs.toDouble(),
+                  if (detectorResult.detections.isNotEmpty)
+                    'unassociatedDetectorConfidence': detectorResult.detections
+                        .map((d) => d.confidence)
+                        .where(
+                          (score) => score.isFinite && score >= 0 && score <= 1,
+                        )
+                        .fold<double>(
+                          0,
+                          (best, score) => score > best ? score : best,
+                        ),
+                },
                 capturedAt: frame.capturedAt,
-                pipelineVersion: 'temporal-quality-v3',
+                pipelineVersion: 'temporal-quality-v4',
               )
             : null,
       );
@@ -149,7 +167,7 @@ class DetectorFirstDogVisionEngine
           imageHeight: detectorResult.imageHeight ?? frame.height,
           measurements: matchedDetection!.frameQuality,
           capturedAt: frame.capturedAt,
-          pipelineVersion: 'temporal-quality-v3',
+          pipelineVersion: 'temporal-quality-v4',
         ),
       );
     }
@@ -251,7 +269,7 @@ class DetectorFirstDogVisionEngine
               rawJoints: qaTemporalQuality ? joints(rawPose!) : const [],
               capturedAt: frame.capturedAt,
               pipelineVersion: qaTemporalQuality
-                  ? 'temporal-quality-v3'
+                  ? 'temporal-quality-v4'
                   : 'limb-v2',
             )
           : null;
